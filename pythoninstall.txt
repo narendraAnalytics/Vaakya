@@ -1,0 +1,5 @@
+vaakya/
+└── backend/
+
+uv init
+ uv venv --python 3.12.10

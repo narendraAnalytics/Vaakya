@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# uv
+.uv/
+
+# Generated PDFs
+*.pdf
+
+# Test cache
+.pytest_cache/
+.coverage
+htmlcov/

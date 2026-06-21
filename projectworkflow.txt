@@ -1,0 +1,491 @@
+================================================================================
+  VAAKYA (వాక్య) — Autonomous Legal Document Factory
+  Project Workflow & Technical Documentation
+  Version 1.0 | June 2026
+================================================================================
+
+"Vaakya" = Telugu for "legal statement or clause"
+Mission: Give every Indian SMB owner a voice in every contract — automatically,
+affordably, and accurately.
+
+--------------------------------------------------------------------------------
+1. WHAT WE ARE BUILDING
+--------------------------------------------------------------------------------
+
+Vaakya is a multi-agent AI backend that takes a plain-text request or a PDF
+upload from an Indian SMB owner and returns a fully drafted, reviewed, and
+risk-checked legal contract — ready for e-signature — in under 4 minutes.
+
+It replaces a lawyer for routine legal work (NDAs, vendor agreements, employment
+contracts, freelancer agreements, etc.) at 95% lower cost.
+
+No chatbot. No template generator. A fully autonomous legal pipeline.
+
+
+--------------------------------------------------------------------------------
+2. FINAL TECH STACK (DECIDED)
+--------------------------------------------------------------------------------
+
+  Backend Runtime     Python 3.12.10  (managed by uv)
+  API Framework       FastAPI + Uvicorn (async)
+  AI Orchestration    LangGraph 0.2+ (stateful multi-agent graph)
+  LLM - Reasoning     Groq: llama-3.3-70b-versatile
+  LLM - Routing       Groq: llama-3.1-8b-instant
+  Embeddings          BAAI/bge-small-en-v1.5 (local, via sentence-transformers)
+  Auth                Supabase Auth (JWT)
+  Database            Supabase PostgreSQL + pgvector extension
+  File Storage        Supabase Storage (bucket: vaakya-contracts)
+  PDF Parsing         PyMuPDF (fitz)
+  PDF Generation      ReportLab
+  Doc Generation      python-docx (intermediate drafts)
+  E-Signature         Digio API (Phase 2 — Indian legal e-sign)
+  Notifications       WhatsApp Business API (Phase 2)
+  Frontend            Next.js (Phase 3)
+  Package Manager     uv (never pip)
+
+Why Supabase for auth + storage?
+  - Single platform: auth, postgres, pgvector, and file storage in one place
+  - Row-Level Security (RLS) enforces multi-tenancy at the DB layer
+  - Supabase Storage integrates directly with auth — signed URLs per user
+  - No separate S3 bucket, no separate JWT library needed
+  - Free tier sufficient for MVP (50,000 MAU, 1GB storage)
+
+Why Groq instead of Claude for LLM?
+  - Ultra-low latency (critical for <4 min turnaround promise)
+  - llama-3.3-70b-versatile handles legal reasoning well for MVP
+  - Near-zero cost during development and early users
+  - Can upgrade to Claude Sonnet for specific agents later without
+    changing the LangGraph architecture
+
+
+--------------------------------------------------------------------------------
+3. THE 8 AGENTS — NAMES, ROLES, AND LLMs
+--------------------------------------------------------------------------------
+
+  01  ARAMBHA (ఆరంభ) — "Beginning"
+      Role        : Orchestrator + Intake
+      LLM         : llama-3.1-8b-instant (fast classification)
+      What it does: Receives text request or extracted PDF text.
+                    Classifies document type (NDA, Employment, Vendor, etc.)
+                    Extracts: parties, jurisdiction, key terms, amounts, dates.
+                    Routes to correct sub-graph: new_doc / redline / dispute.
+      Output      : Populated VaakyaState metadata fields.
+
+  02  RACHANA (రచన) — "Composition"
+      Role        : Drafting Agent
+      LLM         : llama-3.3-70b-versatile
+      What it does: Generates the full contract from:
+                    - Clause library JSON templates (by document type)
+                    - Arambha's extracted metadata
+                    - Indian Contract Act 1872 standard language
+                    - Jurisdiction-specific clauses (AP, TN, MH, etc.)
+                    - GST references where applicable
+      Output      : Full draft contract as text (stored in state.draft).
+
+  03  PARISHEELANAM (పరిశీలనం) — "Examination"
+      Role        : Review Agent (Reflexion Loop)
+      LLM         : llama-3.3-70b-versatile
+      What it does: Reads the Rachana draft.
+                    Scores overall quality 0–100.
+                    Flags: missing clauses, one-sided terms, liability gaps,
+                    jurisdiction mismatches, missing return-of-materials, etc.
+                    If score < 75 AND loop_count < 3: sends back to Rachana.
+                    If score >= 75 OR loop_count == 3: passes to parallel fan-out.
+      Output      : review_score (int), review_issues (list), updated draft.
+
+  04  JOKHIM (జోఖిమ్) — "Risk"
+      Role        : Risk Flagging Agent
+      LLM         : llama-3.3-70b-versatile
+      What it does: Runs IN PARALLEL with Parisheelanam final pass.
+                    Deep-scans for hidden risks:
+                    - Auto-renewal traps
+                    - Unlimited liability clauses
+                    - IP ownership ambiguity
+                    - Non-compete enforceability under Indian law
+                    - Penalty clause enforceability under ICA Section 74
+                    - Pre-estimate of loss language requirements
+      Output      : risk_flags (list of dicts with clause ref + severity + fix)
+
+  05  SAMJOOTA (సమ్జూత) — "Negotiation / Agreement"
+      Role        : Redline / Negotiation Agent
+      LLM         : llama-3.3-70b-versatile
+      What it does: Activated on REDLINE sub-graph only.
+                    Runs IN PARALLEL with Jokhim on incoming counter-party docs.
+                    Diffs counter-party document against standard Vaakya terms.
+                    Identifies all changes (additions, deletions, modifications).
+                    Flags deal-breakers vs acceptable changes.
+                    Suggests counter-proposals with specific clause references.
+      Output      : negotiation_redlines (list), counter-proposal text.
+
+  06  SAHEE (సహీ) — "Signature"
+      Role        : Sign & Deliver Agent
+      LLM         : Tool-based (no LLM needed)
+      What it does: Generates final PDF (ReportLab).
+                    Uploads to Supabase Storage (vaakya-contracts bucket).
+                    Triggers Digio e-signature API (Phase 2).
+                    Sends signing link to parties via email/WhatsApp.
+                    Tracks signer status via Digio webhook.
+                    Stores signed PDF back in Supabase Storage.
+                    Creates vault record in Supabase DB.
+      Output      : final_pdf_url, vault_id, esign_status.
+
+  07  SRUTHI (శ్రుతి) — "Listener / Tracker"
+      Role        : Obligation Tracker
+      LLM         : llama-3.1-8b-instant (extraction only)
+      What it does: Runs AFTER Sahee (post-signing).
+                    Extracts all obligations from the signed contract:
+                    - Payment dates and amounts
+                    - Deliverable deadlines
+                    - Renewal windows (with 90-day pre-alert)
+                    - SLA terms
+                    - Non-compete periods
+                    Creates alert records in Supabase.
+                    Schedules WhatsApp/email alerts (Phase 2).
+      Output      : obligations (list of dicts with type, date, parties).
+
+  08  VIVADA (వివాద) — "Dispute"
+      Role        : Dispute Resolution Agent
+      LLM         : llama-3.3-70b-versatile
+      What it does: Activated on DISPUTE sub-graph only.
+                    Arambha locates relevant contract in vault using pgvector
+                    semantic search (by party name, document type, date).
+                    Vivada extracts applicable clauses for the dispute.
+                    Generates dispute summary with exact clause references.
+                    Drafts legal demand notice under Indian Contract Act / CPC.
+                    Target: complete in under 30 seconds.
+      Output      : dispute_summary, legal_notice_draft (PDF via Sahee).
+
+
+--------------------------------------------------------------------------------
+4. THE LANGGRAPH WORKFLOW
+--------------------------------------------------------------------------------
+
+4.1 VAAKYASTATE (Shared State — TypedDict)
+------------------------------------------
+
+  All agents read from and write to one shared state object.
+  LangGraph persists this to Supabase PostgreSQL via a custom checkpointer.
+
+  Input fields      : user_id, input_mode, raw_input
+  Metadata fields   : document_type, parties, jurisdiction, key_terms
+  Draft fields      : draft, review_score, review_issues
+  Risk/Negotiation  : risk_flags, negotiation_redlines
+  Post-sign         : obligations, dispute_summary
+  Control           : loop_count (max 3), hitl_approved, sub_graph
+  Output            : final_pdf_url, vault_id, esign_status, errors
+
+4.2 SUB-GRAPH A — NEW DOCUMENT FLOW
+-------------------------------------
+
+  User sends text request (Mode 1) or uploads PDF (Mode 2)
+          │
+          ▼
+  [PyMuPDF] — if PDF: extract all pages → plain text
+          │
+          ▼
+  [ARAMBHA] — classify doc type, extract metadata, set sub_graph="new_doc"
+          │
+          ▼
+  [RACHANA] — generate full draft from clause library + LLM
+          │
+          ▼
+  [PARISHEELANAM] — review and score
+          │
+          ├── score < 75 AND loop_count < 3 ──► back to RACHANA (loop)
+          │
+          └── score >= 75 OR loop_count == 3
+                    │
+                    ▼
+           ┌── PARALLEL FAN-OUT ──┐
+           │                      │
+    [PARISHEELANAM]           [JOKHIM]
+     (final review)         (risk flags)
+           │                      │
+           └─────── FAN-IN ───────┘
+                    │
+                    ▼
+           [HITL CHECKPOINT]
+           User reviews draft + risk flags
+           Can edit. Must explicitly approve.
+           LangGraph interrupt() — async pause.
+                    │
+                    ▼
+           [SAHEE] — generate PDF, upload to Supabase, trigger Digio
+                    │
+                    ▼
+           [SRUTHI] — extract obligations, schedule alerts
+                    │
+                    ▼
+           Contract in Vault. Done.
+
+4.3 SUB-GRAPH B — REDLINE REVIEW FLOW
+---------------------------------------
+
+  User uploads counter-party contract (PDF or DOCX)
+          │
+          ▼
+  [PyMuPDF] — extract text
+          │
+          ▼
+  [ARAMBHA] — classify as counter-party/redline, set sub_graph="redline"
+          │
+          ▼
+  ┌── PARALLEL ──────────────────────┐
+  │                                   │
+  [SAMJOOTA]                      [JOKHIM]
+  Diff vs standard terms          Deep risk scan on
+  Flag deal-breakers              counter-party terms
+  Suggest counter-proposals       Flag hidden risks
+  │                                   │
+  └──────────── FAN-IN ───────────────┘
+          │
+          ▼
+  [HITL CHECKPOINT] — user reviews redlines + risks
+          │
+          ▼
+  [SAHEE] — send redlined PDF back to counter-party
+
+4.4 SUB-GRAPH C — DISPUTE RESOLUTION FLOW
+-------------------------------------------
+
+  User raises dispute flag
+          │
+          ▼
+  [ARAMBHA] — search vault for relevant contract (pgvector semantic search)
+          │
+          ▼
+  [VIVADA] — extract applicable clauses, generate dispute summary + legal notice
+          │
+          ▼
+  [HITL CHECKPOINT] — user reviews + approves legal notice
+          │
+          ▼
+  [SAHEE] — deliver legal notice via email + WhatsApp
+
+
+--------------------------------------------------------------------------------
+5. SUPABASE SCHEMA
+--------------------------------------------------------------------------------
+
+5.1 AUTH
+  Handled by Supabase Auth (built-in users table).
+  We add a profiles table for business metadata.
+
+5.2 TABLES
+
+  profiles
+  --------
+  id              uuid  PK (references auth.users.id)
+  business_name   text
+  plan            text  -- starter / growth / business
+  city            text
+  state           text
+  created_at      timestamptz
+
+  documents
+  ---------
+  id              uuid  PK
+  user_id         uuid  FK → auth.users (RLS: user sees own rows)
+  document_type   text  -- NDA, Employment, Vendor, etc.
+  sub_graph       text  -- new_doc / redline / dispute
+  status          text  -- draft / reviewing / hitl_pending / signed / archived
+  parties         jsonb
+  jurisdiction    text
+  key_terms       jsonb
+  draft           text
+  review_score    int
+  risk_flags      jsonb
+  graph_thread_id text  -- LangGraph checkpoint thread ID
+  created_at      timestamptz
+  updated_at      timestamptz
+
+  vault
+  -----
+  id              uuid  PK
+  document_id     uuid  FK → documents
+  user_id         uuid  FK → auth.users (RLS)
+  pdf_path        text  -- Supabase Storage path
+  pdf_signed_path text  -- path after e-sign
+  esign_status    text  -- pending / sent / signed / declined
+  digio_ref       text  -- Digio transaction ID (Phase 2)
+  signed_at       timestamptz
+  created_at      timestamptz
+
+  obligations
+  -----------
+  id              uuid  PK
+  vault_id        uuid  FK → vault
+  user_id         uuid  FK → auth.users (RLS)
+  obligation_type text  -- payment / renewal / deliverable / sla / non-compete
+  description     text
+  due_date        date
+  alert_date      date  -- usually due_date - 90 days
+  alerted         bool  DEFAULT false
+  created_at      timestamptz
+
+  clause_library  (seed data — not user-specific)
+  ---------------
+  id              uuid  PK
+  document_type   text
+  clause_name     text
+  clause_text     text
+  jurisdiction    text  -- national / AP / TN / MH / etc.
+  embedding       vector(384)  -- bge-small-en-v1.5 output
+  tags            text[]
+
+5.3 STORAGE BUCKETS
+
+  vaakya-contracts
+  ├── {user_id}/drafts/{document_id}.pdf
+  ├── {user_id}/signed/{vault_id}_signed.pdf
+  └── {user_id}/uploads/{document_id}_original.pdf
+
+  Access: private bucket, signed URLs only. RLS via Supabase Storage policies.
+
+
+--------------------------------------------------------------------------------
+6. FASTAPI ENDPOINTS
+--------------------------------------------------------------------------------
+
+  POST   /auth/callback              Supabase Auth redirect handler
+  GET    /auth/me                    Get current user profile
+
+  POST   /document/new               Create document from text request
+                                     Body: { request: str }
+                                     Returns: { document_id, thread_id }
+
+  POST   /document/upload            Upload PDF for review/redline
+                                     Body: multipart/form-data (file)
+                                     Returns: { document_id, thread_id }
+
+  GET    /document/{id}/status       Poll document + agent progress
+  POST   /document/{id}/approve      HITL approval (user clicks approve)
+  POST   /document/{id}/edit         HITL edit before approval
+
+  GET    /vault                      List user's signed contracts
+  GET    /vault/{id}                 Get signed contract + signed URL
+  GET    /vault/{id}/obligations     Get obligation calendar for contract
+
+  POST   /dispute                    Raise dispute on a vault contract
+                                     Body: { vault_id, description }
+
+  POST   /webhook/digio              Digio e-sign status webhook (Phase 2)
+
+All routes require: Authorization: Bearer <supabase_jwt>
+
+
+--------------------------------------------------------------------------------
+7. HOW AUTH WORKS
+--------------------------------------------------------------------------------
+
+  1. User signs up / logs in via Supabase Auth (email OTP or Google OAuth)
+  2. Supabase issues a JWT (access_token)
+  3. Frontend sends JWT in Authorization header with every request
+  4. FastAPI middleware:
+       - Verifies JWT signature using Supabase public key
+       - Extracts user_id (sub claim)
+       - Sets request.state.user_id for all route handlers
+  5. All Supabase DB queries automatically filtered by user_id via RLS
+  6. Supabase Storage signed URLs scoped to user_id path
+
+
+--------------------------------------------------------------------------------
+8. DEVELOPMENT PHASES
+--------------------------------------------------------------------------------
+
+PHASE 1 — FOUNDATION (Start here)
+  Goal: Working end-to-end pipeline for NDA creation from text input.
+
+  Step 1.1 : Fix Python venv — uv venv --python 3.12.10
+  Step 1.2 : Add all Phase 1 dependencies to pyproject.toml via uv add
+  Step 1.3 : Create Supabase project, run schema SQL, enable pgvector
+  Step 1.4 : Set up .env with Supabase + Groq keys
+  Step 1.5 : graph/state.py — define VaakyaState TypedDict
+  Step 1.6 : services/supabase_client.py — singleton client
+  Step 1.7 : services/embeddings.py — load bge-small-en-v1.5, search function
+  Step 1.8 : agents/arambha.py — classify + extract metadata
+  Step 1.9 : agents/rachana.py — draft generation from clause library
+  Step 1.10: agents/parisheelanam.py — review + reflexion loop logic
+  Step 1.11: graph/subgraphs/new_doc.py — wire A→R→P loop → fan-out → HITL
+  Step 1.12: graph/workflow.py — main graph with sub-graph routing
+  Step 1.13: api/middleware/auth.py — Supabase JWT verification
+  Step 1.14: api/routes/document.py — POST /document/new
+  Step 1.15: services/pdf_extractor.py — PyMuPDF extraction
+  Step 1.16: api/routes/document.py — POST /document/upload
+  Step 1.17: services/storage.py — Supabase Storage upload/download
+  Step 1.18: clause_library/ — seed NDA + Vendor Agreement JSON templates
+  Step 1.19: tests/ — 10 real NDA scenarios end-to-end
+
+  Deliverable: User types NDA request → draft reviewed → user approves →
+               PDF in Supabase Storage. All in under 4 minutes.
+
+PHASE 2 — PARALLEL AGENTS & E-SIGN
+  - agents/jokhim.py — parallel risk flagging
+  - agents/sruthi.py — obligation extraction
+  - agents/sahee.py — Digio e-sign integration
+  - Update new_doc subgraph with Jokhim parallel fan-out
+  - Supabase vault table populated after signing
+  - 5 more document types in clause_library
+  - WhatsApp obligation alerts
+
+PHASE 3 — NEGOTIATION, DISPUTES & FRONTEND
+  - agents/samjoota.py — redline sub-graph
+  - agents/vivada.py — dispute sub-graph
+  - graph/subgraphs/redline.py
+  - graph/subgraphs/dispute.py
+  - pgvector semantic clause search (find similar clauses)
+  - Next.js frontend with Supabase Auth
+  - WhatsApp bot integration
+
+
+--------------------------------------------------------------------------------
+9. AGENT CODE PATTERN (every agent follows this)
+--------------------------------------------------------------------------------
+
+from langchain_groq import ChatGroq
+from pydantic import BaseModel
+from graph.state import VaakyaState
+
+# Structured output schema
+class ArambhaOutput(BaseModel):
+    document_type: str
+    parties: list[dict]
+    jurisdiction: str
+    key_terms: dict
+    sub_graph: str
+
+llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
+
+async def run_arambha(state: VaakyaState) -> VaakyaState:
+    structured_llm = llm.with_structured_output(ArambhaOutput)
+    result = await structured_llm.ainvoke([
+        SystemMessage(content=ARAMBHA_SYSTEM_PROMPT),
+        HumanMessage(content=state["raw_input"])
+    ])
+    return {
+        **state,
+        "document_type": result.document_type,
+        "parties": result.parties,
+        "jurisdiction": result.jurisdiction,
+        "key_terms": result.key_terms,
+        "sub_graph": result.sub_graph,
+    }
+
+
+--------------------------------------------------------------------------------
+10. KEY CONSTRAINTS (non-negotiable)
+--------------------------------------------------------------------------------
+
+  - Jurisdiction-aware     : All contracts cite Indian Contract Act 1872 by default
+  - Risk threshold         : Parisheelanam score must be >= 75; max 3 loops
+  - HITL mandatory         : No document reaches e-sign without user approval
+  - Multi-tenant           : Every DB row has user_id; RLS enforced at DB level
+  - PDF-first output       : All final contracts are PDF (ReportLab), not DOCX
+  - No global LLM state    : Each agent creates its own LLM instance
+  - Async throughout       : All agents are async functions; no blocking calls
+  - uv only                : Never use pip. Always: uv add <package>
+  - Secrets in .env        : Never hardcode API keys
+
+================================================================================
+END OF DOCUMENT
+================================================================================
