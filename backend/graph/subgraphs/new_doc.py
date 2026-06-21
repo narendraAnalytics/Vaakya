@@ -7,9 +7,14 @@ new_doc sub-graph — Phase 1 + Phase 2 core flow:
                                     │
                                  jokhim   (risk flagging on final draft)
                                     │
-                              hitl_review  (score ≥ 75 OR loop_count ≥ 3)
+                              hitl_review  (HITL approval gate)
                                     │
-                                   END
+                          ┌─────────┴──────────┐
+                       approved             rejected
+                          │                    │
+                        sruthi                END  (obligations extracted)
+                          │
+                         END
 """
 
 from langgraph.graph import END, START, StateGraph
@@ -19,6 +24,7 @@ from agents.arambha import run_arambha
 from agents.jokhim import run_jokhim
 from agents.parisheelanam import run_parisheelanam
 from agents.rachana import run_rachana
+from agents.sruthi import run_sruthi
 from graph.state import VaakyaState
 
 MAX_LOOPS = 3
@@ -26,6 +32,11 @@ REVIEW_THRESHOLD = 75
 
 
 # ── Edge functions ─────────────────────────────────────────────────────────────
+
+def _after_hitl(state: VaakyaState) -> str:
+    """After HITL: extract obligations if approved, else stop."""
+    return "sruthi" if state.get("hitl_approved") else END
+
 
 def _should_redraft(state: VaakyaState) -> str:
     """After Parisheelanam: redraft or proceed to risk analysis + HITL."""
@@ -85,6 +96,7 @@ def build_new_doc_graph() -> StateGraph:
     builder.add_node("parisheelanam", run_parisheelanam)
     builder.add_node("jokhim",        run_jokhim)
     builder.add_node("hitl_review",   hitl_review)
+    builder.add_node("sruthi",        run_sruthi)
 
     builder.add_edge(START,       "arambha")
     builder.add_edge("arambha",   "rachana")
@@ -96,8 +108,15 @@ def build_new_doc_graph() -> StateGraph:
         {"redraft": "rachana", "proceed": "jokhim"},
     )
 
-    builder.add_edge("jokhim",      "hitl_review")
-    builder.add_edge("hitl_review", END)
+    builder.add_edge("jokhim", "hitl_review")
+
+    builder.add_conditional_edges(
+        "hitl_review",
+        _after_hitl,
+        {"sruthi": "sruthi", END: END},
+    )
+
+    builder.add_edge("sruthi", END)
 
     return builder
 
