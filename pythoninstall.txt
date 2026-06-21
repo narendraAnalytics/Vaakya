@@ -3,3 +3,8 @@ vaakya/
 
 uv init
  uv venv --python 3.12.10
+
+
+
+
+ https://nbgradneuaarkijqiqrv.supabase.co
