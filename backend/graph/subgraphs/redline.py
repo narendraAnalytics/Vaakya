@@ -1,17 +1,18 @@
 """
 redline sub-graph — counter-party contract review flow:
 
-  START → samjoota → jokhim → hitl_review
-                                    │
-                          ┌─────────┴──────────┐
-                       approved             rejected
-                          │                    │
-                        sahee                 END
-                          │
-                         END
+  START → samjoota ─┐
+        → jokhim   ─┴→ hitl_review
+                              │
+                    ┌─────────┴──────────┐
+                 approved             rejected
+                    │                    │
+                  sahee                 END
+                    │
+                   END
 
-Samjoota produces negotiation redlines; Jokhim flags risks on the same document.
-HITL surfaces both redlines + risk flags for the SMB owner to approve before vaulting.
+Samjoota (negotiation) and Jokhim (risk) are independent — they fan-out in parallel
+from START, then fan-in at hitl_review. LangGraph waits for both before proceeding.
 """
 
 from langgraph.graph import END, START, StateGraph
@@ -74,9 +75,12 @@ def build_redline_graph() -> StateGraph:
     builder.add_node("hitl_review", hitl_review)
     builder.add_node("sahee",       run_sahee)
 
-    builder.add_edge(START,       "samjoota")
-    builder.add_edge("samjoota",  "jokhim")
-    builder.add_edge("jokhim",    "hitl_review")
+    # Parallel fan-out: Samjoota and Jokhim start simultaneously
+    builder.add_edge(START, "samjoota")
+    builder.add_edge(START, "jokhim")
+    # Fan-in: hitl_review waits for both branches to complete
+    builder.add_edge("samjoota", "hitl_review")
+    builder.add_edge("jokhim",   "hitl_review")
 
     builder.add_conditional_edges(
         "hitl_review",

@@ -1,20 +1,21 @@
 """
 new_doc sub-graph — Phase 1 + Phase 2 core flow:
 
-  START → arambha → rachana → parisheelanam
-                        ↑           │
-                        └───────────┘  (score < 75 AND loop_count < 3)
-                                    │
-                                 jokhim   (risk flagging on final draft)
-                                    │
-                              hitl_review  (HITL approval gate)
-                                    │
-                          ┌─────────┴──────────┐
-                       approved             rejected
-                          │                    │
-                        sruthi                END  (obligations extracted)
-                          │
-                         END
+  START → arambha → rachana → parisheelanam ─┐
+                        ↑                    fan_in → hitl_review
+                        └──────── jokhim ───┘     │
+                          (redraft loop)           │
+                                         ┌─────────┴──────────┐
+                                      approved             rejected
+                                         │                    │
+                                       sahee                 END
+                                         │
+                                       sruthi
+                                         │
+                                        END
+
+Rachana fans out to both Parisheelanam and Jokhim simultaneously.
+fan_in collects both outputs, then routes: score<75 & loops<3 → rachana, else → hitl.
 """
 
 from langgraph.graph import END, START, StateGraph
@@ -39,13 +40,18 @@ def _after_hitl(state: VaakyaState) -> str:
     return "sahee" if state.get("hitl_approved") else END
 
 
+async def _fan_in(state: VaakyaState) -> dict:
+    """Fan-in node: collects parallel outputs from Parisheelanam and Jokhim."""
+    return {}
+
+
 def _should_redraft(state: VaakyaState) -> str:
-    """After Parisheelanam: redraft or proceed to risk analysis + HITL."""
+    """After fan_in: redraft or proceed to HITL."""
     score = state.get("review_score", 0)
     loops = state.get("loop_count", 0)
     if score < REVIEW_THRESHOLD and loops < MAX_LOOPS:
         return "redraft"
-    return "proceed"
+    return "hitl"
 
 
 # ── HITL node ─────────────────────────────────────────────────────────────────
@@ -96,21 +102,26 @@ def build_new_doc_graph() -> StateGraph:
     builder.add_node("rachana",       run_rachana)
     builder.add_node("parisheelanam", run_parisheelanam)
     builder.add_node("jokhim",        run_jokhim)
+    builder.add_node("fan_in",        _fan_in)
     builder.add_node("hitl_review",   hitl_review)
     builder.add_node("sahee",         run_sahee)
     builder.add_node("sruthi",        run_sruthi)
 
-    builder.add_edge(START,       "arambha")
-    builder.add_edge("arambha",   "rachana")
-    builder.add_edge("rachana",   "parisheelanam")
+    builder.add_edge(START,         "arambha")
+    builder.add_edge("arambha",     "rachana")
+
+    # Parallel fan-out: Parisheelanam and Jokhim run simultaneously
+    builder.add_edge("rachana",       "parisheelanam")
+    builder.add_edge("rachana",       "jokhim")
+    # Fan-in: fan_in waits for both before routing
+    builder.add_edge("parisheelanam", "fan_in")
+    builder.add_edge("jokhim",        "fan_in")
 
     builder.add_conditional_edges(
-        "parisheelanam",
+        "fan_in",
         _should_redraft,
-        {"redraft": "rachana", "proceed": "jokhim"},
+        {"redraft": "rachana", "hitl": "hitl_review"},
     )
-
-    builder.add_edge("jokhim", "hitl_review")
 
     builder.add_conditional_edges(
         "hitl_review",
