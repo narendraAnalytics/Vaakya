@@ -24,6 +24,7 @@ from agents.arambha import run_arambha
 from agents.jokhim import run_jokhim
 from agents.parisheelanam import run_parisheelanam
 from agents.rachana import run_rachana
+from agents.sahee import run_sahee
 from agents.sruthi import run_sruthi
 from graph.state import VaakyaState
 
@@ -34,8 +35,8 @@ REVIEW_THRESHOLD = 75
 # ── Edge functions ─────────────────────────────────────────────────────────────
 
 def _after_hitl(state: VaakyaState) -> str:
-    """After HITL: extract obligations if approved, else stop."""
-    return "sruthi" if state.get("hitl_approved") else END
+    """After HITL: vault + obligations if approved, else stop."""
+    return "sahee" if state.get("hitl_approved") else END
 
 
 def _should_redraft(state: VaakyaState) -> str:
@@ -96,6 +97,7 @@ def build_new_doc_graph() -> StateGraph:
     builder.add_node("parisheelanam", run_parisheelanam)
     builder.add_node("jokhim",        run_jokhim)
     builder.add_node("hitl_review",   hitl_review)
+    builder.add_node("sahee",         run_sahee)
     builder.add_node("sruthi",        run_sruthi)
 
     builder.add_edge(START,       "arambha")
@@ -113,9 +115,10 @@ def build_new_doc_graph() -> StateGraph:
     builder.add_conditional_edges(
         "hitl_review",
         _after_hitl,
-        {"sruthi": "sruthi", END: END},
+        {"sahee": "sahee", END: END},
     )
 
+    builder.add_edge("sahee",  "sruthi")
     builder.add_edge("sruthi", END)
 
     return builder

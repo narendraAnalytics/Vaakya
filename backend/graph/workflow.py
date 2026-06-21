@@ -2,9 +2,9 @@
 Main Vaakya LangGraph workflow.
 Routes incoming state to the correct sub-graph based on VaakyaState.sub_graph.
 
-  new_doc  → graph/subgraphs/new_doc.py   (Phase 1 — active)
-  redline  → graph/subgraphs/redline.py   (Phase 3 — placeholder)
-  dispute  → graph/subgraphs/dispute.py   (Phase 3 — placeholder)
+  new_doc  → graph/subgraphs/new_doc.py   (Phase 1 — all 6 core agents)
+  redline  → graph/subgraphs/redline.py   (Phase 2 — Samjoota + Jokhim + Sahee)
+  dispute  → graph/subgraphs/dispute.py   (Phase 2 — Vivada + Sahee)
 """
 
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -12,17 +12,9 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.store.postgres.aio import AsyncPostgresStore
 
 from graph.state import VaakyaState
+from graph.subgraphs.dispute import dispute_graph
 from graph.subgraphs.new_doc import new_doc_graph
-
-
-# ── Placeholder nodes for Phase 3 sub-graphs ─────────────────────────────────
-
-async def _redline_placeholder(state: VaakyaState) -> dict:
-    return {"errors": ["Redline sub-graph not yet implemented (Phase 3)"]}
-
-
-async def _dispute_placeholder(state: VaakyaState) -> dict:
-    return {"errors": ["Dispute sub-graph not yet implemented (Phase 3)"]}
+from graph.subgraphs.redline import redline_graph
 
 
 # ── Router ────────────────────────────────────────────────────────────────────
@@ -44,12 +36,10 @@ def build_graph(
     """
     builder = StateGraph(VaakyaState)
 
-    # Register sub-graphs as nodes
     builder.add_node("new_doc", new_doc_graph.compile())
-    builder.add_node("redline", _redline_placeholder)
-    builder.add_node("dispute", _dispute_placeholder)
+    builder.add_node("redline", redline_graph.compile())
+    builder.add_node("dispute", dispute_graph.compile())
 
-    # Route from START based on sub_graph field set by Arambha
     builder.add_conditional_edges(
         START,
         _route_sub_graph,
