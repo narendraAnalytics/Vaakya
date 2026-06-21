@@ -23,17 +23,24 @@ from graph.workflow import build_graph
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    import asyncio as _asyncio
+    loop = _asyncio.get_event_loop()
+    print(f"[INFO] Event loop type: {type(loop).__name__}")
+
     app.state.db_ok = False
     try:
+        print(f"[INFO] Connecting to DB: {settings.DATABASE_URL[:60]}...")
         async with AsyncPostgresSaver.from_conn_string(settings.DATABASE_URL) as checkpointer:
             await checkpointer.setup()
             app.state.checkpointer = checkpointer
             app.state.graph = build_graph(checkpointer=checkpointer)
             app.state.db_ok = True
+            print("[INFO] DB connected — checkpointer ready")
             yield
     except Exception as exc:
-        # DB unavailable — server starts without HITL persistence (dev/health-check mode)
-        print(f"[WARN] DB connection failed: {exc}")
+        import traceback
+        print(f"[WARN] DB connection failed: {type(exc).__name__}: {exc}")
+        traceback.print_exc()
         print("[WARN] Starting without checkpointer — HITL will not persist across restarts")
         app.state.checkpointer = None
         app.state.graph = build_graph(checkpointer=None)
