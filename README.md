@@ -1,7 +1,5 @@
 # Vaakya (వాక్య) — Autonomous Legal Document Factory
 
-> Telugu for *"legal statement / clause"* — the smallest unit of law.
-
 Vaakya is a multi-agent AI platform that eliminates the legal document bottleneck for Indian SMBs. A business owner types a plain-English request or uploads a PDF — Vaakya drafts, reviews, risk-checks, and delivers a legally sound contract ready for e-signature in under 4 minutes, at 95% lower cost than a lawyer.
 
 ---

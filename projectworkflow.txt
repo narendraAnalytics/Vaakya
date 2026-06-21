@@ -1,3 +1,5 @@
+Next session starts at api/constants.py — the plan file at C:\Users\ES\.claude\plans\i-installed-the-uv-lucky-flame.md has the full
+  checklist. Just open a new conversation in this folder and say "continue from the plan".
 ================================================================================
   VAAKYA (వాక్య) — Autonomous Legal Document Factory
   Project Workflow & Technical Documentation
