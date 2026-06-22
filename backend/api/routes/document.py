@@ -7,13 +7,16 @@ POST /document/{id}/approve → resume graph after HITL human approval
 """
 
 import uuid
+from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
 from langgraph.types import Command
 from pydantic import BaseModel
 
+from api.config import settings
 from api.middleware.auth import get_current_user
+from services.supabase_client import get_supabase
 
 router = APIRouter()
 
@@ -35,6 +38,92 @@ class ApprovalRequest(BaseModel):
     feedback: str = ""                  # optional user feedback on rejection
 
 
+# ── Supabase persistence helpers ──────────────────────────────────────────────
+
+def _derive_status(graph_state) -> str:
+    """Map LangGraph state → document status string."""
+    next_nodes = list(graph_state.next) if graph_state.next else []
+    for task in getattr(graph_state, "tasks", []):
+        if hasattr(task, "interrupts") and task.interrupts:
+            return "awaiting_approval"
+    if not next_nodes:
+        values = graph_state.values
+        if values.get("errors"):
+            return "completed"   # completed with errors is still completed
+        return "completed"
+    return "processing"
+
+
+async def _persist_state(graph, document_id: str, config: dict) -> None:
+    """Read final graph state and write to Supabase. No-op in DEV_AUTH_BYPASS mode."""
+    if settings.DEV_AUTH_BYPASS:
+        return  # user_id is "dev-token", not a real UUID — skip FK writes
+
+    try:
+        graph_state = await graph.aget_state(config)
+        if graph_state is None:
+            return
+        v = graph_state.values
+        doc_status = _derive_status(graph_state)
+        now = datetime.now(timezone.utc).isoformat()
+        sb = get_supabase()
+
+        # Update documents row
+        sb.table("documents").update({
+            "document_type": v.get("document_type", ""),
+            "parties":       v.get("parties", []),
+            "jurisdiction":  v.get("jurisdiction", "India"),
+            "key_terms":     v.get("key_terms", {}),
+            "sub_graph":     v.get("sub_graph", "new_doc"),
+            "draft":         v.get("draft", ""),
+            "review_score":  v.get("review_score", 0),
+            "loop_count":    v.get("loop_count", 0),
+            "hitl_approved": v.get("hitl_approved", False),
+            "status":        doc_status,
+            "vault_id":      v.get("vault_id") or None,
+            "esign_status":  v.get("esign_status", ""),
+            "risk_flags":    v.get("risk_flags", []),
+            "errors":        v.get("errors", []),
+            "updated_at":    now,
+        }).eq("id", document_id).execute()
+
+        # Write vault_documents row when document is completed with a vault_id
+        if doc_status == "completed" and v.get("vault_id"):
+            sb.table("vault_documents").upsert({
+                "id":             v["vault_id"],
+                "user_id":        v.get("user_id", ""),
+                "document_id":    document_id,
+                "document_type":  v.get("document_type", ""),
+                "jurisdiction":   v.get("jurisdiction", "India"),
+                "parties":        v.get("parties", []),
+                "esign_status":   v.get("esign_status", "pending_signature"),
+                "updated_at":     now,
+            }).execute()
+
+        # Write obligations rows (idempotent — delete + re-insert)
+        if doc_status == "completed" and v.get("obligations"):
+            sb.table("obligations").delete().eq("document_id", document_id).execute()
+            rows = []
+            for obl in v["obligations"]:
+                rows.append({
+                    "user_id":          v.get("user_id", ""),
+                    "document_id":      document_id,
+                    "party":            obl.get("party", ""),
+                    "obligation_type":  obl.get("obligation_type", "other"),
+                    "action":           obl.get("action", ""),
+                    "deadline":         obl.get("deadline", ""),
+                    "deadline_type":    obl.get("deadline_type", "relative"),
+                    "consequence":      obl.get("consequence", ""),
+                    "priority":         obl.get("priority", "MEDIUM"),
+                    "clause_reference": obl.get("clause_reference", ""),
+                })
+            if rows:
+                sb.table("obligations").insert(rows).execute()
+
+    except Exception as exc:
+        print(f"[WARN] Supabase persist failed for {document_id}: {exc}")
+
+
 # ── Background task ───────────────────────────────────────────────────────────
 
 async def _run_graph(
@@ -46,9 +135,11 @@ async def _run_graph(
     """Runs the Vaakya graph in the background. Interrupts at HITL node."""
     try:
         async for _ in graph.astream(initial_state, config=config, stream_mode="updates"):
-            pass   # graph persists state via checkpointer; we don't need to capture here
+            pass
     except Exception:
-        pass       # errors are stored in state["errors"] via agent fallbacks
+        pass
+    # Persist whatever state we reached (processing → awaiting_approval or error)
+    await _persist_state(graph, document_id, config)
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -62,6 +153,19 @@ async def create_document(
 ) -> NewDocumentResponse:
     graph = request.app.state.graph
     document_id = str(uuid.uuid4())
+
+    # Persist initial row to Supabase (real auth only — dev bypass uses non-UUID user_id)
+    if not settings.DEV_AUTH_BYPASS:
+        try:
+            get_supabase().table("documents").insert({
+                "id":         document_id,
+                "user_id":    user_id,
+                "input_mode": body.input_mode,
+                "raw_input":  body.request,
+                "status":     "processing",
+            }).execute()
+        except Exception as exc:
+            print(f"[WARN] Supabase insert failed: {exc}")
 
     initial_state: dict[str, Any] = {
         "user_id": user_id,
@@ -88,7 +192,6 @@ async def create_document(
     }
 
     config = {"configurable": {"thread_id": document_id}}
-
     background_tasks.add_task(_run_graph, graph, document_id, initial_state, config)
 
     return NewDocumentResponse(document_id=document_id)
@@ -169,6 +272,9 @@ async def approve_document(
             pass
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Resume failed: {exc}")
+
+    # Persist completed state (vault_documents + obligations written here)
+    await _persist_state(graph, document_id, config)
 
     return {
         "document_id": document_id,
