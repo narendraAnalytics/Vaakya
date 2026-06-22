@@ -199,11 +199,11 @@ Runtime    : Python 3.12.10 (uv)
     draft (new_doc) or raw_input (redline), document_type, parties, jurisdiction
 
   TOOLS USED
-    services/legal_search.py → search_indian_law()
-    Fetches live Indian law references from IndianKanoon, BarAndBench, LiveLaw,
-    indiacode.nic.in, msme.gov.in via Tavily before the LLM risk analysis.
-    Results are injected as a "CURRENT LEGAL REFERENCES:" block into the prompt.
-    Degrades gracefully — returns [] if TAVILY_API_KEY is missing or search fails.
+    services/legal_search.py → needs_legal_research() + search_indian_law()
+    Conditional: Tavily called only when doc_type matches regulatory/compliance
+    keywords (DPDPA, GST, MSME, labour, arbitration, IP, insurance, banking, etc.).
+    Skipped for NDA, Vendor Agreement, Service Agreement, Employment Agreement, MSA.
+    max_results=5, score threshold ≥ 0.40. Returns [] on failure — graceful degradation.
 
   WRITES TO STATE
     risk_flags  (Annotated[list[dict], operator.add])
@@ -815,11 +815,16 @@ Runtime    : Python 3.12.10 (uv)
   services/legal_search.py — Tavily Legal Search
 ────────────────────────────────────────────────────────────────────────────────
 
-  Used by    : Jokhim, Vivada
+  Used by    : Jokhim (conditional), Vivada (always)
   Pattern    : fetch THEN inject into LLM prompt (not LangChain bind_tools)
+  Conditional: needs_legal_research(doc_type) gates Jokhim's call — True only
+               for regulatory/compliance-heavy types (DPDPA, GST, MSME, labour,
+               arbitration, IP, insurance, banking). False for NDA, MSA, Vendor,
+               Service, Employment contracts — skips Tavily to reduce latency/cost.
   Domains    : indiankanoon.org, barandbench.com, livelaw.in,
                scconline.com, indiacode.nic.in, msme.gov.in
   Threshold  : score ≥ 0.40 (lower than generic search — legal is a niche domain)
+  max_results: 5 (increased from 3 for better legal coverage before reranking)
   Env var    : TAVILY_API_KEY (returns [] if missing — graceful degradation)
 
   API

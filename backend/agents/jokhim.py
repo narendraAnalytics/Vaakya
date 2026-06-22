@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from api.config import settings
 from api.constants import GROQ_MODEL_PRO
 from graph.state import VaakyaState
-from services.legal_search import format_refs_block, search_indian_law
+from services.legal_search import format_refs_block, needs_legal_research, search_indian_law
 
 _llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0)
 
@@ -128,11 +128,14 @@ def _build_human_message(state: VaakyaState) -> str:
         )
 
     doc_type = state.get("document_type", "Unknown")
-    query = (
-        f"Indian law {doc_type} risk clauses DPDPA 2023 MSMED Act "
-        f"Arbitration Conciliation Act 1996 Indian Contract Act 1872"
-    )
-    legal_refs = search_indian_law(query)
+    if needs_legal_research(doc_type):
+        query = (
+            f"Indian law {doc_type} risk clauses DPDPA 2023 MSMED Act "
+            f"Arbitration Conciliation Act 1996 Indian Contract Act 1872"
+        )
+        legal_refs = search_indian_law(query)
+    else:
+        legal_refs = []
     refs_block = format_refs_block(legal_refs)
 
     return f"""Document Type: {doc_type}

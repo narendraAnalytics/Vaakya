@@ -22,8 +22,27 @@ LEGAL_DOMAINS = [
 
 TAVILY_SCORE_THRESHOLD = 0.40  # lower than generic search — legal is a niche domain
 
+_RESEARCH_KEYWORDS = frozenset({
+    "dpdpa", "data protection", "privacy", "personal data",
+    "gst", "tax",
+    "msme", "msmed",
+    "labour", "labor",
+    "arbitration",
+    "dispute",
+    "regulatory", "compliance",
+    "intellectual property", "trademark", "copyright", "patent",
+    "insurance", "banking", "nbfc", "rbi",
+    "franchise", "technology transfer",
+})
 
-def search_indian_law(query: str, max_results: int = 3) -> list[dict]:
+
+def needs_legal_research(document_type: str) -> bool:
+    """True if doc_type warrants a live Tavily search; False for standard contracts."""
+    doc_lower = document_type.lower()
+    return any(kw in doc_lower for kw in _RESEARCH_KEYWORDS)
+
+
+def search_indian_law(query: str, max_results: int = 5) -> list[dict]:
     """
     Search Indian legal sources via Tavily.
     Returns list of {url, content, score} dicts sorted by score descending.
