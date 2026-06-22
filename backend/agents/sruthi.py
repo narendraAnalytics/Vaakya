@@ -68,7 +68,8 @@ deadline_type="relative" and flag it in the action field.
 - If the same obligation applies to both parties, create two separate entries
 - clause_reference: use the actual clause number if present (e.g. "Clause 5.3"),
   otherwise use the section heading (e.g. "Payment Terms", "Termination")
-- If the document has no time-bound obligations (very rare), return an empty list"""
+- If the document has no time-bound obligations (very rare), return an empty list
+Return ONLY valid JSON."""
 
 
 class Obligation(BaseModel):
@@ -99,7 +100,7 @@ class SruthiOutput(BaseModel):
     )
 
 
-_structured_llm = _llm.with_structured_output(SruthiOutput)
+_structured_llm = _llm.with_structured_output(SruthiOutput, method="json_mode")
 
 
 def _build_human_message(state: VaakyaState) -> str:

@@ -80,7 +80,7 @@ class SamjootaOutput(BaseModel):
     counter_count: int = Field(description="Number of clauses with counter-proposals")
 
 
-_structured_llm = _llm.with_structured_output(SamjootaOutput)
+_structured_llm = _llm.with_structured_output(SamjootaOutput, method="json_mode")
 
 
 def _build_human_message(state: VaakyaState) -> str:

@@ -34,7 +34,8 @@ Your output appears on the vault dashboard card that the SMB owner sees.
    governing law (Indian Contract Act, 1872), and jurisdiction.
    Write in plain English that a non-lawyer SMB owner can immediately understand.
 
-Keep the title concise (under 80 characters). Keep the summary under 80 words."""
+Keep the title concise (under 80 characters). Keep the summary under 80 words.
+Return ONLY valid JSON."""
 
 
 class SaheeOutput(BaseModel):
@@ -42,7 +43,7 @@ class SaheeOutput(BaseModel):
     vault_summary: str = Field(description="2-3 sentence summary for the vault card (under 80 words)")
 
 
-_structured_llm = _llm.with_structured_output(SaheeOutput)
+_structured_llm = _llm.with_structured_output(SaheeOutput, method="json_mode")
 
 
 def _build_human_message(state: VaakyaState) -> str:

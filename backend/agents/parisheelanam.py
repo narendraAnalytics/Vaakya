@@ -70,7 +70,8 @@ You MUST return:
 - review_summary: 2-3 sentence executive summary of the document quality
 
 Be strict. A score ≥ 75 means the document is ready for client review.
-A score < 75 means it MUST go back for redrafting. Be precise about what needs fixing."""
+A score < 75 means it MUST go back for redrafting. Be precise about what needs fixing.
+Return ONLY valid JSON."""
 
 
 class ParisheelanamOutput(BaseModel):
@@ -82,7 +83,7 @@ class ParisheelanamOutput(BaseModel):
     review_summary: str = Field(description="2-3 sentence executive summary of document quality")
 
 
-_structured_llm = _llm.with_structured_output(ParisheelanamOutput)
+_structured_llm = _llm.with_structured_output(ParisheelanamOutput, method="json_mode")
 
 
 def _build_human_message(state: VaakyaState) -> str:

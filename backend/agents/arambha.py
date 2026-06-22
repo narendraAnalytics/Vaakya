@@ -4,10 +4,11 @@ Classifies document type and extracts parties, jurisdiction, key terms.
 Uses GROQ_MODEL_FLASH (llama-3.1-8b-instant).
 """
 
-from typing import Literal
+import json
+from typing import Any, Literal
 
 from langchain_groq import ChatGroq
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from api.config import settings
 from api.constants import GROQ_MODEL_FLASH
@@ -29,7 +30,15 @@ Rules:
   - redline: user uploaded a document to review/negotiate
   - dispute: user has a legal dispute to resolve
 
-Return ONLY valid JSON matching the schema. No extra text."""
+Return ONLY a valid JSON object with these exact keys:
+{
+  "document_type": "<string>",
+  "parties": [{"name": "<string>", "role": "<string>"}, ...],
+  "jurisdiction": "<string>",
+  "key_terms": {"duration": "<string>", "governing_law": "<string>"},
+  "sub_graph": "new_doc" | "redline" | "dispute"
+}
+parties MUST be a JSON array of objects, NOT a string. No extra text outside the JSON."""
 
 
 class Party(BaseModel):
@@ -44,8 +53,23 @@ class ArambhaOutput(BaseModel):
     key_terms: dict = Field(description="Key terms extracted: duration, governing_law, etc.")
     sub_graph: Literal["new_doc", "redline", "dispute"] = Field(default="new_doc")
 
+    @field_validator("parties", mode="before")
+    @classmethod
+    def parse_parties(cls, v: Any) -> Any:
+        # llama-3.1-8b-instant sometimes serializes arrays as JSON strings
+        if isinstance(v, str):
+            return json.loads(v)
+        return v
 
-_structured_llm = _llm.with_structured_output(ArambhaOutput)
+    @field_validator("key_terms", mode="before")
+    @classmethod
+    def parse_key_terms(cls, v: Any) -> Any:
+        if isinstance(v, str):
+            return json.loads(v)
+        return v
+
+
+_structured_llm = _llm.with_structured_output(ArambhaOutput, method="json_mode")
 
 
 async def run_arambha(state: VaakyaState) -> dict:

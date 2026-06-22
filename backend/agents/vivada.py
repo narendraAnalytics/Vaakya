@@ -111,7 +111,7 @@ class VivadaOutput(BaseModel):
     )
 
 
-_structured_llm = _llm.with_structured_output(VivadaOutput)
+_structured_llm = _llm.with_structured_output(VivadaOutput, method="json_mode")
 
 
 def _build_dispute_summary(result: VivadaOutput) -> str:

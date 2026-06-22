@@ -86,7 +86,8 @@ These are small and medium businesses. They often:
 - Lack in-house legal counsel
 - Sign contracts under time pressure
 - Face counterparties with more negotiating power
-Your job is to be their legal guardian — flag anything that could harm them."""
+Your job is to be their legal guardian — flag anything that could harm them.
+Return ONLY valid JSON."""
 
 
 class RiskFlag(BaseModel):
@@ -108,7 +109,7 @@ class JokhimOutput(BaseModel):
     high_count: int = Field(description="Number of HIGH severity flags")
 
 
-_structured_llm = _llm.with_structured_output(JokhimOutput)
+_structured_llm = _llm.with_structured_output(JokhimOutput, method="json_mode")
 
 
 def _build_human_message(state: VaakyaState) -> str:

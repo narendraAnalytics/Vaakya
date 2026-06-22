@@ -65,14 +65,18 @@ When you receive a list of issues from a prior review, you MUST:
 - Address EVERY issue explicitly — do not skip any
 - Strengthen weak clauses
 - Fix ambiguities and add missing elements
-- Do NOT change what was already correct"""
+- Do NOT change what was already correct
+
+## Output Format
+Return ONLY a valid JSON object: {"draft": "<complete document text here>"}
+No markdown fences, no explanation outside the JSON."""
 
 
 class RachanaOutput(BaseModel):
     draft: str = Field(description="Complete legal document text, professionally formatted")
 
 
-_structured_llm = _llm.with_structured_output(RachanaOutput)
+_structured_llm = _llm.with_structured_output(RachanaOutput, method="json_mode")
 
 
 def _build_human_message(state: VaakyaState) -> str:

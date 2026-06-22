@@ -14,6 +14,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from api.config import settings
@@ -28,22 +29,31 @@ async def lifespan(app: FastAPI):
     print(f"[INFO] Event loop type: {type(loop).__name__}")
 
     app.state.db_ok = False
-    try:
-        print(f"[INFO] Connecting to DB: {settings.DATABASE_URL[:60]}...")
-        async with AsyncPostgresSaver.from_conn_string(settings.DATABASE_URL) as checkpointer:
-            await checkpointer.setup()
+
+    if settings.DATABASE_URL:
+        try:
+            print(f"[INFO] Connecting to DB: {settings.DATABASE_URL[:60]}...")
+            async with AsyncPostgresSaver.from_conn_string(settings.DATABASE_URL) as checkpointer:
+                await checkpointer.setup()
+                app.state.checkpointer = checkpointer
+                app.state.graph = build_graph(checkpointer=checkpointer)
+                app.state.db_ok = True
+                print("[INFO] DB connected — Postgres checkpointer ready")
+                yield
+        except Exception as exc:
+            import traceback
+            print(f"[WARN] DB connection failed: {type(exc).__name__}: {exc}")
+            traceback.print_exc()
+            print("[WARN] Falling back to in-memory checkpointer — state lost on restart")
+            checkpointer = MemorySaver()
             app.state.checkpointer = checkpointer
             app.state.graph = build_graph(checkpointer=checkpointer)
-            app.state.db_ok = True
-            print("[INFO] DB connected — checkpointer ready")
             yield
-    except Exception as exc:
-        import traceback
-        print(f"[WARN] DB connection failed: {type(exc).__name__}: {exc}")
-        traceback.print_exc()
-        print("[WARN] Starting without checkpointer — HITL will not persist across restarts")
-        app.state.checkpointer = None
-        app.state.graph = build_graph(checkpointer=None)
+    else:
+        print("[INFO] No DATABASE_URL — using in-memory checkpointer (dev/test mode)")
+        checkpointer = MemorySaver()
+        app.state.checkpointer = checkpointer
+        app.state.graph = build_graph(checkpointer=checkpointer)
         yield
 
 
