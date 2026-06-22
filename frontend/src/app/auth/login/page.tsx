@@ -33,8 +33,16 @@ export default function LoginPage() {
 
     const toMsg = (err: { message?: string; name?: string; code?: string; status?: number } | null) => {
       console.error('[Vaakya Auth]', JSON.stringify(err));
+      const code = err?.code;
+      if (code === 'invalid_credentials') {
+        return mode === 'signin'
+          ? 'Incorrect email or password. Double-check and try again, or switch to Sign up if you\'re new.'
+          : 'Could not create account. Please try a different email or password.';
+      }
+      if (code === 'email_not_confirmed') return 'Please confirm your email before signing in.';
+      if (code === 'user_already_exists') return 'An account with this email already exists. Please sign in instead.';
       const msg = err?.message;
-      if (!msg || msg === '{}') return 'Something went wrong. Please check your credentials and try again.';
+      if (!msg || msg === '{}') return 'Something went wrong. Please try again.';
       return msg;
     };
 
