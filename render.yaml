@@ -1,0 +1,28 @@
+services:
+  - name: vaakya-backend
+    type: web
+    env: python
+    rootDir: backend
+    buildCommand: pip install uv && uv sync --frozen
+    startCommand: uv run uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: DEV_AUTH_BYPASS
+        value: "false"
+      - key: ALLOWED_ORIGIN
+        value: https://your-frontend.vercel.app   # update after frontend deploy
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false   # postgresql+psycopg://postgres:[pass]@db.xxxx.supabase.co:5432/postgres (port 5432 direct, NOT 6543 pooler)
+      - key: SUPABASE_JWKS_URL
+        sync: false   # https://xxxx.supabase.co/auth/v1/.well-known/jwks.json
+      - key: GROQ_API_KEY
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false   # optional — legal_search degrades gracefully if absent
