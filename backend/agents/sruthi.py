@@ -6,7 +6,8 @@ Uses GROQ_MODEL_FLASH (llama-3.1-8b-instant).
 """
 
 from langchain_groq import ChatGroq
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
+from typing import Any
 
 from api.config import settings
 from api.constants import GROQ_MODEL_FLASH
@@ -69,35 +70,88 @@ deadline_type="relative" and flag it in the action field.
 - clause_reference: use the actual clause number if present (e.g. "Clause 5.3"),
   otherwise use the section heading (e.g. "Payment Terms", "Termination")
 - If the document has no time-bound obligations (very rare), return an empty list
-Return ONLY valid JSON."""
+
+## Required JSON Output Structure
+Return ONLY a valid JSON object with this EXACT structure — both keys are mandatory:
+{
+  "obligations": [
+    {
+      "party": "Party name or role",
+      "obligation_type": "payment|delivery|notice|reporting|compliance|renewal|non_compete|insurance|confidentiality|other",
+      "action": "Plain-English description of what must be done",
+      "deadline": "When it must be done: exact phrase from contract or statutory default",
+      "deadline_type": "absolute|relative|recurring|event_triggered",
+      "consequence": "What happens if not met (penalty, breach, termination, etc.)",
+      "priority": "HIGH|MEDIUM|LOW",
+      "clause_reference": "Clause X.Y or Section Name"
+    }
+  ],
+  "obligation_summary": "1-2 sentence summary: total count, highest-priority items, nearest upcoming deadline"
+}
+If no obligations, return: {"obligations": [], "obligation_summary": "No time-bound obligations identified in this document."}"""
 
 
 class Obligation(BaseModel):
-    party: str = Field(description="Who must perform this obligation (party name or role)")
+    party: str = Field(default="", description="Who must perform this obligation (party name or role)")
     obligation_type: str = Field(
+        default="other",
         description="payment | delivery | notice | reporting | compliance | renewal | non_compete | insurance | confidentiality | other"
     )
-    action: str = Field(description="Plain-English description of what must be done")
+    action: str = Field(default="", description="Plain-English description of what must be done")
     deadline: str = Field(
+        default="",
         description="When it must be done: exact phrase from contract or implied statutory default"
     )
     deadline_type: str = Field(
+        default="relative",
         description="absolute | relative | recurring | event_triggered"
     )
     consequence: str = Field(
+        default="",
         description="What happens if this obligation is not met (penalty, breach, termination, etc.)"
     )
-    priority: str = Field(description="HIGH | MEDIUM | LOW")
-    clause_reference: str = Field(description="Clause number or section heading")
+    priority: str = Field(default="MEDIUM", description="HIGH | MEDIUM | LOW")
+    clause_reference: str = Field(default="", description="Clause number or section heading")
+
+    @model_validator(mode="before")
+    @classmethod
+    def remap_fields(cls, data: Any) -> Any:
+        if not isinstance(data, dict):
+            return data
+        # LLM sometimes uses "obligation" as the description field instead of "action"
+        if "action" not in data and "obligation" in data:
+            data["action"] = data.pop("obligation")
+        # LLM sometimes puts deadline_type value in "deadline" and actual date in nothing
+        # Detect: if "deadline" value is one of the known deadline_type keywords, remap it
+        _deadline_types = {"absolute", "relative", "recurring", "event_triggered"}
+        if data.get("deadline", "").lower() in _deadline_types and "deadline_type" not in data:
+            data["deadline_type"] = data.pop("deadline")
+            data["deadline"] = ""
+        # LLM sometimes uses "consequence" field for priority (HIGH/MEDIUM/LOW)
+        _priorities = {"high", "medium", "low"}
+        consequence_val = str(data.get("consequence", "")).strip().lower()
+        if consequence_val in _priorities and "priority" not in data:
+            data["priority"] = data.pop("consequence").upper()
+        return data
 
 
 class SruthiOutput(BaseModel):
     obligations: list[Obligation] = Field(
+        default_factory=list,
         description="All time-bound obligations extracted from the contract. Empty list if none found."
     )
     obligation_summary: str = Field(
+        default="",
         description="1-2 sentence summary: total count, highest-priority items, and nearest upcoming deadline"
     )
+
+    @model_validator(mode="after")
+    def fill_summary(self) -> "SruthiOutput":
+        if not self.obligation_summary:
+            total = len(self.obligations)
+            high = sum(1 for o in self.obligations if o.priority.upper() == "HIGH")
+            self.obligation_summary = f"Extracted {total} obligation(s); {high} high-priority." if total else "No time-bound obligations identified."
+        return self
 
 
 _structured_llm = _llm.with_structured_output(SruthiOutput, method="json_mode")

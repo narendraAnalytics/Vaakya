@@ -7,7 +7,7 @@ Uses GROQ_MODEL_PRO (llama-3.3-70b-versatile).
 """
 
 from langchain_groq import ChatGroq
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from api.config import settings
 from api.constants import GROQ_MODEL_PRO
@@ -87,7 +87,24 @@ These are small and medium businesses. They often:
 - Sign contracts under time pressure
 - Face counterparties with more negotiating power
 Your job is to be their legal guardian — flag anything that could harm them.
-Return ONLY valid JSON."""
+
+## Required JSON Output Structure
+Return ONLY a valid JSON object with this EXACT structure — all four keys are mandatory:
+{
+  "risk_flags": [
+    {
+      "severity": "CRITICAL|HIGH|MEDIUM|LOW",
+      "category": "FINANCIAL RISK|LEGAL & COMPLIANCE RISK|OPERATIONAL RISK|COUNTERPARTY RISK|JURISDICTION & ENFORCEMENT RISK",
+      "clause_reference": "Clause X.Y or Section Name",
+      "risk_description": "Plain-English description of the risk",
+      "recommendation": "Specific actionable fix with Indian law citation"
+    }
+  ],
+  "risk_summary": "2-3 sentence executive summary of the overall risk profile",
+  "critical_count": 0,
+  "high_count": 0
+}
+If no risks, return: {"risk_flags": [], "risk_summary": "The document is well-drafted with no significant risks.", "critical_count": 0, "high_count": 0}"""
 
 
 class RiskFlag(BaseModel):
@@ -100,13 +117,26 @@ class RiskFlag(BaseModel):
 
 class JokhimOutput(BaseModel):
     risk_flags: list[RiskFlag] = Field(
+        default_factory=list,
         description="List of identified risks. Empty list if document is sound."
     )
     risk_summary: str = Field(
+        default="",
         description="2-3 sentence executive summary of the overall risk profile"
     )
-    critical_count: int = Field(description="Number of CRITICAL severity flags")
-    high_count: int = Field(description="Number of HIGH severity flags")
+    critical_count: int = Field(default=0, description="Number of CRITICAL severity flags")
+    high_count: int = Field(default=0, description="Number of HIGH severity flags")
+
+    @model_validator(mode="after")
+    def compute_counts(self) -> "JokhimOutput":
+        if not self.risk_summary:
+            total = len(self.risk_flags)
+            self.risk_summary = f"Found {total} risk(s) in the document." if total else "No significant risks identified."
+        if not self.critical_count:
+            self.critical_count = sum(1 for f in self.risk_flags if f.severity.upper() == "CRITICAL")
+        if not self.high_count:
+            self.high_count = sum(1 for f in self.risk_flags if f.severity.upper() == "HIGH")
+        return self
 
 
 _structured_llm = _llm.with_structured_output(JokhimOutput, method="json_mode")

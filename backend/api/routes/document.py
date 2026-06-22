@@ -135,6 +135,9 @@ async def get_document_status(
         "loop_count": values.get("loop_count", 0),
         "hitl_payload": hitl_payload,
         "hitl_approved": values.get("hitl_approved", False),
+        "vault_id": values.get("vault_id", ""),
+        "esign_status": values.get("esign_status", ""),
+        "obligations_count": len(values.get("obligations", [])),
         "errors": values.get("errors", []),
         "draft_preview": (values.get("draft", "")[:500] + "…") if values.get("draft") else "",
     }
