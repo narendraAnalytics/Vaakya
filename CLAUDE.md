@@ -214,7 +214,14 @@ Arambha (classify)
 ### Phase 3 — Negotiation, Disputes & Frontend
 - [ ] pgvector semantic clause search (`services/embeddings.py`)
 - [ ] WhatsApp Business API alerts in Sruthi
-- [ ] Next.js frontend
+- [x] Next.js 16 frontend — landing page + auth + onboarding (deployed: https://vaakya-tau.vercel.app)
+- [ ] Dashboard / document management UI
+
+#### Frontend Auth — Resolved Issues
+- **Signup 500 error**: Supabase had `on_auth_user_created` trigger → `handle_new_user()` tried to INSERT into missing `profiles` table. Fixed by dropping the trigger and creating `public.profiles` (id, username, created_at) with RLS.
+- **Next.js 16 proxy conflict**: `src/middleware.ts` + `src/proxy.ts` cannot coexist. Deleted `middleware.ts`; `src/proxy.ts` exports `async function proxy()` (not `middleware`).
+- **Onboarding redirect loop**: `updateUser()` updates `user_metadata` but JWT stays stale. Proxy reads old JWT → no username → bounces back. Fixed by calling `supabase.auth.refreshSession()` before `router.replace('/')`.
+- **Username login**: Added `username` column to `profiles`. Onboarding upserts username there. Login form accepts email OR username — if no `@`, calls `get_email_by_username(p_username)` SECURITY DEFINER RPC to resolve email, then signs in normally.
 
 ---
 
