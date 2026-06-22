@@ -30,10 +30,12 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
-    const toMsg = (err: { message?: string } | null) =>
-      err?.message && err.message !== '{}' && err.message !== '{}'
-        ? err.message
-        : 'Something went wrong. Please check your credentials and try again.';
+    const toMsg = (err: { message?: string; name?: string; code?: string; status?: number } | null) => {
+      console.error('[Vaakya Auth]', JSON.stringify(err));
+      const msg = err?.message;
+      if (!msg || msg === '{}') return 'Something went wrong. Please check your credentials and try again.';
+      return msg;
+    };
 
     try {
       if (mode === 'signup') {
