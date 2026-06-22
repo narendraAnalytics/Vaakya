@@ -197,18 +197,17 @@ Arambha (classify)
 - [x] `services/storage.py` (upload_pdf, get_signed_url, upload_user_pdf)
 - [x] `services/legal_search.py` (Tavily Indian law search — Jokhim + Vivada)
 
-### Phase 2 — Parallel Agents & E-Sign ✅ Agents done
+### Phase 2 — Parallel Agents & E-Sign
 - [x] Jokhim Agent (parallel with Parisheelanam in new_doc; parallel with Samjoota in redline)
 - [x] Sruthi Agent (obligation extraction, post-HITL)
-- [x] Sahee Agent (vault card + esign_status)
+- [x] Sahee Agent (vault card + esign_status + PDF generation + Storage upload)
 - [x] Samjoota Agent (negotiation/redline sub-graph)
 - [x] Vivada Agent (dispute sub-graph)
 - [x] All 3 sub-graphs wired with parallel fan-out (new_doc, redline, dispute)
-- [ ] `services/doc_generator.py` (ReportLab PDF — populates final_pdf_url)
+- [x] `services/doc_generator.py` (ReportLab platypus — contract PDF + redline report PDF; populates final_pdf_url)
+- [x] `clause_library/` — 6 doc types, 67 clauses (NDA, Vendor Agreement, Employment, Service, Lease, Partnership Deed)
 - [ ] Supabase Storage vault with pgvector metadata
 - [ ] Digio API integration in Sahee (e-signatures)
-- [x] `clause_library/` — 6 doc types, 67 clauses (NDA, Vendor Agreement, Employment, Service, Lease, Partnership Deed)
-- [ ] `services/doc_generator.py` (ReportLab PDF — populates final_pdf_url)
 - [ ] `tests/test_nda_pipeline.py` (10 scenarios)
 
 ### Phase 3 — Negotiation, Disputes & Frontend

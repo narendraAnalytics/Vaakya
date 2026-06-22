@@ -81,7 +81,7 @@ backend/
 │   ├── storage.py          # upload_pdf, get_signed_url, upload_user_pdf
 │   ├── pdf_extractor.py    # PyMuPDF extract_text + extract_metadata, page labels
 │   ├── legal_search.py     # Tavily Indian law search — Jokhim + Vivada
-│   ├── doc_generator.py    # ReportLab PDF + python-docx  (Phase 2)
+│   ├── doc_generator.py    # ReportLab platypus — contract PDF + redline report PDF
 │   └── embeddings.py       # BGE model load + embed + pgvector search  (Phase 3)
 ├── clause_library/
 │   ├── nda.json                    # 11 clauses
@@ -310,9 +310,9 @@ Bucket name: `vaakya-contracts` (private, RLS-enabled).
 13. ✅ `services/legal_search.py` — Tavily Indian law (Jokhim + Vivada)
 14. ✅ Supabase schema — 6 tables (profiles, documents, vault_documents, obligations, disputes, clause_library) + RLS + 2 storage buckets
 15. ✅ `clause_library/` — 6 JSON files, 67 clauses (NDA, Vendor Agreement, Employment, Service, Lease, Partnership Deed); seed data for Supabase clause_library table + Rachana RAG context
-16. [ ] `tests/test_nda_pipeline.py` — 10 scenarios
+16. ✅ `services/doc_generator.py` — ReportLab platypus; contract PDF (new_doc: header, parties table, formatted draft, obligations appendix, risk appendix, signature block) + redline report PDF (redline: per-clause risk badges, current/proposed text); wired into Sahee → upload_pdf → get_signed_url → final_pdf_url
+17. [ ] `tests/test_nda_pipeline.py` — 10 scenarios
 
----
 
 ## Do Not
 
