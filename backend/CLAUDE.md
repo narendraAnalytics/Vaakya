@@ -83,7 +83,13 @@ backend/
 │   ├── legal_search.py     # Tavily Indian law search — Jokhim + Vivada
 │   ├── doc_generator.py    # ReportLab PDF + python-docx  (Phase 2)
 │   └── embeddings.py       # BGE model load + embed + pgvector search  (Phase 3)
-├── clause_library/          # JSON clause templates — nda.json etc  (Phase 2)
+├── clause_library/
+│   ├── nda.json                    # 11 clauses
+│   ├── vendor_agreement.json       # 12 clauses
+│   ├── employment_agreement.json   # 11 clauses
+│   ├── service_agreement.json      # 12 clauses
+│   ├── lease_agreement.json        # 10 clauses
+│   └── partnership_deed.json       # 11 clauses
 ├── tests/
 │   └── test_nda_pipeline.py  # (Phase 2)
 ├── .env                    # gitignored
@@ -303,7 +309,7 @@ Bucket name: `vaakya-contracts` (private, RLS-enabled).
 12. ✅ `services/storage.py` — upload_pdf, get_signed_url, upload_user_pdf
 13. ✅ `services/legal_search.py` — Tavily Indian law (Jokhim + Vivada)
 14. ✅ Supabase schema — 6 tables (profiles, documents, vault_documents, obligations, disputes, clause_library) + RLS + 2 storage buckets
-15. [ ] `clause_library/nda.json` + 5 more doc types — seed data
+15. ✅ `clause_library/` — 6 JSON files, 67 clauses (NDA, Vendor Agreement, Employment, Service, Lease, Partnership Deed); seed data for Supabase clause_library table + Rachana RAG context
 16. [ ] `tests/test_nda_pipeline.py` — 10 scenarios
 
 ---

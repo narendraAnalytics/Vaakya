@@ -66,7 +66,7 @@ vaakya/
 │   │   ├── storage.py          # Supabase Storage operations
 │   │   ├── legal_search.py     # Tavily Indian law search (Jokhim + Vivada)
 │   │   └── embeddings.py       # BGE embeddings + pgvector search  (Phase 3)
-│   ├── clause_library/         # JSON clause templates by doc type
+│   ├── clause_library/         # JSON clause templates — nda, vendor, employment, service, lease, partnership
 │   ├── tests/
 │   ├── pyproject.toml
 │   ├── .python-version         # 3.12.10
@@ -207,7 +207,8 @@ Arambha (classify)
 - [ ] `services/doc_generator.py` (ReportLab PDF — populates final_pdf_url)
 - [ ] Supabase Storage vault with pgvector metadata
 - [ ] Digio API integration in Sahee (e-signatures)
-- [ ] 5 more document types in clause_library/
+- [x] `clause_library/` — 6 doc types, 67 clauses (NDA, Vendor Agreement, Employment, Service, Lease, Partnership Deed)
+- [ ] `services/doc_generator.py` (ReportLab PDF — populates final_pdf_url)
 - [ ] `tests/test_nda_pipeline.py` (10 scenarios)
 
 ### Phase 3 — Negotiation, Disputes & Frontend
