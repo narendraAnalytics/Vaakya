@@ -18,6 +18,7 @@ class VaakyaState(TypedDict):
     # Annotated[list, operator.add] → safe concurrent writes from parallel nodes
     draft: str
     review_score: int
+    confidence_score: float      # Parisheelanam certainty (0.0–1.0); < 0.65 → low-confidence warning
     review_issues: Annotated[list[str], operator.add]
     risk_flags: Annotated[list[dict], operator.add]
     negotiation_redlines: Annotated[list[dict], operator.add]

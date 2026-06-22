@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 from api.config import settings
 from api.constants import GROQ_MODEL_PRO
 from graph.state import VaakyaState
+from services.legal_search import format_refs_block, search_indian_law
 
 _llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0)
 
@@ -152,9 +153,18 @@ def _build_human_message(state: VaakyaState) -> str:
             for p in parties
         )
 
-    return f"""Document Type: {state.get("document_type", "Unknown")}
+    doc_type = state.get("document_type", "Unknown")
+    party_names = " ".join(p.get("name", "") for p in parties[:2])
+    query = (
+        f"Indian law dispute {doc_type} {party_names} breach remedy "
+        f"arbitration MSMED Act Limitation Act 2024 precedent"
+    )
+    legal_refs = search_indian_law(query)
+    refs_block = format_refs_block(legal_refs)
+
+    return f"""Document Type: {doc_type}
 Jurisdiction: {state.get("jurisdiction", "India")}
-{parties_text}
+{parties_text}{refs_block}
 
 Dispute Description:
 {state.get("raw_input", "")}

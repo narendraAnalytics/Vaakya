@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     SUPABASE_SERVICE_ROLE_KEY: str = ""
     DATABASE_URL: str = ""      # postgresql://postgres:[pass]@db.xxxx.supabase.co:5432/postgres
     GROQ_API_KEY: str = ""
+    TAVILY_API_KEY: str = ""
     APP_ENV: str = "development"
     ALLOWED_ORIGIN: str = "http://localhost:3000"
 

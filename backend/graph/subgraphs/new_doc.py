@@ -69,9 +69,13 @@ async def hitl_review(state: VaakyaState) -> dict:
     critical_flags = [f for f in risk_flags if f.get("severity") == "CRITICAL"]
     high_flags = [f for f in risk_flags if f.get("severity") == "HIGH"]
 
+    confidence = state.get("confidence_score", 1.0)
+
     payload = {
         "draft": state.get("draft", ""),
         "review_score": score,
+        "confidence_score": confidence,
+        "low_confidence": confidence < 0.65,
         "review_issues": state.get("review_issues", []),
         "loop_count": loops,
         "document_type": state.get("document_type", ""),

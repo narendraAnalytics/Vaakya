@@ -1,134 +1,849 @@
-### Yes — with one small correction.
+================================================================================
+  VAAKYA (వాక్య) — Agent Architecture & Workflow Documentation
+  Autonomous Legal Document Factory for Indian SMBs
+================================================================================
 
-Your workflow is **90–95% correct** and is much closer to a production system than most AI agent projects. The agent responsibilities align well with the Vaakya blueprint. 
+Telugu for "legal statement / clause."
+Gives every SMB owner a voice in every contract.
 
-## What is Correct ✅
+Repository : github.com/narendraAnalytics/Vaakya
+Backend    : FastAPI + LangGraph + Groq + Supabase + Tavily
+Runtime    : Python 3.12.10 (uv)
 
-| Agent         | Verdict   |
-| ------------- | --------- |
-| Arambha       | ✅ Correct |
-| Rachana       | ✅ Correct |
-| Parisheelanam | ✅ Correct |
-| Jokhim        | ✅ Correct |
-| Samjoota      | ✅ Correct |
-| Sahee         | ✅ Correct |
-| Sruthi        | ✅ Correct |
-| Vivada        | ✅ Correct |
 
-The model split of:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  1. THE 8 AGENTS — QUICK REFERENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-```text
-Fast Tasks  → 8B
-Reasoning Tasks → 70B
-```
+  #   Telugu Name      Meaning              Role                   LLM Model
+  ─── ──────────────── ──────────────────── ────────────────────── ────────────────────────
+  01  Arambha          Beginning / Start    Intake & Classifier    llama-3.1-8b-instant
+      (ఆరంభ)
+  02  Rachana          Composition          Contract Drafter       llama-3.3-70b-versatile
+      (రచన)
+  03  Parisheelanam    Examination          Quality Reviewer       llama-3.3-70b-versatile
+      (పరిశీలనం)
+  04  Jokhim           Risk / Hazard        Risk Flagger           llama-3.3-70b-versatile
+      (జోఖిమ్)
+  05  Samjoota         Agreement / Deal     Negotiator / Redline   llama-3.3-70b-versatile
+      (సమ్జూత)
+  06  Sahee            Signature            Export & Vault         llama-3.1-8b-instant
+      (సహీ)
+  07  Sruthi           Sound / Attentive    Obligation Tracker     llama-3.1-8b-instant
+      (శ్రుతి)
+  08  Vivada           Dispute / Argument   Dispute Resolver       llama-3.3-70b-versatile
+      (వివాద)
 
-is exactly what I would do for an MVP. Groq positions Llama 3.3 70B as the stronger model for reasoning, instruction following, and tool use, while Llama 3.1 8B is useful for lightweight classification and routing tasks. ([Groq][1])
+  Model tiers:
+    70B versatile → reasoning-heavy tasks (drafting, review, risk, negotiation, dispute)
+    8B  instant   → lightweight routing / classification / extraction tasks
 
----
 
-# One Change I Would Make
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  2. AGENT DEEP-DIVES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Currently:
+────────────────────────────────────────────────────────────────────────────────
+  01  ARAMBHA (ఆరంభ) — Intake & Orchestrator
+      File   : backend/agents/arambha.py
+      Model  : llama-3.1-8b-instant  |  temperature: 0
+────────────────────────────────────────────────────────────────────────────────
 
-```text
-redline:
-Samjoota → Jokhim → HITL → Sahee
-```
+  WHAT IT DOES
+  ├─ Reads the raw user request (text or PDF-extracted text)
+  ├─ Classifies the document type (NDA, Vendor Agreement, Employment Agreement,
+  │  Service Agreement, Lease Agreement, Partnership Deed, MOU, Other)
+  ├─ Extracts the parties involved (name + role for each party)
+  ├─ Determines jurisdiction (default: India / Indian Contract Act 1872)
+  ├─ Extracts key commercial terms (duration, value, governing law, etc.)
+  └─ Routes the request to the correct sub-graph
 
-I would change it to:
+  READS FROM STATE
+    raw_input, input_mode, user_id
 
-```text
-redline:
+  WRITES TO STATE
+    document_type, parties, jurisdiction, key_terms, sub_graph
 
-           ┌───────────┐
-           │           │
-           ▼           ▼
-      Samjoota      Jokhim
-           │           │
-           └─────┬─────┘
-                 ▼
-               HITL
-                 ▼
-               Sahee
-```
+  ROUTING LOGIC
+    new_doc  → user wants a new contract drafted from scratch
+    redline  → user uploaded a counter-party contract for review/negotiation
+    dispute  → user has a legal dispute to resolve
 
-Because:
+  OUTPUT MODEL
+    ArambhaOutput:
+      document_type : str
+      parties       : list[Party(name, role)]
+      jurisdiction  : str  (default "India")
+      key_terms     : dict
+      sub_graph     : "new_doc" | "redline" | "dispute"
 
-* Samjoota = negotiation analysis
-* Jokhim = risk analysis
+  WHY 8B?
+    Classification + extraction with a well-structured prompt. No multi-step
+    legal reasoning required. 8B is 3–5× faster and cheaper at this task.
 
-Neither depends on the other.
 
-The original Vaakya design also describes them as parallel review paths for incoming redlined contracts. 
+────────────────────────────────────────────────────────────────────────────────
+  02  RACHANA (రచన) — Contract Drafter
+      File   : backend/agents/rachana.py
+      Model  : llama-3.3-70b-versatile  |  temperature: 0.1
+────────────────────────────────────────────────────────────────────────────────
 
-This saves latency and fits LangGraph's fan-out/fan-in pattern.
+  WHAT IT DOES
+  ├─ Drafts a complete, professional legal contract in formal legal English
+  ├─ On first pass: generates from document_type + parties + key_terms + raw_input
+  ├─ On redraft: receives review_issues from Parisheelanam and must fix EVERY issue
+  └─ Produces structured documents with numbered clauses and proper signature blocks
 
----
+  READS FROM STATE
+    document_type, parties, jurisdiction, key_terms, raw_input,
+    draft (previous draft, on redraft), review_issues, loop_count
 
-# One More Optimization
+  WRITES TO STATE
+    draft
 
-Instead of:
+  MANDATORY DOCUMENT STRUCTURE
+    1.  Header (title, date, parties)
+    2.  Recitals (WHEREAS clauses)
+    3.  Definitions
+    4.  Core Clauses (numbered, bold headings)
+    5.  Term & Termination
+    6.  Governing Law & Jurisdiction
+    7.  Dispute Resolution (Negotiation → Mediation → Arbitration under
+        Arbitration & Conciliation Act 1996)
+    8.  Indemnification
+    9.  Limitation of Liability
+    10. General Provisions
+    11. Signature Block
 
-```text
-new_doc:
-Arambha
-→ Rachana
-↔ Parisheelanam Loop
-→ Jokhim
-→ HITL
-→ Sahee
-→ Sruthi
-```
+  LEGAL REFERENCES APPLIED
+    Indian Contract Act 1872, Specific Relief Act 1963, IT Act 2000,
+    Arbitration & Conciliation Act 1996. Currency: INR. Stamp duty note required.
 
-I would use:
+  LANGUAGE RULES
+    "shall"  → obligations  |  "may" → permissions  |  "will" → future facts
 
-```text
-Arambha
-→ Rachana
-↔ Parisheelanam Loop
+  WHY 70B?
+    Full contract drafting demands instruction-following, legal reasoning,
+    precise language, and statute citation. 70B significantly outperforms 8B here.
 
-          ┌───────────┐
-          │           │
-          ▼           ▼
-   Parisheelanam    Jokhim
-          │           │
-          └─────┬─────┘
-                ▼
-              HITL
-                ▼
-              Sahee
-                ▼
-              Sruthi
-```
 
-This is closer to the blueprint architecture. 
+────────────────────────────────────────────────────────────────────────────────
+  03  PARISHEELANAM (పరిశీలనం) — Quality Reviewer
+      File   : backend/agents/parisheelanam.py
+      Model  : llama-3.3-70b-versatile  |  temperature: 0
+────────────────────────────────────────────────────────────────────────────────
 
----
+  WHAT IT DOES
+  ├─ Reviews the draft produced by Rachana on 5 dimensions (100-point scale)
+  ├─ Returns a score and a list of specific issues (with required fixes)
+  ├─ Triggers redraft loop if score < 75 AND loop_count < 3
+  └─ Runs IN PARALLEL with Jokhim to reduce total latency
 
-# Model Mapping I'd Deploy
+  READS FROM STATE
+    draft, document_type, parties, jurisdiction, loop_count
 
-| Agent         | Groq Model              |
-| ------------- | ----------------------- |
-| Arambha       | llama-3.1-8b-instant    |
-| Rachana       | llama-3.3-70b-versatile |
-| Parisheelanam | llama-3.3-70b-versatile |
-| Jokhim        | llama-3.3-70b-versatile |
-| Samjoota      | llama-3.3-70b-versatile |
-| Sahee         | llama-3.1-8b-instant    |
-| Sruthi        | llama-3.1-8b-instant    |
-| Vivada        | llama-3.3-70b-versatile |
+  WRITES TO STATE
+    review_score, confidence_score, review_issues (Annotated list, operator.add), loop_count (+1)
 
-This is the configuration I would start with before experimenting with Llama 4 Scout or other models. Groq currently lists both of these as production models. ([GroqCloud][2])
+  SCORING RUBRIC (100 pts)
+    ┌─────────────────────────────────────┬──────┐
+    │ Dimension                           │ Pts  │
+    ├─────────────────────────────────────┼──────┤
+    │ Legal Completeness                  │  25  │
+    │   (all required clauses present)    │      │
+    │ Legal Accuracy                      │  25  │
+    │   (correct citations, no conflict)  │      │
+    │ Enforceability                      │  20  │
+    │   (specific obligations, remedies)  │      │
+    │ Clarity & Professionalism           │  15  │
+    │   (no errors, consistent terms)     │      │
+    │ Risk Balance                        │  15  │
+    │   (neither party unfairly exposed)  │      │
+    └─────────────────────────────────────┴──────┘
 
-# Final Verdict
+  OUTPUT MODEL
+    ParisheelanamOutput:
+      review_score     : int          # 0–100
+      confidence_score : float        # 0.0–1.0 reviewer certainty
+      review_issues    : list[str]    # Annotated, operator.add
+      review_summary   : str          # 2–3 sentence executive summary
 
-```text
-Agent Design          : 10/10
-Workflow Design       : 9.5/10
-Model Allocation      : 10/10
-Production Readiness  : 9/10
-```
+  ISSUE FORMAT
+    "[DIMENSION] <problem description> → <required fix>"
 
-### Answer: YES
+  THRESHOLD
+    score ≥ 75  → proceed to fan_in → HITL
+    score < 75, loop_count < 3  → back to Rachana (redraft)
+    score < 75, loop_count ≥ 3 → proceed anyway (HITL shows max-loops warning)
+    confidence_score < 0.65     → HITL payload sets low_confidence = true (user warning)
 
-Your 8-agent architecture is correct. The only improvement I would make is to run **Samjoota and Jokhim in parallel** during the redline workflow and keep **Jokhim parallel to the final review stage** in the new document workflow. Everything else looks solid for Vaakya V1. 
+  WHY 70B?
+    Multi-dimension legal analysis with nuanced scoring requires strong
+    instruction-following and legal domain knowledge.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  04  JOKHIM (జోఖిమ్) — Risk Flagger
+      File   : backend/agents/jokhim.py
+      Model  : llama-3.3-70b-versatile  |  temperature: 0
+────────────────────────────────────────────────────────────────────────────────
+
+  WHAT IT DOES
+  ├─ Runs IN PARALLEL with Parisheelanam in new_doc sub-graph
+  ├─ Runs IN PARALLEL with Samjoota in redline sub-graph
+  ├─ Analyses the contract for business and legal risks across 5 categories
+  └─ Returns structured risk flags with severity, category, clause reference,
+     description, and actionable recommendation citing Indian law
+
+  READS FROM STATE
+    draft (new_doc) or raw_input (redline), document_type, parties, jurisdiction
+
+  TOOLS USED
+    services/legal_search.py → search_indian_law()
+    Fetches live Indian law references from IndianKanoon, BarAndBench, LiveLaw,
+    indiacode.nic.in, msme.gov.in via Tavily before the LLM risk analysis.
+    Results are injected as a "CURRENT LEGAL REFERENCES:" block into the prompt.
+    Degrades gracefully — returns [] if TAVILY_API_KEY is missing or search fails.
+
+  WRITES TO STATE
+    risk_flags  (Annotated[list[dict], operator.add])
+
+  RISK CATEGORIES
+    ┌──────────────────────────────────┬─────────────────────────────────────────┐
+    │ Category                         │ Key Checks                              │
+    ├──────────────────────────────────┼─────────────────────────────────────────┤
+    │ FINANCIAL                        │ Uncapped liability, bad payment terms,  │
+    │                                  │ no price revision, unsecured advances,  │
+    │                                  │ broad indemnification                   │
+    │ LEGAL & COMPLIANCE               │ Missing ICA 1872 / Arbitration Act 1996 │
+    │                                  │ / Stamp Act / GST-TDS clauses,          │
+    │                                  │ auto-renewal traps, non-compete §27,    │
+    │                                  │ IP assignment stripping background IP   │
+    │ OPERATIONAL                      │ Vague deliverables, no SLA/KPI, narrow  │
+    │                                  │ force majeure, key-man dependency,      │
+    │                                  │ missing DPDPA 2023 data protection      │
+    │ COUNTERPARTY                     │ No reps & warranties, unilateral        │
+    │                                  │ amendment rights, sub-contract without  │
+    │                                  │ consent, no step-in rights              │
+    │ JURISDICTION & ENFORCEMENT       │ Disadvantageous arbitration seat,       │
+    │                                  │ foreign law clauses, no address for     │
+    │                                  │ service, incomplete signature blocks    │
+    └──────────────────────────────────┴─────────────────────────────────────────┘
+
+  SEVERITY LEVELS
+    CRITICAL → must fix before signing
+    HIGH     → strongly recommended fix
+    MEDIUM   → consider addressing
+    LOW      → minor / optional improvement
+
+  OUTPUT MODEL
+    RiskFlag:
+      severity         : CRITICAL | HIGH | MEDIUM | LOW
+      category         : one of the 5 categories above
+      clause_reference : specific clause number or section title
+      risk_description : what is wrong
+      recommendation   : actionable fix with Indian law citation
+
+
+────────────────────────────────────────────────────────────────────────────────
+  05  SAMJOOTA (సమ్జూత) — Negotiator / Redline
+      File   : backend/agents/samjoota.py
+      Model  : llama-3.3-70b-versatile  |  temperature: 0
+────────────────────────────────────────────────────────────────────────────────
+
+  WHAT IT DOES
+  ├─ Only active in the REDLINE sub-graph (counter-party contract review)
+  ├─ Runs IN PARALLEL with Jokhim
+  ├─ Acts as the SMB owner's legal advocate — reviews every clause
+  ├─ Recommends: accept, reject, or counter for each flagged clause
+  └─ Produces counter-proposals in formal Indian legal language
+
+  READS FROM STATE
+    raw_input (counter-party contract text), document_type, parties, jurisdiction
+
+  WRITES TO STATE
+    negotiation_redlines  (Annotated[list[dict], operator.add])
+
+  ADVOCACY MANDATE — protects SMB from:
+    ├─ Uncapped liability     → push for 1×–2× contract value cap
+    ├─ Broad indemnification  → counter-party must not be indemnified for own negligence
+    ├─ One-sided IP           → carve out background IP
+    ├─ Unilateral amendments  → require mutual written consent
+    ├─ Auto-renewal traps     → minimum 30-day opt-out notice
+    ├─ Non-compete overreach  → limit to contract term only (ICA §27)
+    ├─ Jurisdiction games     → push for Delhi/Mumbai/Hyderabad seats
+    ├─ Asymmetric termination → balance termination rights
+    └─ Missing payment protections → 18% p.a. under MSMED Act 2006
+
+  OUTPUT MODEL
+    Redline:
+      clause_reference  : clause number / section title
+      current_text      : verbatim from counter-party doc (≤200 chars)
+      recommendation    : "accept" | "reject" | "counter"
+      counter_proposal  : formal Indian legal language (empty if accept/reject)
+      risk_level        : HIGH | MEDIUM | LOW
+      reason            : plain English, 1–2 sentences
+
+
+────────────────────────────────────────────────────────────────────────────────
+  06  SAHEE (సహీ) — Export & Vault
+      File   : backend/agents/sahee.py
+      Model  : llama-3.1-8b-instant  |  temperature: 0
+────────────────────────────────────────────────────────────────────────────────
+
+  WHAT IT DOES
+  ├─ Runs after HITL approval (in all three sub-graphs)
+  ├─ Generates a unique vault_id (UUID) for the document
+  ├─ Generates a formal document title ("NDA — Party A & Party B")
+  ├─ Generates a vault card summary (2–3 sentences, ≤80 words)
+  └─ Sets esign_status = "pending_signature" (Digio integration: Phase 2)
+
+  READS FROM STATE
+    draft, document_type, parties, jurisdiction, key_terms
+
+  WRITES TO STATE
+    vault_id, esign_status, final_pdf_url
+
+  PHASE 2 PENDING
+    final_pdf_url → populated by services/doc_generator.py (ReportLab)
+    esign_status  → updated by Digio webhook after e-signature completion
+
+  WHY 8B?
+    Title + summary generation is a lightweight structured output task.
+    No legal reasoning required.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  07  SRUTHI (శ్రుతి) — Obligation Tracker
+      File   : backend/agents/sruthi.py
+      Model  : llama-3.1-8b-instant  |  temperature: 0
+────────────────────────────────────────────────────────────────────────────────
+
+  WHAT IT DOES
+  ├─ Runs AFTER Sahee, only in the new_doc sub-graph
+  ├─ GATED: returns empty immediately if hitl_approved == False
+  ├─ Extracts all actionable obligations from the approved contract
+  └─ Categorises each obligation by type, party, deadline, and priority
+
+  READS FROM STATE
+    draft, hitl_approved, document_type, parties
+
+  WRITES TO STATE
+    obligations  (Annotated[list[dict], operator.add])
+
+  OBLIGATION TYPES EXTRACTED
+    payment | delivery | notice | reporting | compliance | renewal |
+    non_compete | insurance | confidentiality | other
+
+  DEADLINE TYPES
+    absolute        → specific calendar date ("by 31 March 2026")
+    relative        → offset from event ("within 30 days of signing")
+    recurring       → repeating pattern ("monthly", "quarterly")
+    event_triggered → depends on event ("upon termination")
+
+  INDIAN LAW DEFAULTS (applied when contract is silent)
+    30-day notice/cure period (standard practice)
+    18% p.a. late payment interest (MSMED Act 2006)
+    3-year limitation period (Limitation Act 1963)
+
+  EXCLUDES
+    Reps & warranties, recitals, boilerplate governing law clauses
+
+  OUTPUT MODEL
+    Obligation:
+      party            : who must perform
+      obligation_type  : one of the types above
+      action           : plain-English description
+      deadline         : exact phrase or statutory default
+      deadline_type    : absolute | relative | recurring | event_triggered
+      consequence      : penalty, breach, termination, etc.
+      priority         : HIGH | MEDIUM | LOW
+      clause_reference : clause number / section title
+
+  WHY 8B?
+    Extraction with a structured schema. Fast pattern matching from approved
+    draft text. No adversarial legal reasoning needed.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  08  VIVADA (వివాద) — Dispute Resolver
+      File   : backend/agents/vivada.py
+      Model  : llama-3.3-70b-versatile  |  temperature: 0
+────────────────────────────────────────────────────────────────────────────────
+
+  WHAT IT DOES
+  ├─ Only active in the DISPUTE sub-graph
+  ├─ Analyses the dispute facts from the user's description
+  ├─ Assesses the SMB's legal position and likely outcome
+  ├─ Recommends the cheapest/fastest resolution path
+  ├─ Drafts a formal legal notice when appropriate
+  └─ Lists urgent actions and evidence to preserve immediately
+
+  READS FROM STATE
+    raw_input (dispute description), document_type, parties, jurisdiction
+
+  TOOLS USED
+    services/legal_search.py → search_indian_law()
+    Fetches current Indian dispute law precedents and statute references via Tavily.
+    Query targets dispute type, breach remedies, and recent 2024 case law.
+    Results injected as "CURRENT LEGAL REFERENCES:" block into the prompt.
+    Degrades gracefully — returns [] if TAVILY_API_KEY missing or search fails.
+
+  WRITES TO STATE
+    dispute_summary  (formatted multi-section markdown string)
+
+  RESOLUTION HIERARCHY (cheapest first for SMBs)
+    1. Negotiation      → fastest, cheapest, preserves relationship
+    2. Mediation        → MSME Facilitation Council (MSMED Act 2006)
+    3. Arbitration      → Arbitration & Conciliation Act 1996
+                          Preferred seats: Delhi / Mumbai / Bengaluru / Hyderabad
+    4. Litigation       → last resort
+                          District Court: disputes up to ₹20L
+                          High Court: above ₹20L
+                          Commercial Court: disputes > ₹3L (Commercial Courts Act 2015)
+
+  INDIAN LAW TABLE APPLIED
+    ┌─────────────────────────────────────┬──────────────────────────────────┐
+    │ Law                                 │ Relevance                        │
+    ├─────────────────────────────────────┼──────────────────────────────────┤
+    │ ICA 1872 §73-75                     │ Breach remedies & damages        │
+    │ ICA 1872 §17-19                     │ Fraud / misrepresentation        │
+    │ Limitation Act 1963                 │ 3-year clock for filing          │
+    │ Specific Relief Act 1963 / CPC O39  │ Injunctions                      │
+    │ MSMED Act 2006                      │ MSME disputes & payment          │
+    │ Industrial Disputes Act 1947        │ Employment disputes              │
+    │ Trade Marks Act 1999                │ IP infringement                  │
+    │ Copyright Act 1957                  │ IP infringement                  │
+    │ Consumer Protection Act 2019        │ Consumer disputes                │
+    │ IT Act 2000 / DPDPA 2023           │ Cyber / data disputes            │
+    └─────────────────────────────────────┴──────────────────────────────────┘
+
+  LEGAL NOTICE FORMAT (10 elements when required)
+    From / To / Date / Subject / Facts / Legal Basis / Demand /
+    Response Deadline / Consequence of Non-Compliance / Signature
+
+  OUTPUT (dispute_summary sections)
+    LEGAL POSITION, LEGAL BASIS, RECOMMENDED PATH, TIMELINE,
+    COST ESTIMATE (INR), URGENT ACTIONS, DOCUMENTS TO PRESERVE,
+    DRAFT LEGAL NOTICE (if applicable)
+
+  WHY 70B?
+    Dispute analysis requires multi-statute legal reasoning, adversarial
+    position assessment, and nuanced cost-benefit judgment.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  3. VAAKYA STATE SCHEMA (VaakyaState)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  File: backend/graph/state.py
+
+  class VaakyaState(TypedDict):
+
+      # ── Input (set by API before graph starts) ──────────────────────────────
+      user_id       : str
+      input_mode    : Literal["text", "pdf"]
+      raw_input     : str        # user's request text or PDF-extracted text
+      document_type : str        # NDA | Vendor Agreement | Employment | etc.
+
+      # ── Extracted by Arambha ─────────────────────────────────────────────────
+      parties      : list[dict]  # [{"name": ..., "role": ...}, ...]
+      jurisdiction : str         # default "India"
+      key_terms    : dict        # {"duration": ..., "value": ..., ...}
+
+      # ── Agent outputs ─────────────────────────────────────────────────────────
+      # Fields written by PARALLEL nodes use Annotated[list, operator.add]
+      # → LangGraph merges concurrent writes safely (no last-writer-wins loss)
+
+      draft                : str
+      review_score         : int
+      confidence_score     : float        # Parisheelanam certainty (0.0–1.0)
+      review_issues        : Annotated[list[str],  operator.add]
+      risk_flags           : Annotated[list[dict], operator.add]
+      negotiation_redlines : Annotated[list[dict], operator.add]
+      obligations          : Annotated[list[dict], operator.add]
+      dispute_summary      : str
+      errors               : Annotated[list[str],  operator.add]
+
+      # ── Control flow ─────────────────────────────────────────────────────────
+      loop_count   : int          # Rachana ↔ Parisheelanam reflexion counter
+      hitl_approved: bool         # set by hitl_review node after interrupt()
+      sub_graph    : Literal["new_doc", "redline", "dispute"]
+
+      # ── Output ───────────────────────────────────────────────────────────────
+      final_pdf_url : str         # Supabase Storage URL (Phase 2)
+      vault_id      : str         # UUID generated by Sahee
+      esign_status  : str         # "pending_signature" → updated by Digio webhook
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  4. SUB-GRAPH WORKFLOWS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────────────────────────────────────────────
+  SUB-GRAPH A — new_doc   (new contract from scratch)
+  File: backend/graph/subgraphs/new_doc.py
+────────────────────────────────────────────────────────────────────────────────
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                                                                     │
+  │   START                                                             │
+  │     │                                                               │
+  │     ▼                                                               │
+  │  [Arambha]  ←── classify doc type, extract parties, route          │
+  │     │                                                               │
+  │     ▼                                                               │
+  │  [Rachana]  ←── draft contract (or redraft if loop active)         │
+  │     │                                                               │
+  │     ├─────────────────────┐                                         │
+  │     ▼                     ▼                                         │
+  │  [Parisheelanam]       [Jokhim]      ← PARALLEL fan-out            │
+  │  review + score        risk flags                                   │
+  │     │                     │                                         │
+  │     └──────────┬──────────┘                                         │
+  │                ▼                                                     │
+  │           [fan_in]  ←── waits for BOTH branches                    │
+  │                │                                                     │
+  │         ┌──────┴──────┐                                             │
+  │         │             │                                             │
+  │  score<75 &      score≥75 or                                        │
+  │  loops<3         loops≥3                                            │
+  │         │             │                                             │
+  │         └──► back to  │                                             │
+  │             Rachana   ▼                                             │
+  │           (redraft) [hitl_review]  ←── interrupt() pauses here     │
+  │                       │                                             │
+  │              ┌────────┴────────┐                                   │
+  │              │                 │                                   │
+  │           approved          rejected                               │
+  │              │                 │                                   │
+  │              ▼                END                                  │
+  │           [Sahee]  ←── generate vault_id, esign_status             │
+  │              │                                                      │
+  │              ▼                                                      │
+  │           [Sruthi]  ←── extract obligations from approved draft    │
+  │              │                                                      │
+  │             END                                                     │
+  │                                                                     │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  NODES (8): arambha, rachana, parisheelanam, jokhim, fan_in,
+             hitl_review, sahee, sruthi
+
+  STEP-BY-STEP NARRATIVE
+
+  Step 1 — Arambha
+    Reads user's request. Classifies document type, extracts parties and key
+    commercial terms, sets sub_graph = "new_doc". Routes to Rachana.
+
+  Step 2 — Rachana
+    Drafts a complete contract using all extracted metadata. On first pass
+    (loop_count=0), builds from scratch. On redraft, receives review_issues
+    from the previous Parisheelanam cycle and must address every issue.
+
+  Step 3 — Parisheelanam + Jokhim (PARALLEL)
+    Both nodes start simultaneously after Rachana completes:
+    • Parisheelanam scores the draft on 5 legal dimensions (0–100) and
+      returns specific issues with required fixes.
+    • Jokhim analyses the same draft for business/legal risks across
+      5 risk categories and returns structured risk flags.
+    Both write to Annotated list fields so concurrent writes are safe.
+
+  Step 4 — fan_in
+    No-op node. LangGraph waits here until BOTH Parisheelanam and Jokhim
+    have completed. Then routes based on _should_redraft():
+    • score < 75 AND loop_count < 3  →  back to Rachana (redraft loop)
+    • score ≥ 75 OR loop_count ≥ 3  →  hitl_review
+
+  Step 5 — hitl_review (HITL checkpoint)
+    Calls interrupt(payload) to pause the graph. The payload surfaced to the
+    user includes: draft text, review_score, confidence_score, low_confidence
+    flag (true when confidence_score < 0.65), review_issues, risk_flags,
+    loop_count, max_loops_reached flag. Graph resumes when the API calls
+    Command(resume={"approved": true/false}). Sets hitl_approved in state.
+
+  Step 6 — Sahee  (if approved)
+    Generates a unique vault_id (UUID). Produces a formal document title and
+    vault card summary. Sets esign_status = "pending_signature".
+    (PDF generation via ReportLab: Phase 2)
+
+  Step 7 — Sruthi  (after Sahee)
+    Extracts all obligations from the approved draft. Categorises by type,
+    deadline, party, and priority. Applies Indian law defaults where silent.
+
+  REFLEXION LOOP CONSTRAINT
+    Maximum 3 iterations (MAX_LOOPS = 3). After 3 loops, graph proceeds to
+    HITL regardless of score — with a max_loops_reached warning in payload.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  SUB-GRAPH B — redline   (counter-party contract review)
+  File: backend/graph/subgraphs/redline.py
+────────────────────────────────────────────────────────────────────────────────
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                                                                     │
+  │   START                                                             │
+  │     │                                                               │
+  │     ├─────────────────────┐                                         │
+  │     ▼                     ▼                                         │
+  │  [Samjoota]            [Jokhim]      ← PARALLEL fan-out            │
+  │  negotiation           risk flags                                   │
+  │  redlines                                                           │
+  │     │                     │                                         │
+  │     └──────────┬──────────┘                                         │
+  │                ▼                                                     │
+  │         [hitl_review]  ←── interrupt() pauses here                  │
+  │                │                                                     │
+  │       ┌────────┴────────┐                                           │
+  │       │                 │                                           │
+  │    approved          rejected                                       │
+  │       │                 │                                           │
+  │       ▼                END                                          │
+  │    [Sahee]  ←── vault_id, esign_status                              │
+  │       │                                                             │
+  │      END                                                            │
+  │                                                                     │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  NODES (4): samjoota, jokhim, hitl_review, sahee
+
+  STEP-BY-STEP NARRATIVE
+
+  Step 1 — Samjoota + Jokhim (PARALLEL)
+    Both start simultaneously from START:
+    • Samjoota reviews the counter-party contract as the SMB's advocate.
+      For each flagged clause: accept, reject, or counter with a formal
+      counter-proposal in Indian legal language.
+    • Jokhim analyses the same contract for risks across 5 categories.
+    Neither depends on the other — true parallel execution.
+
+  Step 2 — hitl_review (HITL checkpoint)
+    Surfaces negotiation_redlines + risk_flags to the SMB owner.
+    Payload includes: redlines (total/reject/counter counts), critical
+    risk flags. User approves or rejects via Command(resume=...).
+
+  Step 3 — Sahee  (if approved)
+    Vaults the reviewed contract with a unique vault_id and summary.
+    Sets esign_status = "pending_signature".
+
+  NOTE: No Rachana/Parisheelanam loop here. This sub-graph handles
+  INCOMING contracts (review + negotiate), not outgoing drafts.
+  No Sruthi either — obligation extraction applies only to own contracts.
+
+
+────────────────────────────────────────────────────────────────────────────────
+  SUB-GRAPH C — dispute   (legal dispute resolution)
+  File: backend/graph/subgraphs/dispute.py
+────────────────────────────────────────────────────────────────────────────────
+
+  ┌─────────────────────────────────────────────────────────────────────┐
+  │                                                                     │
+  │   START                                                             │
+  │     │                                                               │
+  │     ▼                                                               │
+  │  [Vivada]  ←── analyse dispute, draft legal notice                 │
+  │     │                                                               │
+  │     ▼                                                               │
+  │  [hitl_review]  ←── interrupt() pauses here                        │
+  │     │                                                               │
+  │  ┌──┴──────────────┐                                               │
+  │  │                 │                                               │
+  │ approved        rejected                                           │
+  │  │                 │                                               │
+  │  ▼                END                                              │
+  │  [Sahee]   ←── vault_id, esign_status                              │
+  │     │                                                               │
+  │    END                                                              │
+  │                                                                     │
+  └─────────────────────────────────────────────────────────────────────┘
+
+  NODES (4): vivada, hitl_review, sahee
+
+  STEP-BY-STEP NARRATIVE
+
+  Step 1 — Vivada
+    Reads the dispute description from raw_input. Assesses the SMB's
+    legal position and likely outcome. Recommends the cheapest resolution
+    path (negotiation → mediation → arbitration → litigation). Drafts a
+    formal legal notice if appropriate. Lists urgent actions and evidence
+    to preserve. Writes all output as a structured multi-section markdown
+    string into dispute_summary.
+
+  Step 2 — hitl_review (HITL checkpoint)
+    Surfaces dispute_summary (including the draft legal notice) to the
+    SMB owner for approval. Payload includes: dispute_summary, document_type,
+    parties, jurisdiction. User approves or rejects via Command(resume=...).
+    A generated legal notice must never be dispatched without explicit
+    user approval.
+
+  Step 3 — Sahee  (if approved)
+    Vaults the approved dispute analysis package with a vault_id and summary
+    card. Sets esign_status = "pending_signature" (for legal notice dispatch).
+
+  NOTE: Rejected → graph terminates at END. Nothing is vaulted.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  5. MAIN WORKFLOW — TOP-LEVEL ROUTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  File: backend/graph/workflow.py
+
+  User Input (API)
+       │
+       ▼
+  [Arambha classifies sub_graph]
+       │
+       ├─── "new_doc" ──► new_doc sub-graph  (8 nodes)
+       │
+       ├─── "redline" ──► redline sub-graph  (4 nodes)
+       │
+       └─── "dispute" ──► dispute sub-graph  (4 nodes)
+                │
+               END  (all three sub-graphs terminate at END)
+
+  The main graph compiles each sub-graph as a single node:
+    builder.add_node("new_doc", new_doc_graph.compile())
+    builder.add_node("redline", redline_graph.compile())
+    builder.add_node("dispute", dispute_graph.compile())
+
+  Checkpointer: AsyncPostgresSaver (Supabase PostgreSQL)
+  → Enables HITL persistence — graph state is saved before interrupt()
+    and restored after Command(resume=...) is received via the API.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  6. HITL PATTERN (Human-in-the-Loop)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Vaakya uses LangGraph's interrupt() / Command(resume=) mechanism.
+  No document ever reaches e-sign without explicit SMB owner approval.
+
+  PAUSE
+    Inside hitl_review node:
+      approval = interrupt(payload)
+    LangGraph serialises graph state to the checkpointer (PostgreSQL).
+    API returns the payload to the frontend/client.
+
+  RESUME
+    Client calls the API with user's decision:
+      graph.astream(Command(resume={"approved": True}), config=config)
+    LangGraph restores state from checkpoint and continues from hitl_review.
+    hitl_review returns: {"hitl_approved": True/False}
+
+  CONFIG
+    Each graph run is identified by a thread_id:
+      config = {"configurable": {"thread_id": "<session-uuid>"}}
+    Same thread_id is used for both initial invocation and resume.
+
+  GUARANTEES
+    • No fire-and-forget — graph is paused, not polled
+    • State is durable — survives server restarts between pause and resume
+    • Explicit rejection → graph terminates at END (no document vaulted)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  7. MODEL ALLOCATION RATIONALE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ┌─────────────────┬─────────────────────────┬──────────────────────────────┐
+  │ Agent           │ Model                   │ Why                          │
+  ├─────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ Arambha         │ llama-3.1-8b-instant    │ Classification + extraction. │
+  │                 │                         │ No legal reasoning. 3–5×     │
+  │                 │                         │ faster than 70B.             │
+  ├─────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ Rachana         │ llama-3.3-70b-versatile │ Full contract drafting.      │
+  │                 │                         │ Instruction-following,       │
+  │                 │                         │ statute citation, consistent │
+  │                 │                         │ clause structure required.   │
+  ├─────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ Parisheelanam   │ llama-3.3-70b-versatile │ Multi-dimension legal        │
+  │                 │                         │ analysis, nuanced scoring.   │
+  ├─────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ Jokhim          │ llama-3.3-70b-versatile │ Adversarial risk analysis    │
+  │                 │                         │ across 5 legal categories.   │
+  ├─────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ Samjoota        │ llama-3.3-70b-versatile │ Legal negotiation strategy + │
+  │                 │                         │ formal counter-proposals.    │
+  ├─────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ Sahee           │ llama-3.1-8b-instant    │ Title + summary generation.  │
+  │                 │                         │ No legal reasoning.          │
+  ├─────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ Sruthi          │ llama-3.1-8b-instant    │ Structured extraction from   │
+  │                 │                         │ known text. Pattern matching. │
+  ├─────────────────┼─────────────────────────┼──────────────────────────────┤
+  │ Vivada          │ llama-3.3-70b-versatile │ Multi-statute legal          │
+  │                 │                         │ reasoning + adversarial      │
+  │                 │                         │ position assessment.         │
+  └─────────────────┴─────────────────────────┴──────────────────────────────┘
+
+  SUMMARY
+    70B (reasoning)   → Rachana, Parisheelanam, Jokhim, Samjoota, Vivada
+    8B  (lightweight) → Arambha, Sahee, Sruthi
+
+  Both models are Groq production models (low latency, high throughput).
+  All LLM calls use langchain-groq with with_structured_output(PydanticModel)
+  — no JSON parsing required, guaranteed schema compliance.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  8. KEY CONSTRAINTS & INVARIANTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  JURISDICTION     All contracts cite Indian Contract Act 1872 by default.
+  REVIEW THRESHOLD Parisheelanam score must reach ≥ 75 to exit redraft loop.
+  MAX LOOPS        Hard-coded at 3 in graph/subgraphs/new_doc.py (not in agent).
+  HITL MANDATORY   No document reaches e-sign without explicit user approval.
+  MULTI-TENANT     Every DB row has user_id FK. Supabase RLS enforced on all tables.
+  PDF-FIRST OUTPUT Final documents are PDF (ReportLab), not DOCX.
+  PARALLEL SAFETY  All fields written by concurrent nodes use
+                   Annotated[list, operator.add] in VaakyaState.
+  SECRETS          Never hardcoded. Always from .env via pydantic-settings.
+  PACKAGES         uv only — never pip directly.
+  TAVILY SEARCH    Jokhim + Vivada fetch live Indian law refs before LLM call.
+                   Requires TAVILY_API_KEY in .env. Fails silently if absent.
+  RAG (PHASE 3)    services/embeddings.py stub ready. Wire after pgvector schema.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  9. SERVICES & EXTERNAL TOOLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+────────────────────────────────────────────────────────────────────────────────
+  services/legal_search.py — Tavily Legal Search
+────────────────────────────────────────────────────────────────────────────────
+
+  Used by    : Jokhim, Vivada
+  Pattern    : fetch THEN inject into LLM prompt (not LangChain bind_tools)
+  Domains    : indiankanoon.org, barandbench.com, livelaw.in,
+               scconline.com, indiacode.nic.in, msme.gov.in
+  Threshold  : score ≥ 0.40 (lower than generic search — legal is a niche domain)
+  Env var    : TAVILY_API_KEY (returns [] if missing — graceful degradation)
+
+  API
+    search_indian_law(query, max_results=3) → list[{url, content, score}]
+    format_refs_block(refs)                 → str   (formatted prompt block)
+
+
+────────────────────────────────────────────────────────────────────────────────
+  services/embeddings.py — BGE Embeddings + pgvector RAG  (Phase 3 stub)
+────────────────────────────────────────────────────────────────────────────────
+
+  Model      : BAAI/bge-small-en-v1.5 (lazy-loaded singleton)
+  Status     : STUB — search_clauses() returns [] until Supabase pgvector
+               table 'clause_library' + match_clauses() RPC are provisioned
+  Planned    : new kb_retriever node between Arambha and Rachana (new_doc graph)
+  Collections: nda_clauses, vendor_clauses, employment_clauses,
+               msa_clauses, privacy_policy_clauses, legal_notices
+
+  API
+    embed(text)                              → list[float]
+    search_clauses(query, document_type, k)  → list[dict]  (stub: always [])
+
+
+================================================================================
+  END OF DOCUMENT
+  Last updated: 2026-06-22
+================================================================================

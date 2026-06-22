@@ -60,6 +60,10 @@ Your feedback is used to redraft the document until it meets the quality thresho
 ## Output Format
 You MUST return:
 - review_score: integer 0-100 (sum of all dimensions)
+- confidence_score: float 0.0-1.0 — how confident you are in your score.
+  Set high (0.85–1.0) when the document is clear and complete.
+  Set medium (0.65–0.84) when some clauses are ambiguous or context is thin.
+  Set low (0.40–0.64) when the document is incomplete, heavily templated, or you lack sufficient context to score accurately.
 - review_issues: list of specific, actionable issues (empty list if score ≥ 90)
   Format each issue as: "[DIMENSION] <specific problem> → <required fix>"
   Example: "[LEGAL COMPLETENESS] Missing dispute resolution clause → Add arbitration under Arbitration and Conciliation Act, 1996"
@@ -71,6 +75,7 @@ A score < 75 means it MUST go back for redrafting. Be precise about what needs f
 
 class ParisheelanamOutput(BaseModel):
     review_score: int = Field(ge=0, le=100, description="Quality score 0-100")
+    confidence_score: float = Field(ge=0.0, le=1.0, description="Reviewer certainty 0.0-1.0")
     review_issues: list[str] = Field(
         description="Actionable issues for Rachana to fix. Empty if score >= 90."
     )
@@ -114,12 +119,14 @@ async def run_parisheelanam(state: VaakyaState) -> dict:
 
         return {
             "review_score": result.review_score,
+            "confidence_score": result.confidence_score,
             "review_issues": result.review_issues,
             "loop_count": new_loop_count,
         }
     except Exception as exc:
         return {
             "review_score": 0,
+            "confidence_score": 0.0,
             "review_issues": [f"Parisheelanam error: {exc}"],
             "loop_count": state.get("loop_count", 0) + 1,
             "errors": [f"Parisheelanam error: {exc}"],
