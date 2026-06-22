@@ -30,17 +30,22 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
 
+    const toMsg = (err: { message?: string } | null) =>
+      err?.message && err.message !== '{}' && err.message !== '{}'
+        ? err.message
+        : 'Something went wrong. Please check your credentials and try again.';
+
     try {
       if (mode === 'signup') {
         const { error: err } = await supabase.auth.signUp({ email, password });
-        if (err) { setError(err.message); return; }
+        if (err) { setError(toMsg(err)); return; }
         setError('Check your email to confirm your account, then sign in.');
         setMode('signin');
         return;
       }
 
       const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
-      if (err) { setError(err.message); return; }
+      if (err) { setError(toMsg(err)); return; }
 
       const username = data.user?.user_metadata?.username;
       router.replace(username ? '/' : '/onboarding');
