@@ -37,10 +37,13 @@ export default function OnboardingPage() {
     setError('');
     setLoading(true);
     try {
-      const { error: err } = await supabase.auth.updateUser({
+      const { data: { user }, error: err } = await supabase.auth.updateUser({
         data: { username: trimmed },
       });
       if (err) { setError(err.message); return; }
+      if (user) {
+        await supabase.from('profiles').upsert({ id: user.id, username: trimmed });
+      }
       await supabase.auth.refreshSession();
       router.replace('/');
     } finally {

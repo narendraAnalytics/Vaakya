@@ -12,7 +12,7 @@ export default function LoginPage() {
   const supabase = createClient();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -47,6 +47,14 @@ export default function LoginPage() {
     };
 
     try {
+      // Resolve username → email if no @ present
+      let email = identifier.trim();
+      if (!email.includes('@')) {
+        const { data: fn } = await supabase.rpc('get_email_by_username', { p_username: email });
+        if (!fn) { setError('Username not found. Please check the spelling or sign up.'); return; }
+        email = fn as string;
+      }
+
       if (mode === 'signup') {
         const { error: signUpErr } = await supabase.auth.signUp({ email, password });
         if (signUpErr) { setError(toMsg(signUpErr)); return; }
@@ -160,14 +168,14 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#2C4A38', marginBottom: 7 }}>
-                Email address
+                {mode === 'signup' ? 'Email address' : 'Email or Username'}
               </label>
               <input
                 className="auth-input"
-                type="email"
-                placeholder="you@company.com"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
+                type="text"
+                placeholder={mode === 'signup' ? 'you@company.com' : 'you@company.com or your username'}
+                value={identifier}
+                onChange={e => setIdentifier(e.target.value)}
                 required
                 autoComplete="email"
               />
