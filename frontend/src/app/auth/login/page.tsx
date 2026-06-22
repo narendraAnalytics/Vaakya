@@ -40,11 +40,8 @@ export default function LoginPage() {
 
     try {
       if (mode === 'signup') {
-        const { error: err } = await supabase.auth.signUp({ email, password });
-        if (err) { setError(toMsg(err)); return; }
-        setError('Check your email to confirm your account, then sign in.');
-        setMode('signin');
-        return;
+        const { error: signUpErr } = await supabase.auth.signUp({ email, password });
+        if (signUpErr) { setError(toMsg(signUpErr)); return; }
       }
 
       const { data, error: err } = await supabase.auth.signInWithPassword({ email, password });
