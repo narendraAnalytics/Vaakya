@@ -10,12 +10,14 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Request, UploadFile, status
 from langgraph.types import Command
 from pydantic import BaseModel
 
 from api.config import settings
 from api.middleware.auth import get_current_user
+from services.pdf_extractor import extract_text
+from services.storage import upload_user_pdf
 from services.supabase_client import get_supabase
 
 router = APIRouter()
@@ -189,6 +191,79 @@ async def create_document(
         "vault_id": "",
         "esign_status": "",
         "errors": [],
+    }
+
+    config = {"configurable": {"thread_id": document_id}}
+    background_tasks.add_task(_run_graph, graph, document_id, initial_state, config)
+
+    return NewDocumentResponse(document_id=document_id)
+
+
+@router.post("/upload", response_model=NewDocumentResponse, status_code=status.HTTP_202_ACCEPTED)
+async def upload_document(
+    background_tasks: BackgroundTasks,
+    request: Request,
+    file: UploadFile = File(...),
+    user_id: str = Depends(get_current_user),
+) -> NewDocumentResponse:
+    """
+    PDF upload endpoint for the redline flow.
+    Extracts text via PyMuPDF, stores the original PDF in vaakya-uploads,
+    then runs the graph with input_mode='pdf' and sub_graph='redline'.
+    """
+    if file.content_type not in ("application/pdf", "application/octet-stream"):
+        raise HTTPException(status_code=415, detail="Only PDF files are accepted.")
+
+    pdf_bytes = await file.read()
+    if len(pdf_bytes) > 10 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="PDF must be under 10 MB.")
+
+    try:
+        raw_text = extract_text(pdf_bytes)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+
+    document_id = str(uuid.uuid4())
+    graph = request.app.state.graph
+
+    if not settings.DEV_AUTH_BYPASS:
+        try:
+            upload_user_pdf(user_id, document_id, pdf_bytes)
+        except Exception as exc:
+            print(f"[WARN] PDF upload to storage failed: {exc}")
+        try:
+            get_supabase().table("documents").insert({
+                "id":         document_id,
+                "user_id":    user_id,
+                "input_mode": "pdf",
+                "raw_input":  raw_text[:2000],
+                "status":     "processing",
+            }).execute()
+        except Exception as exc:
+            print(f"[WARN] Supabase insert failed: {exc}")
+
+    initial_state: dict[str, Any] = {
+        "user_id":              user_id,
+        "input_mode":           "pdf",
+        "raw_input":            raw_text,
+        "document_type":        "",
+        "parties":              [],
+        "jurisdiction":         "India",
+        "key_terms":            {},
+        "draft":                "",
+        "review_score":         0,
+        "review_issues":        [],
+        "risk_flags":           [],
+        "negotiation_redlines": [],
+        "obligations":          [],
+        "dispute_summary":      "",
+        "loop_count":           0,
+        "hitl_approved":        False,
+        "sub_graph":            "redline",
+        "final_pdf_url":        "",
+        "vault_id":             "",
+        "esign_status":         "",
+        "errors":               [],
     }
 
     config = {"configurable": {"thread_id": document_id}}
