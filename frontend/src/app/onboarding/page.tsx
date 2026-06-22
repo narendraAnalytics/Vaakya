@@ -41,6 +41,7 @@ export default function OnboardingPage() {
         data: { username: trimmed },
       });
       if (err) { setError(err.message); return; }
+      await supabase.auth.refreshSession();
       router.replace('/');
     } finally {
       setLoading(false);
