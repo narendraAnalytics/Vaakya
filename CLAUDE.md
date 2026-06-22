@@ -206,6 +206,7 @@ Arambha (classify)
 - [x] All 3 sub-graphs wired with parallel fan-out (new_doc, redline, dispute)
 - [x] `services/doc_generator.py` (ReportLab platypus — contract PDF + redline report PDF; populates final_pdf_url)
 - [x] `clause_library/` — 6 doc types, 67 clauses (NDA, Vendor Agreement, Employment, Service, Lease, Partnership Deed)
+- [x] Backend deployed to Render — https://vaakya.onrender.com (health ✅ `db: connected`)
 - [ ] Supabase Storage vault with pgvector metadata
 - [ ] Digio API integration in Sahee (e-signatures)
 - [ ] `tests/test_nda_pipeline.py` (10 scenarios)
@@ -247,6 +248,15 @@ LANGSMITH_PROJECT=vaakya
 DIGIO_API_KEY=                  # Phase 2
 WHATSAPP_API_KEY=               # Phase 2
 ```
+
+---
+
+## Deployment
+
+| Service | Platform | URL |
+|---------|----------|-----|
+| Backend (FastAPI) | Render | https://vaakya.onrender.com |
+| Frontend (Next.js) | Vercel | TBD — Phase 3 |
 
 ---
 
