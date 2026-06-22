@@ -1,0 +1,74 @@
+[
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "definitions",
+    "clause_text": "In this Agreement: \"Client\" means [PARTY A], the entity engaging the Vendor for Services; \"Vendor\" means [PARTY B], the entity providing Services to the Client; \"Services\" means the goods, works, and/or services described in Schedule 1 hereto; \"Deliverables\" means any output, work product, software, report, documentation, or other materials produced by the Vendor in the course of providing the Services; \"Intellectual Property Rights\" means patents, copyrights, trademarks, trade secrets, database rights, and all other intellectual and industrial property rights of any nature, whether registered or unregistered; \"Confidential Information\" shall have the meaning assigned in Clause 7; \"Force Majeure Event\" means any event beyond a party's reasonable control, including acts of God, war, terrorism, pandemic, government action, or natural disaster; \"Change Order\" means a written agreement signed by both parties modifying the scope, cost, or timeline of the Services.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "scope_of_services",
+    "clause_text": "The Vendor shall provide the Services to the Client as described in Schedule 1 (Scope of Work) attached hereto and incorporated by reference. The Vendor shall: (a) perform the Services with reasonable skill, care, and diligence, using appropriately qualified and experienced personnel; (b) comply with all applicable laws, regulations, and industry standards; (c) perform the Services in accordance with the timelines specified in Schedule 1; (d) promptly inform the Client of any material issues or delays that may affect the delivery of the Services or Deliverables; and (e) obtain all necessary licences, permits, and approvals required to perform the Services. Any services outside the scope defined in Schedule 1 shall be agreed in writing through a Change Order signed by both parties before such additional services are commenced. The Vendor shall not sub-contract any part of the Services without the Client's prior written consent.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "payment_terms",
+    "clause_text": "In consideration of the performance of the Services, the Client shall pay the Vendor the fees set forth in Schedule 2 (Fee Schedule) in accordance with the payment milestones therein. The Vendor shall submit valid GST-compliant tax invoices to the Client. The Client shall pay each undisputed invoice within [PAYMENT_DAYS] days of receipt. Amounts not paid by the due date shall attract interest at the rate of eighteen percent (18%) per annum as prescribed under the Micro, Small and Medium Enterprises Development (MSMED) Act, 2006, compounded monthly from the due date until the date of actual payment. All payments shall be made by electronic funds transfer to the Vendor's bank account as notified in writing. The Client shall deduct Tax Deducted at Source (TDS) as required under the Income Tax Act, 1961, and provide a valid TDS certificate to the Vendor within the prescribed time. GST shall be charged and remitted by the Vendor as applicable under the Goods and Services Tax Act.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "delivery_and_acceptance",
+    "clause_text": "The Vendor shall deliver each Deliverable by the milestone date specified in Schedule 1. Upon delivery, the Client shall review and test each Deliverable for a period of [ACCEPTANCE_DAYS] business days (the \"Acceptance Period\"). The Client shall either: (a) accept the Deliverable in writing; or (b) notify the Vendor in writing of any material defects or non-conformities with the specifications set out in Schedule 1. If the Client notifies the Vendor of defects, the Vendor shall remedy such defects within [REMEDY_DAYS] business days at no additional cost. If the Client does not notify the Vendor of defects within the Acceptance Period, the Deliverable shall be deemed accepted. The Client shall not unreasonably withhold or delay acceptance. Acceptance of a Deliverable shall not release the Vendor from its warranty obligations set forth in Clause 5, nor shall it constitute a waiver of the Client's rights in respect of any latent defects subsequently discovered.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "warranties",
+    "clause_text": "The Vendor represents and warrants that: (a) it has full power and authority to enter into this Agreement and to perform its obligations hereunder; (b) the Services and Deliverables will conform in all material respects to the specifications set out in Schedule 1; (c) the Services will be performed by qualified personnel with the requisite skills and experience; (d) the Deliverables shall be free from material defects in workmanship and materials for a period of [WARRANTY_PERIOD] days following acceptance; (e) the performance of the Services and the provision of the Deliverables shall not infringe any third-party Intellectual Property Rights; (f) the Vendor is registered under applicable GST laws and shall comply with all tax obligations; and (g) the Vendor has obtained and shall maintain all necessary licences and permits required for the performance of the Services. In the event of a breach of warranty, the Vendor shall, at its own cost, re-perform the defective Services or replace the defective Deliverable.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "ip_ownership",
+    "clause_text": "All Intellectual Property Rights in and to the Deliverables created by the Vendor specifically for the Client under this Agreement (\"Client-Specific IP\") shall, upon full payment of all fees due, vest in and be owned by the Client. The Vendor hereby assigns to the Client, with full title guarantee, all such Client-Specific IP, and agrees to execute all documents and take all steps necessary to give effect to such assignment. Notwithstanding the foregoing: (a) any pre-existing Intellectual Property Rights of the Vendor (\"Vendor Background IP\"), including any tools, methodologies, frameworks, libraries, or know-how used by the Vendor in delivering the Services, shall remain the exclusive property of the Vendor; (b) the Vendor grants the Client a non-exclusive, perpetual, royalty-free licence to use Vendor Background IP to the extent embedded in or necessary for the use of the Client-Specific IP; and (c) any third-party open-source components shall be identified by the Vendor and used in compliance with their respective licence terms.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "confidentiality",
+    "clause_text": "Each party (\"Receiving Party\") shall hold in strict confidence all Confidential Information of the other party (\"Disclosing Party\") and shall not disclose such Confidential Information to any third party without the prior written consent of the Disclosing Party. \"Confidential Information\" means all non-public information disclosed by one party to the other in connection with this Agreement, including but not limited to business plans, financial data, customer lists, technical specifications, pricing, and the terms of this Agreement. Each party shall use Confidential Information solely for the purposes of performing its obligations or exercising its rights under this Agreement. The obligations of confidentiality shall not apply to information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was known to the Receiving Party prior to disclosure; (c) is independently developed by the Receiving Party; or (d) is required to be disclosed by law or court order. These obligations shall survive termination of this Agreement for a period of three (3) years.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "limitation_of_liability",
+    "clause_text": "Neither party shall be liable to the other for any indirect, incidental, consequential, punitive, or special damages, including loss of profit, loss of revenue, loss of data, or loss of business opportunity, arising out of or in connection with this Agreement, even if such party has been advised of the possibility of such damages. The aggregate liability of either party to the other under or in connection with this Agreement, whether arising in contract, tort (including negligence), breach of statutory duty, or otherwise, shall not exceed the total fees paid or payable by the Client to the Vendor under this Agreement in the twelve (12) months immediately preceding the event giving rise to the liability. The limitations of liability in this clause shall not apply to: (a) death or personal injury caused by negligence; (b) fraud or fraudulent misrepresentation; (c) any wilful misconduct or gross negligence; or (d) any breach of the confidentiality or IP ownership obligations.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "term_and_termination",
+    "clause_text": "This Agreement shall commence on the Effective Date and shall continue until the completion of all Services specified in Schedule 1, unless earlier terminated in accordance with this clause. Either party may terminate this Agreement: (a) for convenience, upon [NOTICE_DAYS] days' prior written notice to the other party; (b) immediately upon written notice if the other party commits a material breach of this Agreement and fails to remedy such breach within thirty (30) days of receiving written notice specifying the breach; (c) immediately upon written notice if the other party is subject to any insolvency proceedings, makes an assignment for the benefit of creditors, or ceases to carry on business. Upon termination: (i) the Client shall pay the Vendor for all Services duly performed and Deliverables accepted up to the date of termination; (ii) the Vendor shall deliver to the Client all work-in-progress and Deliverables completed up to the date of termination; and (iii) each party shall return or destroy the other's Confidential Information.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "governing_law",
+    "clause_text": "This Agreement shall be governed by and construed in accordance with the laws of India, including the Indian Contract Act, 1872, the Specific Relief Act, 1963, and the Information Technology Act, 2000, as applicable, without regard to conflict of laws principles. The parties agree that the courts of competent jurisdiction at [CITY], India, shall have exclusive jurisdiction to hear and determine any disputes not resolved through the dispute resolution mechanism in Clause 11. This Agreement may require stamping as per the applicable provisions of the Indian Stamp Act, 1899, or the relevant State Stamp Act, and the cost of such stamping shall be borne equally by the parties.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "dispute_resolution",
+    "clause_text": "Any dispute, controversy, or claim arising out of or relating to this Agreement, including any question regarding its existence, validity, or termination, shall be resolved as follows: (a) Senior Management Escalation: Either party may escalate the dispute to the senior management of both parties for resolution within fifteen (15) days of written notice; (b) Mediation: If unresolved, the parties shall attempt resolution through mediation before a mutually agreed mediator within thirty (30) days; (c) Arbitration: If mediation fails, the dispute shall be referred to and finally resolved by arbitration under the Arbitration and Conciliation Act, 1996, as amended. The arbitration shall be conducted by a sole arbitrator agreed by the parties, or, failing agreement within fifteen (15) days, appointed by the competent court under the Act. The seat of arbitration shall be [CITY], India. The arbitration proceedings shall be conducted in English. The arbitral award shall be final and binding and may be enforced in any court of competent jurisdiction.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Vendor Agreement",
+    "clause_type": "indemnification",
+    "clause_text": "The Vendor shall indemnify, defend, and hold harmless the Client and its Affiliates, directors, officers, and employees from and against any third-party claims, losses, damages, costs, and expenses (including reasonable legal fees) arising out of or resulting from: (a) any breach by the Vendor of its obligations, representations, or warranties under this Agreement; (b) any infringement of third-party Intellectual Property Rights by the Services or Deliverables; (c) any negligent act or omission, fraud, or wilful misconduct of the Vendor or its personnel; or (d) any non-compliance by the Vendor with applicable laws or regulations. The Client shall: (i) promptly notify the Vendor in writing of any claim for which indemnification is sought; (ii) give the Vendor sole control over the defence and settlement of such claim; and (iii) provide reasonable assistance to the Vendor at the Vendor's cost. The Client shall indemnify the Vendor against losses arising from the Client's own breach, negligence, or wilful misconduct.",
+    "jurisdiction": "India"
+  }
+]

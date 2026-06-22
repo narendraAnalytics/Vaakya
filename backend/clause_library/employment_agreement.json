@@ -1,0 +1,68 @@
+[
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "definitions",
+    "clause_text": "In this Agreement: \"Employer\" means [PARTY A]; \"Employee\" means [PARTY B]; \"Commencement Date\" means [DATE]; \"Probation Period\" means the initial [PROBATION_DURATION] months of employment commencing on the Commencement Date; \"CTC\" means Cost to Company, being the total annual remuneration package as detailed in Schedule 1; \"Confidential Information\" means all non-public information relating to the business of the Employer or its clients, including but not limited to trade secrets, customer data, business strategies, financial information, and technical know-how; \"Intellectual Property Rights\" means patents, copyrights, designs, trademarks, trade secrets, and all other intellectual and industrial property rights; \"Termination Date\" means the last day of employment as notified by either party in accordance with this Agreement; \"Applicable Laws\" means all central and state legislation governing employment in India, including the Industrial Disputes Act, 1947, the Payment of Wages Act, 1936, the Payment of Gratuity Act, 1972, and the Shops and Establishments Act of the applicable state.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "position_and_duties",
+    "clause_text": "The Employee is engaged in the position of [DESIGNATION] in the [DEPARTMENT] department, reporting to [REPORTING_MANAGER]. The Employee shall: (a) diligently and faithfully perform all duties assigned from time to time by the Employer consistent with the Employee's role; (b) devote the Employee's full working time, attention, and abilities to the business of the Employer during working hours; (c) comply with all Employer policies, codes of conduct, and procedures as notified from time to time; (d) not engage in any other employment, business, or commercial activity during the term of this Agreement without the prior written consent of the Employer; (e) promptly disclose to the Employer any conflict of interest or any opportunity that may compete with the Employer's business; and (f) represent the Employer professionally and uphold the Employer's reputation at all times. The Employer reserves the right to reasonably modify the Employee's designation, duties, or reporting structure based on operational requirements, provided that such modifications shall not result in a material reduction in the Employee's remuneration.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "compensation_and_benefits",
+    "clause_text": "In consideration of the Employee's services, the Employer shall pay the Employee a CTC of INR [AMOUNT] per annum, the breakup of which is set out in Schedule 1. The CTC includes the employer's contribution to the Employee Provident Fund (EPF) as mandated under the Employees' Provident Funds and Miscellaneous Provisions Act, 1952, and professional tax as applicable. The Employee's remuneration shall be subject to applicable Tax Deducted at Source (TDS) under the Income Tax Act, 1961. The Employer shall review the Employee's compensation annually, but is not obligated to increase it. In addition to CTC, the Employee shall be entitled to such other benefits as may be set out in the Employer's HR policy, including health insurance, leave travel allowance, and any performance incentives, subject to the terms and conditions of such policies. The payment of salary shall be made on or before the [SALARY_DAY] of each month by electronic bank transfer.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "working_hours_and_leave",
+    "clause_text": "The Employee's normal working hours shall be [HOURS] hours per day, [DAYS] days per week, subject to the applicable Shops and Establishments Act. The Employee may be required to work additional hours as reasonably necessary for the performance of duties, without additional compensation unless otherwise required by applicable law. The Employee shall be entitled to leave in accordance with the Employer's leave policy as amended from time to time, which shall not be less than the entitlements prescribed under applicable law, including: (a) earned/privilege leave; (b) casual leave; (c) sick leave; (d) public holidays as notified by the Employer. Maternity leave shall be provided in accordance with the Maternity Benefit Act, 1961. Paternity leave shall be as per the Employer's HR policy. Leave not availed during a calendar year shall lapse or be carried forward in accordance with the Employer's leave policy, subject to applicable law. The Employee shall apply for leave in advance through the Employer's designated system.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "confidentiality",
+    "clause_text": "The Employee shall, both during and after the term of employment: (a) hold all Confidential Information in strict confidence; (b) not disclose Confidential Information to any third party without the prior written consent of the Employer; (c) use Confidential Information solely for the legitimate purposes of performing employment duties; (d) take all reasonable steps to protect the Confidential Information from unauthorised disclosure; and (e) promptly report to the Employer any actual or suspected unauthorised disclosure of Confidential Information. The obligation of confidentiality shall survive the termination of employment for a period of three (3) years. The Employee acknowledges that any breach of this clause may cause irreparable harm to the Employer, and the Employer shall be entitled to seek injunctive relief or specific performance under the Specific Relief Act, 1963, in addition to any other remedy available at law. All passwords, access credentials, and data belonging to the Employer or its clients shall be treated as Confidential Information.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "ip_assignment",
+    "clause_text": "All Intellectual Property Rights in and to any work, invention, creation, design, software, process, or other output created, developed, or conceived by the Employee: (a) during the course of employment; (b) using the Employer's resources, equipment, or Confidential Information; or (c) in connection with the Employer's business or operations, whether or not such work was done during normal working hours (\"Employer Work Product\"), shall be the sole and exclusive property of the Employer. The Employee hereby assigns to the Employer, with full title guarantee, all Intellectual Property Rights in Employer Work Product, and waives all moral rights in such works to the fullest extent permitted by law. The Employee shall promptly disclose all Employer Work Product to the Employer and shall execute all documents and take all reasonable steps required to perfect the Employer's title thereto. This assignment shall not apply to inventions for which no equipment, supplies, facility, or trade secret information of the Employer was used, and that were developed entirely on the Employee's own time, and that do not relate to the Employer's current or contemplated business.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "non_compete_and_non_solicitation",
+    "clause_text": "Non-Solicitation: During the term of employment and for a period of [NON_SOLICIT_PERIOD] months following the Termination Date, the Employee shall not, directly or indirectly, solicit or attempt to solicit for employment any person who is at the relevant time an employee of the Employer, or induce any such person to leave the employment of the Employer. The Employee shall further not, during the same period, solicit or attempt to solicit the custom of any client or prospective client of the Employer with whom the Employee had material dealings in the twelve (12) months preceding the Termination Date. Non-Compete: The parties acknowledge that, in accordance with Section 27 of the Indian Contract Act, 1872, post-employment restrictions on trade are void to the extent they prevent a person from practising a lawful profession or trade. Accordingly, any non-compete obligation shall apply only during the term of employment. Nothing in this clause shall prevent the Employee from taking up employment with a non-competing entity after the Termination Date.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "termination",
+    "clause_text": "During the Probation Period, either party may terminate this Agreement by giving [PROBATION_NOTICE] days' written notice without assigning any reason. After confirmation of employment, either party may terminate this Agreement by giving [NOTICE_PERIOD] days' written notice, or payment of salary in lieu of notice. The Employer may terminate this Agreement summarily (without notice or pay in lieu) in the event of: (a) the Employee's gross misconduct, dishonesty, fraud, or wilful neglect of duty; (b) a material breach of this Agreement or the Employer's policies that is not remedied within seven (7) days of written notice; (c) the Employee's conviction of a criminal offence; or (d) conduct that materially brings the Employer into disrepute. Upon termination, the Employee shall: (i) immediately return all Employer property, equipment, and Confidential Information; (ii) resign from all positions held in the Employer or its Affiliates; and (iii) execute all documents required to give effect to such resignation. The Employer shall make full and final settlement of all dues within [SETTLEMENT_DAYS] days of the Termination Date.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "post_termination_obligations",
+    "clause_text": "Following the Termination Date, the Employee shall: (a) not represent themselves as being connected with or employed by the Employer; (b) promptly return all Employer property, including equipment, documents (in any form), access cards, and materials; (c) provide reasonable transition assistance for a period not exceeding [TRANSITION_DAYS] days, at the Employer's cost if such assistance is required after the Termination Date; and (d) continue to honour the obligations of confidentiality and non-solicitation set out in this Agreement. The Employee shall be entitled to receive all statutory dues upon termination, including gratuity (if eligible under the Payment of Gratuity Act, 1972), earned leave encashment, and provident fund balance. The Employer shall issue a relieving letter and experience certificate within [DOCS_DAYS] days of the Termination Date. Any amounts owed by the Employee to the Employer may be deducted from the Employee's final settlement in accordance with applicable law.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "governing_law",
+    "clause_text": "This Agreement shall be governed by and construed in accordance with the laws of India, including the Indian Contract Act, 1872, the Industrial Disputes Act, 1947, the Payment of Wages Act, 1936, the Payment of Gratuity Act, 1972, the Employees' Provident Funds and Miscellaneous Provisions Act, 1952, the Maternity Benefit Act, 1961, the Sexual Harassment of Women at Workplace (Prevention, Prohibition and Redressal) Act, 2013, and all other applicable central and state labour laws. The competent courts at [CITY], India shall have jurisdiction to hear and determine any disputes arising from this Agreement. This Agreement is subject to the rules of the applicable Shops and Establishments Act of the state in which the Employee is primarily employed. The Employer shall not discriminate against the Employee on grounds prohibited by applicable law.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Employment Agreement",
+    "clause_type": "dispute_resolution",
+    "clause_text": "Any dispute, controversy, or claim arising out of or in connection with this Agreement, including any dispute regarding its validity, termination, or the employment relationship, shall first be resolved through internal grievance redressal. The Employee shall submit a written grievance to the HR department, which shall be addressed within fifteen (15) business days. If unresolved, the parties shall attempt resolution through mediation before a mutually agreed mediator. If mediation fails within thirty (30) days of commencement, the dispute shall be submitted to binding arbitration under the Arbitration and Conciliation Act, 1996. The arbitration shall be conducted by a sole arbitrator, seated at [CITY], India. Nothing in this clause shall prevent either party from seeking urgent injunctive or other equitable relief from a court of competent jurisdiction. The provisions of applicable labour laws, including any mandatory dispute resolution mechanisms under the Industrial Disputes Act, 1947, shall take precedence to the extent mandated by law.",
+    "jurisdiction": "India"
+  }
+]

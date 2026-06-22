@@ -1,0 +1,68 @@
+[
+  {
+    "document_type": "NDA",
+    "clause_type": "definitions",
+    "clause_text": "In this Agreement, unless the context otherwise requires: (a) \"Confidential Information\" shall have the meaning ascribed to it in Clause 2 hereof; (b) \"Disclosing Party\" means the party disclosing Confidential Information; (c) \"Receiving Party\" means the party receiving Confidential Information; (d) \"Purpose\" means [PURPOSE], being the specific purpose for which Confidential Information is disclosed under this Agreement; (e) \"Affiliate\" means any entity that directly or indirectly controls, is controlled by, or is under common control with a party; (f) \"Representatives\" means the directors, officers, employees, advisors, consultants, and agents of a party who have a need to know the Confidential Information for the Purpose. Words importing the singular shall include the plural and vice versa. References to any statute shall include all amendments, re-enactments, and subsidiary legislation made thereunder.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "confidential_information",
+    "clause_text": "\"Confidential Information\" means all information, data, know-how, trade secrets, business plans, financial information, technical specifications, customer lists, pricing information, software, source code, algorithms, formulae, processes, designs, drawings, and any other information, whether oral, written, electronic, or in any other form, disclosed by the Disclosing Party to the Receiving Party in connection with the Purpose, and which is either: (a) marked or designated as \"confidential\" or \"proprietary\" at the time of disclosure; (b) disclosed orally and identified as confidential at the time of disclosure and confirmed in writing within seven (7) days thereof; or (c) of a nature that a reasonable person would understand to be confidential given the circumstances of disclosure. For the avoidance of doubt, Confidential Information shall include all analyses, compilations, studies, or other documents prepared by the Receiving Party or its Representatives that contain or reflect the Confidential Information.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "non_disclosure_obligation",
+    "clause_text": "The Receiving Party shall: (a) hold all Confidential Information in strict confidence using at least the same degree of care it applies to its own confidential information, but in no event less than reasonable care; (b) not disclose, directly or indirectly, any Confidential Information to any third party without the prior written consent of the Disclosing Party; (c) use the Confidential Information solely for the Purpose and for no other purpose whatsoever; (d) restrict disclosure of Confidential Information to its Representatives who have a need to know such information for the Purpose, provided that each such Representative is bound by confidentiality obligations no less restrictive than those set forth herein; (e) promptly notify the Disclosing Party in writing upon becoming aware of any actual or suspected unauthorised disclosure or use of the Confidential Information; and (f) not copy, reproduce, or reduce to writing any part of the Confidential Information except as reasonably necessary for the Purpose, and any such copy, reproduction, or writing shall be the property of the Disclosing Party.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "permitted_disclosures",
+    "clause_text": "Notwithstanding the obligations in Clause 3, the Receiving Party may disclose Confidential Information to the extent required by: (a) applicable law, regulation, or the order of a court or governmental authority of competent jurisdiction, provided that the Receiving Party shall, to the extent permitted by law: (i) give the Disclosing Party prompt prior written notice of such requirement; (ii) co-operate with the Disclosing Party to obtain a protective order or other appropriate relief; and (iii) disclose only that portion of the Confidential Information strictly required by such law, regulation, or order; or (b) the rules of any recognised stock exchange or securities regulator, subject to the same protections described above. Any disclosure pursuant to this clause shall not relieve the Receiving Party of its other obligations under this Agreement in relation to the Confidential Information so disclosed.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "exclusions_from_confidentiality",
+    "clause_text": "The obligations of confidentiality under this Agreement shall not apply to information that the Receiving Party can demonstrate by written records: (a) is or becomes publicly available other than through a breach of this Agreement by the Receiving Party or its Representatives; (b) was rightfully known to the Receiving Party prior to the date of disclosure, without restriction on disclosure; (c) is rightfully received by the Receiving Party from a third party without restriction on disclosure and without any breach of any obligation of confidentiality owed to the Disclosing Party; (d) is independently developed by the Receiving Party without reference to or use of the Confidential Information, as evidenced by written records predating the disclosure; or (e) is expressly approved for release by the prior written consent of the Disclosing Party. The burden of proving that any of the foregoing exceptions applies shall rest with the Receiving Party.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "return_of_information",
+    "clause_text": "Upon the earlier of: (a) the expiry or termination of this Agreement; (b) the completion of the Purpose; or (c) written demand by the Disclosing Party, the Receiving Party shall promptly, at the Disclosing Party's election: (i) return to the Disclosing Party all originals and copies of Confidential Information in any form whatsoever (including all written materials, notes, memoranda, and electronic storage media containing Confidential Information); or (ii) destroy all such Confidential Information and certify in writing to the Disclosing Party that such destruction has been completed, provided that the Receiving Party may retain one archival copy solely for legal compliance purposes and subject to the continuing obligations of this Agreement. The obligation to return or destroy Confidential Information shall not apply to Confidential Information retained on automated backup systems, provided such backup systems are overwritten in the ordinary course of business.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "term_and_termination",
+    "clause_text": "This Agreement shall commence on the Effective Date and shall continue for a period of [DURATION] years, unless earlier terminated by either party upon [NOTICE_PERIOD] days' prior written notice to the other party. The obligations of confidentiality with respect to Confidential Information disclosed prior to the date of termination shall survive the expiry or termination of this Agreement and shall remain in full force and effect for a further period of [SURVIVAL_PERIOD] years from the date of expiry or termination. Termination shall not relieve either party of any obligations incurred prior to the effective date of termination or affect any rights or remedies that may have accrued prior thereto. Notwithstanding the foregoing, the Disclosing Party may terminate this Agreement immediately upon written notice if the Receiving Party commits a material breach of any obligation under this Agreement.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "governing_law",
+    "clause_text": "This Agreement shall be governed by and construed in accordance with the laws of India, including but not limited to the Indian Contract Act, 1872, and the Information Technology Act, 2000, as amended from time to time, without regard to its conflict of law principles. The parties irrevocably submit to the exclusive jurisdiction of the courts at [CITY], India, for any dispute arising out of or in connection with this Agreement that is not resolved through the dispute resolution mechanism prescribed in Clause 10 hereof. This Agreement may require stamping under the applicable provisions of the Indian Stamp Act, 1899, or the relevant State Stamp Act, and the parties shall share the cost of any such stamp duty equally, unless otherwise agreed in writing.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "dispute_resolution",
+    "clause_text": "Any dispute, controversy, or claim arising out of or relating to this Agreement, or the breach, termination, or invalidity thereof, shall be resolved as follows: (a) Negotiation: The parties shall first attempt to resolve the dispute through good-faith negotiations for a period of thirty (30) days from the date on which either party notifies the other in writing of the dispute; (b) Mediation: If the dispute is not resolved through negotiation, either party may refer the matter to mediation administered by a mutually agreed mediator; (c) Arbitration: If mediation fails within thirty (30) days of commencement, the dispute shall be finally settled by binding arbitration in accordance with the Arbitration and Conciliation Act, 1996, as amended. The arbitration shall be conducted by a sole arbitrator mutually appointed by the parties, or, failing agreement, appointed by the competent court. The seat of arbitration shall be [CITY], India. The language of arbitration shall be English. The arbitrator's award shall be final and binding on both parties.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "indemnification",
+    "clause_text": "The Receiving Party shall indemnify, defend, and hold harmless the Disclosing Party and its Affiliates, directors, officers, employees, and agents from and against any and all losses, damages, liabilities, costs, penalties, fines, and expenses (including reasonable legal fees) arising out of or resulting from: (a) any breach by the Receiving Party or its Representatives of any obligation under this Agreement; (b) any unauthorised use or disclosure of Confidential Information by the Receiving Party or its Representatives; or (c) any fraud, wilful misconduct, or gross negligence on the part of the Receiving Party or its Representatives. The Disclosing Party shall promptly notify the Receiving Party of any claim for which indemnification is sought, and the Receiving Party shall have the right to assume control of the defence of such claim, provided that the Disclosing Party shall have the right to participate in such defence at its own cost.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "NDA",
+    "clause_type": "general_provisions",
+    "clause_text": "Entire Agreement: This Agreement constitutes the entire agreement between the parties with respect to its subject matter and supersedes all prior discussions, negotiations, representations, and agreements. Amendments: No amendment to this Agreement shall be effective unless made in writing and signed by authorised representatives of both parties. Waiver: Failure by either party to enforce any provision of this Agreement shall not be construed as a waiver of any right or remedy. Severability: If any provision of this Agreement is held invalid, illegal, or unenforceable, the remaining provisions shall continue in full force and effect. No Assignment: Neither party may assign this Agreement or any rights or obligations hereunder without the prior written consent of the other party. Notices: All notices under this Agreement shall be in writing and delivered to the addresses specified in the signature block, by registered post, courier, or email with read receipt. No Joint Venture: Nothing in this Agreement shall be construed to create a partnership, joint venture, or agency relationship between the parties.",
+    "jurisdiction": "India"
+  }
+]

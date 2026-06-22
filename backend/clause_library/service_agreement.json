@@ -1,0 +1,74 @@
+[
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "definitions",
+    "clause_text": "In this Agreement: \"Client\" means [PARTY A]; \"Service Provider\" means [PARTY B]; \"Services\" means the professional services described in Schedule 1; \"Deliverables\" means all outputs, reports, software, and materials produced by the Service Provider under this Agreement; \"SLA\" means the service levels specified in Schedule 2; \"Change Order\" means a written instrument signed by both parties modifying scope, fees, or timelines; \"Intellectual Property Rights\" means all patents, copyrights, trademarks, trade secrets, database rights, and other intellectual property whether registered or unregistered; \"Confidential Information\" means all non-public information disclosed by one party to the other in connection with this Agreement; \"Force Majeure Event\" means any event beyond a party's reasonable control including acts of God, war, pandemic, government action, or infrastructure failure; \"Effective Date\" means [DATE].",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "scope_of_services",
+    "clause_text": "The Service Provider shall perform the Services described in Schedule 1 in accordance with this Agreement. The Service Provider shall: (a) assign suitably qualified personnel with the requisite skill and experience to perform the Services; (b) perform the Services in a professional and workmanlike manner consistent with industry standards; (c) comply with all applicable laws, regulations, and licensing requirements; (d) promptly notify the Client of any circumstance that may materially affect the delivery of Services or Deliverables; and (e) not sub-contract any portion of the Services without the Client's prior written consent. Any services outside the agreed scope shall be addressed through a written Change Order signed by authorised representatives of both parties. The Service Provider acknowledges that time is of the essence with respect to the milestones set out in Schedule 1, and shall take all reasonable steps to meet the agreed timelines.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "payment_terms",
+    "clause_text": "The Client shall pay the Service Provider the fees specified in Schedule 2 in accordance with the payment milestones set out therein. The Service Provider shall issue GST-compliant invoices to the Client. The Client shall pay each undisputed invoice within [PAYMENT_DAYS] days of receipt. Amounts unpaid after the due date shall accrue interest at eighteen percent (18%) per annum as prescribed under the MSMED Act, 2006, calculated daily from the due date until the date of payment. All payments shall be made by electronic funds transfer. The Client shall deduct TDS under the Income Tax Act, 1961, and provide valid TDS certificates within the prescribed statutory period. The Service Provider shall not be required to perform further Services if the Client's outstanding undisputed invoices exceed [THRESHOLD_AMOUNT] and remain unpaid for more than [OVERDUE_DAYS] days after written notice. Any dispute regarding an invoice must be raised within ten (10) business days of receipt, failing which the invoice shall be deemed undisputed.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "service_levels_and_kpis",
+    "clause_text": "The Service Provider shall deliver the Services in accordance with the service levels, key performance indicators, and response times set out in Schedule 2 (\"SLA\"). In the event the Service Provider fails to meet any SLA metric, the Client shall be entitled to service credits as specified in Schedule 2, which shall be the Client's sole and exclusive remedy for such SLA failure unless the failure constitutes a material breach of this Agreement. The Service Provider shall: (a) monitor SLA performance on an ongoing basis and provide monthly SLA reports to the Client; (b) promptly escalate and remediate any SLA breach; (c) conduct a root cause analysis for any critical SLA failure and provide a written remediation plan within five (5) business days. SLA obligations shall be suspended during Force Majeure Events and for any period during which failure is attributable to the Client's act or omission, including failure to provide necessary access, information, or approvals.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "change_management",
+    "clause_text": "Either party may request a change to the scope, deliverables, timelines, or fees under this Agreement by submitting a written Change Request to the other party. Upon receipt of a Change Request, the Service Provider shall, within five (5) business days, provide a written Change Order specifying the proposed impact on scope, fees, and timeline. A Change Order shall become effective only when signed by authorised representatives of both parties. No change to this Agreement shall be implemented without an executed Change Order. The Service Provider shall not be required to implement any change prior to the execution of a Change Order. If the parties are unable to agree on the terms of a Change Order within fifteen (15) days of submission of the Change Request, either party may treat the matter as a dispute and escalate in accordance with the dispute resolution mechanism in Clause 12. Urgent changes required to address system failures or security incidents may be implemented immediately, with the Change Order to be formalised within five (5) business days.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "ip_ownership",
+    "clause_text": "All Intellectual Property Rights in Deliverables created specifically and exclusively for the Client under this Agreement (\"Bespoke IP\") shall, upon receipt of full payment, vest in and be owned by the Client. The Service Provider hereby assigns to the Client all Bespoke IP with full title guarantee and agrees to execute all further instruments required to perfect such assignment. Notwithstanding the foregoing: (a) all pre-existing Intellectual Property Rights of the Service Provider, including tools, frameworks, methodologies, libraries, and know-how (\"Background IP\"), shall remain the exclusive property of the Service Provider; (b) the Service Provider grants the Client a non-exclusive, irrevocable, royalty-free licence to use Background IP to the extent incorporated in or necessary to use the Bespoke IP; (c) third-party components used in the Deliverables shall be identified by the Service Provider, and the Client's use thereof shall be subject to the applicable third-party licence terms. The Service Provider shall not incorporate any open-source software subject to copyleft licences into the Deliverables without the Client's prior written consent.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "confidentiality",
+    "clause_text": "Each party shall hold the other's Confidential Information in strict confidence and shall not disclose it to any third party without prior written consent. Each party shall use the other's Confidential Information solely for the purposes of performing obligations or exercising rights under this Agreement. Confidential Information shall not include information that: (a) is or becomes publicly available through no fault of the Receiving Party; (b) was known to the Receiving Party prior to disclosure; (c) is received from a third party without restriction; or (d) is independently developed without reference to the Confidential Information. Each party shall restrict disclosure to employees and contractors who have a need to know and are bound by equivalent confidentiality obligations. These obligations shall survive termination for three (3) years. The parties acknowledge that a breach of this clause may cause irreparable harm and the Disclosing Party shall be entitled to seek injunctive relief under the Specific Relief Act, 1963, without the requirement of proving actual damages.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "limitation_of_liability",
+    "clause_text": "Neither party shall be liable to the other for any indirect, consequential, incidental, punitive, or special losses, including loss of profit, loss of data, loss of business, or loss of reputation, arising out of or in connection with this Agreement, even if advised of the possibility of such loss. The aggregate liability of either party under or in connection with this Agreement, whether in contract, tort (including negligence), breach of statutory duty, or otherwise, shall not exceed the total fees paid or payable by the Client under this Agreement in the twelve (12) months preceding the event giving rise to the claim. These limitations shall not apply to: (a) death or personal injury caused by negligence; (b) fraud or fraudulent misrepresentation; (c) gross negligence or wilful misconduct; (d) breaches of confidentiality or IP ownership obligations; or (e) any liability that cannot be excluded or limited by applicable Indian law. Each party shall take reasonable steps to mitigate any loss or damage it suffers.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "term_and_termination",
+    "clause_text": "This Agreement shall commence on the Effective Date and continue for [INITIAL_TERM], and shall thereafter automatically renew for successive periods of [RENEWAL_TERM] unless either party gives [NOTICE_PERIOD] days' written notice of non-renewal prior to the end of the then-current term. Either party may terminate this Agreement: (a) for convenience upon [TERMINATION_NOTICE] days' written notice; (b) immediately if the other party commits a material breach and fails to remedy it within thirty (30) days of written notice; (c) immediately if the other party becomes insolvent, is wound up, or makes a general assignment for the benefit of creditors. Upon termination: the Client shall pay all fees due for Services performed up to the Termination Date; the Service Provider shall deliver all work-in-progress; each party shall return or certifiably destroy the other's Confidential Information; and all licences granted hereunder shall terminate except as necessary to use delivered Deliverables.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "force_majeure",
+    "clause_text": "Neither party shall be in breach of this Agreement or liable for any failure or delay in performance of its obligations to the extent such failure or delay is caused by a Force Majeure Event, provided that: (a) the affected party promptly notifies the other in writing upon becoming aware of the Force Majeure Event, specifying its nature and expected duration; (b) the affected party uses all reasonable endeavours to mitigate the effect of the Force Majeure Event and to resume performance as soon as reasonably practicable; and (c) the affected party keeps the other party regularly informed of the steps being taken and the expected timeline for resumption. Force Majeure Events include acts of God, floods, fires, earthquakes, epidemics, pandemics, war, terrorism, riots, government orders, regulatory changes, or failure of third-party infrastructure. If a Force Majeure Event continues for more than sixty (60) days, either party may terminate this Agreement on thirty (30) days' written notice, and the Client shall pay for all Services performed up to the date of termination.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "governing_law",
+    "clause_text": "This Agreement shall be governed by and construed in accordance with the laws of India, including the Indian Contract Act, 1872, the Information Technology Act, 2000, the Specific Relief Act, 1963, and applicable rules and regulations thereunder, without regard to conflict of laws principles. The parties submit to the exclusive jurisdiction of the courts at [CITY], India for any matter not resolved through the dispute resolution process in Clause 12. This Agreement may require stamping under the applicable provisions of the Indian Stamp Act, 1899, or the relevant State Stamp Act, and the parties shall share the cost of such stamp duty equally.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Service Agreement",
+    "clause_type": "dispute_resolution",
+    "clause_text": "Any dispute arising out of or in connection with this Agreement shall be resolved as follows: (a) Escalation: Either party may escalate the dispute to the senior management of both parties, who shall meet (in person or virtually) within fifteen (15) days of written notice to attempt resolution; (b) Mediation: If unresolved within thirty (30) days of escalation, either party may refer the dispute to mediation before a mutually agreed mediator, the cost of which shall be borne equally; (c) Arbitration: If mediation fails within thirty (30) days of commencement, the dispute shall be finally resolved by binding arbitration in accordance with the Arbitration and Conciliation Act, 1996, as amended. The arbitral tribunal shall consist of a sole arbitrator agreed by the parties, or failing agreement, appointed by the relevant High Court. The seat of arbitration shall be [CITY], India. Proceedings shall be in English. The award shall be final and enforceable in any court of competent jurisdiction. Either party may seek interim or urgent relief from a court of competent jurisdiction without prejudice to this arbitration clause.",
+    "jurisdiction": "India"
+  }
+]

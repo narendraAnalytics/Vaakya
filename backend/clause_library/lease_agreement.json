@@ -1,0 +1,62 @@
+[
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "definitions",
+    "clause_text": "In this Agreement: \"Lessor\" means [PARTY A], the owner of the Premises; \"Lessee\" means [PARTY B], the party taking the Premises on lease; \"Premises\" means the property situated at [ADDRESS], more particularly described in Schedule 1; \"Lease Term\" means the period specified in Clause 2; \"Monthly Rent\" means INR [RENT_AMOUNT] per month; \"Security Deposit\" means INR [DEPOSIT_AMOUNT], being an interest-free refundable deposit paid by the Lessee to the Lessor; \"Permitted Use\" means [USE], being the sole permitted purpose for which the Lessee may use the Premises; \"Common Areas\" means areas of the building or complex shared with other occupants; \"Handover Date\" means the date the Lessor delivers vacant possession of the Premises to the Lessee; \"Applicable Laws\" means the Transfer of Property Act, 1882, the Registration Act, 1908, the Indian Stamp Act, 1899, and all applicable local municipal laws, rent control legislation, and state tenancy acts.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "lease_term",
+    "clause_text": "The lease shall commence on [COMMENCEMENT_DATE] (\"Commencement Date\") and shall continue for a period of [LEASE_DURATION] months/years (\"Lease Term\"), unless earlier terminated in accordance with this Agreement. At the expiry of the Lease Term, this Agreement shall not be automatically renewed. Any renewal shall be by mutual written agreement of the parties on terms to be negotiated, with the Lessee notifying the Lessor of its intention to renew at least [RENEWAL_NOTICE] days before the expiry of the Lease Term. The Lessee shall vacate and deliver vacant possession of the Premises to the Lessor in good condition (fair wear and tear excepted) upon the expiry or earlier termination of this Agreement. The Lessee shall not claim any right of tenancy, easement, or any other interest in the Premises beyond the Lease Term. This Agreement, if required by applicable law, shall be registered with the Sub-Registrar of Assurances having jurisdiction over the Premises, and the cost of registration shall be borne by the [REGISTRATION_COST_PARTY].",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "rent_and_deposit",
+    "clause_text": "The Lessee shall pay the Monthly Rent of INR [RENT_AMOUNT] on or before the [RENT_DUE_DAY] of each calendar month, by electronic funds transfer to the Lessor's bank account as notified in writing. The Monthly Rent shall be escalated by [ESCALATION_PERCENT]% per annum at the end of every [ESCALATION_FREQUENCY] months of the Lease Term. The Lessee has paid to the Lessor a Security Deposit of INR [DEPOSIT_AMOUNT] (\"Security Deposit\"), receipt of which the Lessor hereby acknowledges. The Security Deposit shall be held by the Lessor as security for the due performance of the Lessee's obligations under this Agreement. The Security Deposit is interest-free and shall be refunded to the Lessee within [REFUND_DAYS] days of the expiry or termination of this Agreement and the Lessee vacating the Premises in good condition, after deducting any amounts due from the Lessee for unpaid rent, damages beyond fair wear and tear, or other amounts payable under this Agreement. Any Monthly Rent not paid by the due date shall attract interest at [INTEREST_RATE]% per annum from the due date until the date of payment.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "use_of_premises",
+    "clause_text": "The Lessee shall use the Premises solely for the Permitted Use and for no other purpose. The Lessee shall: (a) not use the Premises for any illegal, immoral, or hazardous purpose; (b) comply with all applicable laws, by-laws, regulations, orders, and directions of any governmental or municipal authority in relation to the Premises and its use; (c) not cause or permit any nuisance or annoyance to occupants of neighbouring premises; (d) not store any flammable, explosive, or hazardous materials on the Premises; (e) not overload the floors, ceilings, or walls of the Premises beyond their designed capacity; (f) not install or operate any machinery, equipment, or signage without the Lessor's prior written consent; (g) comply with applicable fire safety regulations and maintain all fire safety equipment in working order; (h) obtain all necessary licences, permits, and approvals required for the Permitted Use at the Lessee's own cost; and (i) use the Common Areas in a responsible and considerate manner in accordance with the rules of the building or complex.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "maintenance_and_repairs",
+    "clause_text": "The Lessee shall, at its own cost and expense: (a) keep and maintain the interior of the Premises, including fixtures, fittings, doors, windows, locks, plumbing, and electrical installations (excluding structural elements), in good repair and condition, fair wear and tear excepted; (b) promptly carry out all minor repairs necessary to keep the Premises in good condition; (c) not permit any damage to the Premises or fixtures beyond fair wear and tear; (d) promptly notify the Lessor in writing of any damage requiring structural repair or any failure of major building systems; and (e) allow the Lessor or the Lessor's agents to enter the Premises upon [NOTICE_HOURS] hours' prior notice (or immediately in an emergency) to inspect, carry out repairs, or show the Premises to prospective lessees. The Lessor shall be responsible for all structural repairs and maintenance of the building's external fabric, roof, and major building systems (including main electrical and plumbing infrastructure), and shall carry out such repairs within a reasonable period of notification by the Lessee.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "alterations_and_improvements",
+    "clause_text": "The Lessee shall not make any structural alterations, additions, or improvements to the Premises without the prior written consent of the Lessor. Non-structural interior fit-outs, partitioning, and cosmetic changes may be made with the Lessor's prior written consent, which shall not be unreasonably withheld. Any alterations or improvements approved by the Lessor shall be carried out: (a) at the Lessee's sole cost and expense; (b) using licensed and qualified contractors; (c) in compliance with all applicable laws, building codes, and regulations; and (d) in a good and workmanlike manner. Unless otherwise agreed in writing, all alterations, additions, and improvements made to the Premises shall, at the Lessor's option, either: (i) become the property of the Lessor and remain at the Premises upon expiry or termination of the lease; or (ii) be removed by the Lessee at the Lessee's cost, and the Premises restored to their original condition before the alterations, prior to or upon vacation of the Premises.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "subletting_and_assignment",
+    "clause_text": "The Lessee shall not, without the prior written consent of the Lessor (which may be withheld in the Lessor's absolute discretion): (a) sublet, license, or part with possession of the whole or any part of the Premises to any third party; (b) assign, transfer, or encumber the Lessee's interest under this Agreement; or (c) permit any person other than the Lessee and its authorised employees/personnel to occupy or use the Premises. Any purported subletting, assignment, or parting with possession in breach of this clause shall be void and shall constitute a material breach of this Agreement entitling the Lessor to terminate this Agreement with immediate effect. The Lessor may assign its rights under this Agreement to any purchaser or mortgagee of the Premises, provided that such assignment shall not affect the Lessee's rights under this Agreement for the Lease Term.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "termination",
+    "clause_text": "Either party may terminate this Agreement before the expiry of the Lease Term by giving not less than [TERMINATION_NOTICE] months' prior written notice. The Lessor may terminate this Agreement immediately by written notice if: (a) the Lessee fails to pay the Monthly Rent within [GRACE_DAYS] days of the due date and fails to remedy such default within seven (7) days of written notice from the Lessor; (b) the Lessee commits a material breach of any obligation under this Agreement and fails to remedy such breach within fifteen (15) days of written notice; (c) the Lessee uses the Premises for any unlawful purpose; (d) the Lessee becomes insolvent or is wound up; or (e) the Premises are materially damaged or destroyed due to the Lessee's act or negligence. Upon termination or expiry, the Lessee shall immediately vacate the Premises and return keys and all access credentials to the Lessor. Holdover occupancy after the Lease Term without the Lessor's consent shall be treated as a monthly licence on the same rental terms, terminable by either party at one month's notice.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "governing_law",
+    "clause_text": "This Agreement shall be governed by and construed in accordance with the laws of India, including the Transfer of Property Act, 1882, the Registration Act, 1908, the Indian Stamp Act, 1899, and the applicable state rent control legislation and tenancy laws. This Agreement shall be compulsorily registered with the Sub-Registrar of Assurances if required under Section 17 of the Registration Act, 1908, or applicable state law, and shall be stamped in accordance with the applicable Stamp Act. The competent courts at [CITY], India shall have exclusive jurisdiction over any disputes not resolved through the dispute resolution mechanism in Clause 10. Both parties shall comply with all municipal, local body, and regulatory requirements in relation to the Premises throughout the Lease Term.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Lease Agreement",
+    "clause_type": "dispute_resolution",
+    "clause_text": "Any dispute, difference, or claim arising out of or in connection with this Agreement, including any question regarding its validity, breach, or termination, shall be resolved as follows: (a) Negotiation: The parties shall first attempt to resolve the dispute through good-faith negotiations within fifteen (15) days of one party serving written notice of the dispute on the other; (b) Mediation: If unresolved through negotiation, either party may refer the dispute to mediation before a mutually agreed mediator, the costs of which shall be shared equally; (c) Arbitration: If mediation fails within thirty (30) days of commencement, the dispute shall be referred to binding arbitration in accordance with the Arbitration and Conciliation Act, 1996. The arbitration shall be conducted before a sole arbitrator agreed by the parties, or appointed by the competent court. The seat of arbitration shall be [CITY], India. Nothing in this clause shall prevent either party from seeking interim injunctive relief from a court of competent jurisdiction to protect its interests in the Premises pending the outcome of arbitration proceedings.",
+    "jurisdiction": "India"
+  }
+]

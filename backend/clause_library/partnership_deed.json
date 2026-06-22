@@ -1,0 +1,68 @@
+[
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "definitions",
+    "clause_text": "In this Deed: \"Partners\" means [PARTY A] and [PARTY B] and such other persons as may be admitted as partners in accordance with this Deed; \"Firm\" means the partnership firm constituted by this Deed; \"Firm Name\" means [FIRM_NAME]; \"Partnership Business\" means [BUSINESS_DESCRIPTION]; \"Capital Account\" means the account maintained for each Partner recording their capital contribution; \"Current Account\" means the account maintained for each Partner recording their share of profits, drawings, interest on capital, and salary; \"Majority\" means Partners holding more than fifty percent (50%) of the profit-sharing ratio; \"Applicable Laws\" means the Indian Partnership Act, 1932, the Income Tax Act, 1961, the Goods and Services Tax Act, 2017, and all other applicable central and state legislation; \"Effective Date\" means [DATE], the date from which this Deed shall take effect.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "partnership_name_and_business",
+    "clause_text": "The Partners shall carry on business in partnership under the Firm Name of [FIRM_NAME] with effect from the Effective Date. The principal place of business of the Firm shall be at [ADDRESS]. The Firm may open branch offices at such other locations as may be decided by the Partners by Majority. The Partnership Business shall be [BUSINESS_DESCRIPTION]. The Firm may, by unanimous agreement of all Partners, extend or alter the nature of the Partnership Business. The Partners shall cause the Firm to be registered with the Registrar of Firms under the Indian Partnership Act, 1932, and shall obtain all necessary business licences, trade registrations, GST registration, and other regulatory approvals required for the conduct of the Partnership Business. The Firm Name shall not be changed without the unanimous written consent of all Partners.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "capital_contribution",
+    "clause_text": "The initial capital of the Firm shall be INR [TOTAL_CAPITAL], contributed by the Partners in the following proportions: [PARTY A]: INR [AMOUNT_A] ([PERCENT_A]%); [PARTY B]: INR [AMOUNT_B] ([PERCENT_B]%). Each Partner's contribution shall be credited to their respective Capital Account. Capital contributions shall be made in cash by electronic funds transfer to the Firm's designated bank account within [PAYMENT_DAYS] days of the Effective Date. No Partner shall be entitled to withdraw any amount from their Capital Account without the prior written consent of all Partners. The Partners may, by unanimous agreement, call for additional capital contributions from Partners in proportion to their existing capital contributions. Interest on capital shall be credited to each Partner's Current Account at the rate of [INTEREST_RATE]% per annum on the closing balance of the Capital Account as at the end of each financial year, as permitted under the Income Tax Act, 1961.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "profit_and_loss_sharing",
+    "clause_text": "The net profits and losses of the Firm, after charging all allowable deductions including interest on capital, partner salaries (if any), and all business expenses, shall be divided between the Partners in the following ratio: [PARTY A]: [PROFIT_SHARE_A]%; [PARTY B]: [PROFIT_SHARE_B]%. The profit-sharing ratio may be altered by unanimous written agreement of all Partners. Partner salaries, if any, shall be as specified in Schedule 1 and shall be charged to the Profit and Loss Account before arriving at the net profit. Each Partner's share of profit or loss shall be credited or debited to their Current Account at the close of each financial year. Partners may draw from the Firm an amount not exceeding their share of anticipated profit for the year, subject to the availability of adequate working capital, as determined by Majority. Extraordinary losses arising from fraud, wilful misconduct, or gross negligence of a Partner shall be borne solely by that Partner.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "management_and_decision_making",
+    "clause_text": "The day-to-day management of the Partnership Business shall be the responsibility of all Partners jointly, or such Partners as may be designated as Managing Partners by Majority. Each Partner shall have equal rights to participate in the management of the Firm. Routine business decisions shall be taken by Majority. The following decisions shall require unanimous written consent of all Partners: (a) admission of a new partner; (b) retirement or expulsion of a partner; (c) alteration of the profit-sharing ratio; (d) change in the Firm Name or nature of business; (e) acquisition or disposal of immovable property; (f) taking any loan exceeding INR [LOAN_THRESHOLD]; (g) providing any guarantee on behalf of the Firm; (h) commencement of litigation; (i) dissolution of the Firm. Each Partner shall devote their full time and attention to the Firm's business unless otherwise agreed in writing. No Partner shall, without the consent of other Partners, conduct any competing business.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "banking_and_accounts",
+    "clause_text": "The Firm shall maintain a current account with [BANK_NAME] (or such other bank as the Partners may decide) in the name of the Firm. All receipts of the Firm shall be deposited into the Firm's bank account within [BANKING_DAYS] business days of receipt. All payments on behalf of the Firm exceeding INR [PAYMENT_THRESHOLD] shall be made by account payee cheque, demand draft, or electronic funds transfer. Withdrawals and payments from the Firm's bank account shall require the signature of [SIGNATORY_RULE] (e.g., any two Partners, or a designated Partner). The books of accounts of the Firm shall be maintained at the principal place of business and shall be kept in accordance with the accrual basis of accounting and the applicable provisions of the Income Tax Act, 1961. The accounts shall be audited annually by a Chartered Accountant, and the audited financial statements shall be signed by all Partners within [AUDIT_DAYS] days of the close of the financial year.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "partner_duties_and_restrictions",
+    "clause_text": "Each Partner shall: (a) act in the best interests of the Firm and in good faith towards all other Partners; (b) devote full time and attention to the Partnership Business unless otherwise agreed; (c) promptly account to the Firm for all money, property, or benefits received by the Partner in connection with the Partnership Business; (d) not engage in any competing business or activity without the written consent of all other Partners; (e) not use the Firm's name, assets, or credit for personal purposes; (f) maintain strict confidentiality regarding the Firm's business, financial information, client data, and trade secrets, both during and after the partnership; (g) not enter into any transaction on behalf of the Firm outside the ordinary course of business without Majority consent; (h) not assign, charge, or encumber the Partner's interest in the Firm without the written consent of all other Partners. Any benefit obtained by a Partner in breach of these duties shall be held on trust for the Firm.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "admission_and_retirement",
+    "clause_text": "Admission of a New Partner: No new partner shall be admitted to the Firm without the unanimous written consent of all existing Partners. Upon admission, the new partner shall sign a deed of accession agreeing to be bound by this Deed, and the profit-sharing ratio and capital contributions shall be revised by a supplementary deed. Retirement of a Partner: A Partner may retire from the Firm by giving not less than [RETIREMENT_NOTICE] days' prior written notice in writing to all other Partners. Upon retirement, the retiring Partner shall be entitled to receive: (a) the balance standing to the credit of their Capital Account; (b) the balance standing to the credit of their Current Account; (c) their proportionate share of goodwill, if any, as valued by an independent Chartered Accountant agreed by the Partners. Settlement of the retiring Partner's accounts shall be completed within [SETTLEMENT_DAYS] days of the effective date of retirement. The continuing Partners may carry on the Partnership Business without interruption.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "dissolution_and_winding_up",
+    "clause_text": "The Firm may be dissolved: (a) by unanimous written agreement of all Partners; (b) by the order of a court under the Indian Partnership Act, 1932; (c) upon the death, insolvency, permanent incapacity, or expulsion of a Partner, unless the remaining Partners agree in writing to continue the Firm. Upon dissolution, the Partners shall appoint a liquidator (who may be one of the Partners) to wind up the affairs of the Firm. The assets of the Firm shall be realised and the proceeds applied in the following order: (i) payment of debts and liabilities of the Firm to third parties; (ii) repayment of loans or advances made by Partners to the Firm; (iii) repayment of capital contributions; (iv) distribution of any surplus in the profit-sharing ratio. The goodwill of the Firm shall be valued by an independent Chartered Accountant and the value allocated among the Partners in the profit-sharing ratio. No Partner shall use the Firm Name after dissolution without the written consent of all other Partners.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "governing_law",
+    "clause_text": "This Deed shall be governed by and construed in accordance with the laws of India, including the Indian Partnership Act, 1932, the Indian Contract Act, 1872, the Income Tax Act, 1961, the Goods and Services Tax Act, 2017, and all other applicable central and state legislation. This Deed shall be registered with the Registrar of Firms under the Indian Partnership Act, 1932, and shall be stamped in accordance with the applicable provisions of the Indian Stamp Act, 1899, or the relevant State Stamp Act, the cost of which shall be borne equally by all Partners. Any amendment to this Deed shall be made by a supplementary deed duly executed by all Partners and, where required, registered and stamped in accordance with applicable law. The competent courts at [CITY], India shall have jurisdiction over any matter arising from this Deed.",
+    "jurisdiction": "India"
+  },
+  {
+    "document_type": "Partnership Deed",
+    "clause_type": "dispute_resolution",
+    "clause_text": "Any dispute, difference, or question arising between the Partners touching the construction of this Deed, the rights and liabilities of the Partners, or the dissolution and winding up of the Firm shall be resolved as follows: (a) Negotiation: The Partners in dispute shall first attempt to resolve the matter through good-faith discussions within fifteen (15) days of one Partner serving written notice of the dispute; (b) Mediation: If unresolved, the dispute shall be referred to a mutually agreed mediator, the cost of which shall be shared equally; (c) Arbitration: If mediation fails, the dispute shall be finally resolved by binding arbitration in accordance with the Arbitration and Conciliation Act, 1996. The arbitration shall be conducted by a sole arbitrator appointed by the Partners by agreement, or failing agreement, by the relevant High Court. The seat of arbitration shall be [CITY], India. The proceedings shall be in English. The award shall be final and binding and may be enforced as a decree of the court. Nothing herein shall prevent a Partner from applying to a court for urgent injunctive or interim relief to preserve the Firm's assets.",
+    "jurisdiction": "India"
+  }
+]
