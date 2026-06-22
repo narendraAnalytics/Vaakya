@@ -308,7 +308,7 @@ export default function LandingPage() {
               {/* CTA buttons */}
               <div className="hero-ctas" style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
                 <a
-                  href="#"
+                  href={username ? '/dashboard' : '/auth/login'}
                   className="cta-primary"
                   style={{
                     display: 'inline-flex',
