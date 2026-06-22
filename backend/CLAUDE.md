@@ -55,18 +55,18 @@ backend/
 │   ├── arambha.py          # Intake + classify (llama-3.1-8b-instant)
 │   ├── rachana.py          # Drafting (llama-3.3-70b-versatile)
 │   ├── parisheelanam.py    # Review + reflexion loop (llama-3.3-70b-versatile)
-│   ├── jokhim.py           # Risk flags — Phase 2 (llama-3.3-70b-versatile)
-│   ├── samjoota.py         # Negotiation — Phase 3 (llama-3.3-70b-versatile)
-│   ├── sahee.py            # Sign & deliver — Phase 2 (tool-based)
-│   ├── sruthi.py           # Obligation tracker — Phase 2 (llama-3.1-8b-instant)
-│   └── vivada.py           # Dispute — Phase 3 (llama-3.3-70b-versatile)
+│   ├── jokhim.py           # Risk flags (llama-3.3-70b-versatile)
+│   ├── samjoota.py         # Negotiation / redline (llama-3.3-70b-versatile)
+│   ├── sahee.py            # Sign & deliver (tool-based)
+│   ├── sruthi.py           # Obligation tracker (llama-3.1-8b-instant)
+│   └── vivada.py           # Dispute (llama-3.3-70b-versatile)
 ├── graph/
 │   ├── state.py            # VaakyaState TypedDict
 │   ├── workflow.py         # Main LangGraph graph + sub-graph routing
 │   └── subgraphs/
 │       ├── new_doc.py      # A: text/pdf → draft → review → HITL → sign
-│       ├── redline.py      # B: counter-party PDF → diff → HITL — Phase 3
-│       └── dispute.py      # C: dispute → clause extract → notice — Phase 3
+│       ├── redline.py      # B: PDF upload → Samjoota+Jokhim parallel → HITL → Sahee
+│       └── dispute.py      # C: dispute → Vivada → Sahee
 ├── api/
 │   ├── main.py             # FastAPI app, routers, CORS, lifespan
 │   ├── routes/
@@ -75,18 +75,17 @@ backend/
 │   │   ├── dispute.py      # POST /dispute — Phase 3
 │   │   └── webhook.py      # POST /webhook/digio — Phase 2
 │   └── middleware/
-│       └── auth.py         # Supabase JWT → request.state.user_id
+│       └── auth.py         # JWKS JWT verification + DEV_AUTH_BYPASS
 ├── services/
 │   ├── supabase_client.py  # Singleton Supabase client (anon + service role)
-│   ├── storage.py          # Upload/download from Supabase Storage
-│   ├── pdf_extractor.py    # PyMuPDF text extraction with page labels
-│   ├── doc_generator.py    # ReportLab PDF + python-docx generation
-│   └── embeddings.py       # BGE model load + embed + pgvector search
-├── clause_library/
-│   ├── nda.json
-│   └── vendor_agreement.json
+│   ├── storage.py          # upload_pdf, get_signed_url, upload_user_pdf
+│   ├── pdf_extractor.py    # PyMuPDF extract_text + extract_metadata, page labels
+│   ├── legal_search.py     # Tavily Indian law search — Jokhim + Vivada
+│   ├── doc_generator.py    # ReportLab PDF + python-docx  (Phase 2)
+│   └── embeddings.py       # BGE model load + embed + pgvector search  (Phase 3)
+├── clause_library/          # JSON clause templates — nda.json etc  (Phase 2)
 ├── tests/
-│   └── test_nda_pipeline.py
+│   └── test_nda_pipeline.py  # (Phase 2)
 ├── .env                    # gitignored
 ├── .env.example
 ├── .python-version         # 3.12.10
@@ -103,7 +102,11 @@ Copy `.env.example` → `.env` and fill in:
 SUPABASE_URL=https://xxxx.supabase.co
 SUPABASE_ANON_KEY=eyJ...
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
+SUPABASE_JWKS_URL=https://xxxx.supabase.co/auth/v1/.well-known/jwks.json
+DATABASE_URL=postgresql+psycopg://postgres:[pass]@db.xxxx.supabase.co:5432/postgres
 GROQ_API_KEY=gsk_...
+TAVILY_API_KEY=tvly-...         # optional — legal_search degrades gracefully if absent
+DEV_AUTH_BYPASS=true            # local dev only — set false (or remove) in production
 LANGSMITH_API_KEY=ls__...       # optional for tracing
 LANGSMITH_PROJECT=vaakya
 ```
@@ -115,43 +118,70 @@ LANGSMITH_PROJECT=vaakya
 ```python
 # agents/arambha.py
 from langchain_groq import ChatGroq
-from langchain_core.messages import SystemMessage, HumanMessage
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, model_validator
+from typing import Any
+from api.config import settings
+from api.constants import GROQ_MODEL_FLASH
 from graph.state import VaakyaState
 
-SYSTEM_PROMPT = "..."
+_llm = ChatGroq(model=GROQ_MODEL_FLASH, api_key=settings.GROQ_API_KEY, temperature=0)
 
 class ArambhaOutput(BaseModel):
-    document_type: str
-    parties: list[dict]
-    jurisdiction: str
-    key_terms: dict
-    sub_graph: str  # "new_doc" | "redline" | "dispute"
+    document_type: str = Field(default="")
+    parties: list[dict] = Field(default_factory=list)
+    jurisdiction: str = Field(default="India")
+    key_terms: dict = Field(default_factory=dict)
+    sub_graph: str = Field(default="new_doc")
 
-_llm = ChatGroq(model="llama-3.1-8b-instant", temperature=0)
+_structured_llm = _llm.with_structured_output(ArambhaOutput, method="json_mode")
 
 async def run_arambha(state: VaakyaState) -> dict:
-    result: ArambhaOutput = await _llm.with_structured_output(
-        ArambhaOutput
-    ).ainvoke([
-        SystemMessage(content=SYSTEM_PROMPT),
-        HumanMessage(content=state["raw_input"]),
+    result: ArambhaOutput = await _structured_llm.ainvoke([
+        ("system", SYSTEM_PROMPT),
+        ("human", state["raw_input"]),
     ])
-    return {
-        "document_type": result.document_type,
-        "parties": result.parties,
-        "jurisdiction": result.jurisdiction,
-        "key_terms": result.key_terms,
-        "sub_graph": result.sub_graph,
-    }
+    return result.model_dump()
 ```
 
 Rules:
-- Agent functions return a **partial dict** (only the keys they update)
-- LangGraph merges partial dicts into state automatically
-- `_llm` is module-level (created once, reused)
-- All agents are `async def`
-- Use `with_structured_output(PydanticModel)` — never parse raw text
+- Always use `method="json_mode"` — NOT the default tool-call schema. Groq rejects complex nested Pydantic schemas server-side; `json_mode` lets Pydantic validate client-side.
+- All `Field(default=...)` — never required fields, because mid-size LLMs skip optional-seeming keys.
+- `_llm` and `_structured_llm` are module-level (created once, not per-call).
+- All agents are `async def` returning a partial dict.
+
+## LLM Structured Output — model_validator for resilience
+
+Small/mid Groq models (8B, 70B) often omit fields or use wrong key names. Fix with Pydantic validators:
+
+```python
+from pydantic import model_validator
+from typing import Any
+
+class MyOutput(BaseModel):
+    count: int = Field(default=0)
+    summary: str = Field(default="")
+
+    @model_validator(mode="after")
+    def compute_defaults(self) -> "MyOutput":
+        # Fill fields the LLM skipped — runs AFTER field assignment
+        if not self.count:
+            self.count = len(self.items)
+        if not self.summary:
+            self.summary = f"Found {self.count} item(s)."
+        return self
+
+    @model_validator(mode="before")
+    @classmethod
+    def remap_fields(cls, data: Any) -> Any:
+        # Fix wrong key names — runs BEFORE field assignment
+        if not isinstance(data, dict):
+            return data
+        if "action" not in data and "obligation" in data:
+            data["action"] = data.pop("obligation")
+        return data
+```
+
+Used in: `agents/jokhim.py` (compute_counts), `agents/sruthi.py` (remap_fields + fill_summary).
 
 ---
 
@@ -219,21 +249,28 @@ Max 3 loops is a graph-level rule — not inside any agent.
 
 ## Auth Middleware Pattern
 
-```python
-# api/middleware/auth.py
-from supabase import create_client
-from fastapi import Request, HTTPException
+Two modes in `api/middleware/auth.py`:
 
-async def get_current_user(request: Request) -> str:
-    token = request.headers.get("Authorization", "").removeprefix("Bearer ")
-    if not token:
-        raise HTTPException(status_code=401)
-    # verify via Supabase admin client
-    user = supabase_admin.auth.get_user(token)
-    return user.user.id  # returns user_id (uuid)
+```python
+# DEV_AUTH_BYPASS=true  → Bearer token value used as user_id (not a UUID — skip Supabase FK writes)
+# Production            → JWT verified locally via Supabase JWKS (no per-request API call)
+
+if settings.DEV_AUTH_BYPASS:
+    return token or "dev-user"   # WARNING: not a real UUID
+
+# Production path: fetch JWKS once, cache, decode locally
+jwks = await _get_jwks()   # cached for process lifetime
+payload = jwt.decode(token, public_key, algorithms=["RS256"], audience="authenticated")
+return payload["sub"]      # Supabase user UUID
 ```
 
 All route handlers receive `user_id: str = Depends(get_current_user)`.
+
+**DEV_AUTH_BYPASS rule**: when True, `user_id` = raw token string. Guard all Supabase writes:
+```python
+if not settings.DEV_AUTH_BYPASS:
+    get_supabase().table("documents").insert({...}).execute()
+```
 
 ---
 
@@ -252,21 +289,22 @@ Bucket name: `vaakya-contracts` (private, RLS-enabled).
 
 ## Phase 1 Build Order
 
-1. `graph/state.py` — VaakyaState
-2. `services/supabase_client.py` — singleton client
-3. `services/embeddings.py` — load BGE model
-4. `agents/arambha.py` — classify + extract
-5. `agents/rachana.py` — draft generation
-6. `agents/parisheelanam.py` — review loop
-7. `graph/subgraphs/new_doc.py` — wire the graph
-8. `graph/workflow.py` — main graph entry
-9. `api/middleware/auth.py` — JWT guard
-10. `api/routes/document.py` — POST /document/new
-11. `services/pdf_extractor.py` — PyMuPDF
-12. Add PDF upload to document route
-13. `services/storage.py` — Supabase Storage
-14. `clause_library/nda.json` — seed data
-15. `tests/test_nda_pipeline.py` — 10 scenarios
+1. ✅ `graph/state.py` — VaakyaState
+2. ✅ `services/supabase_client.py` — singleton client
+3. ✅ `services/embeddings.py` — BGE model stub (Phase 3, file exists)
+4. ✅ `agents/arambha.py` — classify + extract
+5. ✅ `agents/rachana.py` — draft generation
+6. ✅ `agents/parisheelanam.py` — review + reflexion loop
+7. ✅ `graph/subgraphs/new_doc.py` — new doc sub-graph (Rachana → Parisheelanam → Jokhim parallel → HITL → Sahee → Sruthi)
+8. ✅ `graph/workflow.py` — main graph entry + sub-graph routing
+9. ✅ `api/middleware/auth.py` — JWKS JWT verification + DEV_AUTH_BYPASS
+10. ✅ `api/routes/document.py` — POST /new, /upload, GET /status, POST /approve
+11. ✅ `services/pdf_extractor.py` — PyMuPDF, page labels, image-PDF guard
+12. ✅ `services/storage.py` — upload_pdf, get_signed_url, upload_user_pdf
+13. ✅ `services/legal_search.py` — Tavily Indian law (Jokhim + Vivada)
+14. ✅ Supabase schema — 6 tables (profiles, documents, vault_documents, obligations, disputes, clause_library) + RLS + 2 storage buckets
+15. [ ] `clause_library/nda.json` + 5 more doc types — seed data
+16. [ ] `tests/test_nda_pipeline.py` — 10 scenarios
 
 ---
 
@@ -275,9 +313,11 @@ Bucket name: `vaakya-contracts` (private, RLS-enabled).
 - Never use `pip` — always `uv add`
 - Never hardcode API keys — always from `.env`
 - Never create sync agent functions — always `async def`
-- Never parse LLM output as raw string — use `with_structured_output`
+- Never use `with_structured_output(Model)` without `method="json_mode"` — Groq rejects complex schemas server-side
+- Never use required Pydantic fields in agent output models — LLMs skip them; always `Field(default=...)`
 - Never skip HITL — `interrupt()` is mandatory before Sahee
 - Never query Supabase without RLS — every table has `user_id` FK
+- Never set `DEV_AUTH_BYPASS=true` in production — user_id becomes the raw token string, not a UUID
 
 ---
 

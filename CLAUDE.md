@@ -60,11 +60,12 @@ vaakya/
 │   │       ├── auth.py         # Supabase JWT verification
 │   │       └── logging.py
 │   ├── services/
-│   │   ├── pdf_extractor.py    # PyMuPDF text extraction
-│   │   ├── doc_generator.py    # python-docx + ReportLab
-│   │   ├── supabase_client.py  # Shared Supabase client
+│   │   ├── pdf_extractor.py    # PyMuPDF text extraction with page labels
+│   │   ├── doc_generator.py    # python-docx + ReportLab  (Phase 2)
+│   │   ├── supabase_client.py  # Shared Supabase client (anon + service role)
 │   │   ├── storage.py          # Supabase Storage operations
-│   │   └── embeddings.py       # BGE embeddings + pgvector search
+│   │   ├── legal_search.py     # Tavily Indian law search (Jokhim + Vivada)
+│   │   └── embeddings.py       # BGE embeddings + pgvector search  (Phase 3)
 │   ├── clause_library/         # JSON clause templates by doc type
 │   ├── tests/
 │   ├── pyproject.toml
@@ -108,14 +109,15 @@ class VaakyaState(TypedDict):
     jurisdiction: str
     key_terms: dict
 
-    # Agent outputs (append-only lists for parallel branches)
+    # Agent outputs — parallel-written fields use Annotated[list, operator.add]
     draft: str
     review_score: int
-    review_issues: list[str]
-    risk_flags: list[dict]
-    negotiation_redlines: list[dict]
-    obligations: list[dict]
+    review_issues: Annotated[list[str], operator.add]
+    risk_flags:    Annotated[list[dict], operator.add]
+    negotiation_redlines: Annotated[list[dict], operator.add]
+    obligations:   Annotated[list[dict], operator.add]
     dispute_summary: str
+    errors:        Annotated[list[str], operator.add]
 
     # Control
     loop_count: int                 # Rachana ↔ Parisheelanam loop counter
@@ -126,7 +128,6 @@ class VaakyaState(TypedDict):
     final_pdf_url: str              # Supabase Storage URL
     vault_id: str
     esign_status: str
-    errors: list[str]
 ```
 
 ---
@@ -156,46 +157,69 @@ Arambha (classify)
 ## Auth Pattern (Supabase)
 
 - All API routes protected by `Authorization: Bearer <supabase_jwt>`
-- FastAPI dependency `get_current_user()` verifies token via Supabase Admin SDK
+- FastAPI dependency `get_current_user()` verifies JWT locally via Supabase JWKS (no per-request API call)
 - Row-Level Security (RLS) on all Supabase tables — users only see their own documents
 - Never expose Supabase service role key to frontend
+- `DEV_AUTH_BYPASS=true` in `.env` skips JWT verification for local testing (Bearer value used as user_id)
+
+---
+
+## API Endpoints
+
+| Method | Path | Sub-graph | Description |
+|--------|------|-----------|-------------|
+| POST | `/document/new` | new_doc | Text input → draft → review → HITL → sign. Returns 202 + document_id |
+| POST | `/document/upload` | redline | PDF multipart upload → negotiate + risk → HITL → sign. Returns 202 + document_id |
+| GET | `/document/{id}/status` | — | Poll graph state; returns HITL payload when paused at approval |
+| POST | `/document/{id}/approve` | — | Resume after HITL. `approved=true` → Sahee; `approved=false` → back to Rachana |
+| GET | `/health` | — | Liveness check + DB connection status |
 
 ---
 
 ## Development Phases
 
-### Phase 1 — Foundation (current)
-- [ ] Fix Python 3.12.10 venv (uv venv --python 3.12.10)
-- [ ] pyproject.toml with all dependencies
-- [ ] Supabase project + schema (users, documents, vault, obligations)
-- [ ] VaakyaState TypedDict
-- [ ] Arambha Agent (classify + extract)
-- [ ] Rachana Agent (draft generation)
-- [ ] Parisheelanam Agent (review + reflexion loop)
-- [ ] FastAPI: POST /document/new
-- [ ] FastAPI: POST /document/upload (PDF mode)
-- [ ] Supabase Auth middleware
-- [ ] Supabase Storage for PDFs
+### Phase 1 — Foundation ✅ COMPLETE
+- [x] Fix Python 3.12.10 venv (uv venv --python 3.12.10)
+- [x] pyproject.toml with all dependencies
+- [x] VaakyaState TypedDict (`graph/state.py`)
+- [x] Arambha Agent (classify + extract)
+- [x] Rachana Agent (draft generation)
+- [x] Parisheelanam Agent (review + reflexion loop)
+- [x] FastAPI app entry point (`api/main.py`) with lifespan + AsyncPostgresSaver
+- [x] `run.py` with Windows SelectorEventLoop fix
+- [x] Supabase project + schema (6 tables + RLS + 2 storage buckets)
+- [x] FastAPI: POST /document/new (202, background graph run, Supabase row insert)
+- [x] FastAPI: POST /document/upload (PDF multipart → redline sub-graph)
+- [x] FastAPI: GET /document/{id}/status + POST /document/{id}/approve (HITL)
+- [x] Supabase Auth middleware — JWKS JWT verification + DEV_AUTH_BYPASS (`api/middleware/auth.py`)
+- [x] `services/pdf_extractor.py` (PyMuPDF, page labels, image-PDF guard)
+- [x] `services/supabase_client.py` (singleton, anon + service role)
+- [x] `services/storage.py` (upload_pdf, get_signed_url, upload_user_pdf)
+- [x] `services/legal_search.py` (Tavily Indian law search — Jokhim + Vivada)
 
-### Phase 2 — Parallel Agents & E-Sign
-- [ ] Jokhim Agent (parallel with Parisheelanam)
-- [ ] Sruthi Agent (obligation extraction + alerts)
-- [ ] Sahee Agent (Digio integration)
+### Phase 2 — Parallel Agents & E-Sign ✅ Agents done
+- [x] Jokhim Agent (parallel with Parisheelanam in new_doc; parallel with Samjoota in redline)
+- [x] Sruthi Agent (obligation extraction, post-HITL)
+- [x] Sahee Agent (vault card + esign_status)
+- [x] Samjoota Agent (negotiation/redline sub-graph)
+- [x] Vivada Agent (dispute sub-graph)
+- [x] All 3 sub-graphs wired with parallel fan-out (new_doc, redline, dispute)
+- [ ] `services/doc_generator.py` (ReportLab PDF — populates final_pdf_url)
 - [ ] Supabase Storage vault with pgvector metadata
-- [ ] 5 more document types
+- [ ] Digio API integration in Sahee (e-signatures)
+- [ ] 5 more document types in clause_library/
+- [ ] `tests/test_nda_pipeline.py` (10 scenarios)
 
-### Phase 3 — Negotiation & Disputes
-- [ ] Samjoota Agent (redline sub-graph)
-- [ ] Vivada Agent (dispute sub-graph)
-- [ ] pgvector semantic clause search
-- [ ] WhatsApp Business API alerts
+### Phase 3 — Negotiation, Disputes & Frontend
+- [ ] pgvector semantic clause search (`services/embeddings.py`)
+- [ ] WhatsApp Business API alerts in Sruthi
 - [ ] Next.js frontend
 
 ---
 
 ## Coding Conventions
 
-- All agents are pure async functions: `async def run_arambha(state: VaakyaState) -> VaakyaState`
+- All agents are pure async functions: `async def run_arambha(state: VaakyaState) -> dict`
 - No global state — everything passes through VaakyaState
 - Supabase client is a singleton from `services/supabase_client.py`
 - All LLM calls use `langchain-groq` with structured output (Pydantic models)
@@ -213,7 +237,11 @@ Arambha (classify)
 SUPABASE_URL=
 SUPABASE_ANON_KEY=
 SUPABASE_SERVICE_ROLE_KEY=
+SUPABASE_JWKS_URL=              # https://<ref>.supabase.co/auth/v1/.well-known/jwks.json
+DATABASE_URL=                   # postgresql+psycopg://... (direct — NOT pooled port 6543)
 GROQ_API_KEY=
+TAVILY_API_KEY=                 # Jokhim + Vivada legal research (optional — degrades gracefully if absent)
+DEV_AUTH_BYPASS=false           # set true in local .env only — NEVER in production
 LANGSMITH_API_KEY=
 LANGSMITH_PROJECT=vaakya
 DIGIO_API_KEY=                  # Phase 2
