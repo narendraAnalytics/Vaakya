@@ -18,7 +18,7 @@ from langgraph.checkpoint.memory import MemorySaver
 from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
 
 from api.config import settings
-from api.routes import document
+from api.routes import document, vault
 from graph.workflow import build_graph
 
 
@@ -73,6 +73,7 @@ app.add_middleware(
 )
 
 app.include_router(document.router, prefix="/document", tags=["document"])
+app.include_router(vault.router, prefix="/vault", tags=["vault"])
 
 
 @app.get("/health", tags=["health"])
