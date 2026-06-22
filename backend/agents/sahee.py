@@ -1,7 +1,7 @@
 """
 Sahee (సహీ) — Export & Vault Agent.
-Runs after HITL approval. Generates the vault record (document title, vault ID,
-e-sign status). PDF generation and Digio e-sign are wired in Phase 2.
+Runs after HITL approval. Generates the contract PDF, uploads to Supabase Storage,
+and creates the vault record.
 Uses GROQ_MODEL_FLASH (llama-3.1-8b-instant).
 """
 
@@ -13,6 +13,8 @@ from pydantic import BaseModel, Field
 from api.config import settings
 from api.constants import GROQ_MODEL_FLASH
 from graph.state import VaakyaState
+from services.doc_generator import generate_contract_pdf
+from services.storage import get_signed_url, upload_pdf
 
 _llm = ChatGroq(model=GROQ_MODEL_FLASH, api_key=settings.GROQ_API_KEY, temperature=0)
 
@@ -46,6 +48,13 @@ class SaheeOutput(BaseModel):
 _structured_llm = _llm.with_structured_output(SaheeOutput, method="json_mode")
 
 
+def _fallback_title(state: VaakyaState) -> str:
+    parties = state.get("parties", [])
+    names = [p.get("name", "") for p in parties[:2]]
+    doc_type = state.get("document_type", "Agreement")
+    return f"{doc_type} — {' & '.join(n for n in names if n)}" if names else doc_type
+
+
 def _build_human_message(state: VaakyaState) -> str:
     parties = state.get("parties", [])
     parties_text = ", ".join(
@@ -69,25 +78,40 @@ Generate the formal document title and vault summary."""
 
 async def run_sahee(state: VaakyaState) -> dict:
     vault_id = str(uuid.uuid4())
+    document_title = _fallback_title(state)
 
+    # ── 1. Generate title + vault summary via LLM ──────────────────────────────
     try:
         result: SaheeOutput = await _structured_llm.ainvoke([
             ("system", _SYSTEM_PROMPT),
             ("human", _build_human_message(state)),
         ])
+        document_title = result.document_title or document_title
+    except Exception as exc:
+        print(f"[WARN] Sahee LLM error (using fallback title): {exc}")
 
-        # final_pdf_url populated by doc_generator.py in Phase 2
-        # esign_status updated by Digio webhook in Phase 2
-        return {
-            "vault_id": vault_id,
-            "esign_status": "pending_signature",
-            "final_pdf_url": "",
-        }
+    # ── 2. Generate PDF ────────────────────────────────────────────────────────
+    final_pdf_url = ""
+    try:
+        pdf_bytes = generate_contract_pdf(state, document_title)
+
+        if settings.DEV_AUTH_BYPASS:
+            print(f"[DEV] PDF generated ({len(pdf_bytes):,} bytes); upload skipped (DEV_AUTH_BYPASS)")
+        else:
+            storage_path = upload_pdf(state["user_id"], vault_id, pdf_bytes)
+            final_pdf_url = get_signed_url(storage_path)
 
     except Exception as exc:
+        print(f"[WARN] Sahee PDF generation/upload error: {exc}")
         return {
             "vault_id": vault_id,
             "esign_status": "pending_signature",
             "final_pdf_url": "",
-            "errors": [f"Sahee error: {exc}"],
+            "errors": [f"Sahee PDF error: {exc}"],
         }
+
+    return {
+        "vault_id": vault_id,
+        "esign_status": "pending_signature",
+        "final_pdf_url": final_pdf_url,
+    }
