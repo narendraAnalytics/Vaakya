@@ -123,8 +123,19 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
   }
   html {
-    @apply font-sans;
+    font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
   }
+}
+
+/* Vaakya brand tokens */
+:root {
+  --vaakya-cream: #FEF9EF;
+  --vaakya-dark: #0F2D1F;
+  --vaakya-green: #1EA851;
+  --vaakya-cta: #1A5C35;
+  --vaakya-nav: #2C4A38;
+  --vaakya-light: #E0F5E8;
 }

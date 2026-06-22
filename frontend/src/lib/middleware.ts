@@ -38,14 +38,31 @@ export async function updateSession(request: NextRequest) {
   const { data } = await supabase.auth.getClaims()
   const user = data?.claims
 
+  const pathname = request.nextUrl.pathname
+
+  // Unauthenticated → send to login (except public routes)
   if (
     !user &&
-    !request.nextUrl.pathname.startsWith('/login') &&
-    !request.nextUrl.pathname.startsWith('/auth')
+    !pathname.startsWith('/login') &&
+    !pathname.startsWith('/auth') &&
+    pathname !== '/'
   ) {
-    // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
+    return NextResponse.redirect(url)
+  }
+
+  // Authenticated user hitting login page → send home
+  if (user && pathname.startsWith('/auth/login')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/'
+    return NextResponse.redirect(url)
+  }
+
+  // Authenticated user with no username → send to onboarding (unless already there)
+  if (user && !user.user_metadata?.username && pathname !== '/onboarding' && !pathname.startsWith('/auth')) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/onboarding'
     return NextResponse.redirect(url)
   }
 
