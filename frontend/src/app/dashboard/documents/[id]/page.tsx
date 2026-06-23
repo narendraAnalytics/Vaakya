@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/client'
 
@@ -25,6 +26,7 @@ type HitlPayload = {
 type StatusResponse = {
   document_id: string
   status: string
+  sub_graph: 'new_doc' | 'redline' | 'dispute'
   document_type: string
   review_score: number
   loop_count: number
@@ -39,26 +41,21 @@ type StatusResponse = {
 
 // ── Agent definitions ─────────────────────────────────────────────────────────
 
-const AGENTS = [
-  { key: 'arambha',       name: 'Arambha',       telugu: 'ఆరంభ', icon: '🎯', role: 'Intake & Classify' },
-  { key: 'rachana',       name: 'Rachana',        telugu: 'రచన',  icon: '✏️', role: 'Draft Generation' },
-  { key: 'parisheelanam', name: 'Parisheelanam',  telugu: 'పరిశీలనం', icon: '🔍', role: 'Review & Score' },
-  { key: 'jokhim',        name: 'Jokhim',         telugu: 'జోఖిమ్', icon: '🛡️', role: 'Risk Flagging' },
-  { key: 'sahee',         name: 'Sahee',          telugu: 'సహీ',  icon: '✍️', role: 'Sign & Deliver' },
-  { key: 'sruthi',        name: 'Sruthi',         telugu: 'శ్రుతి', icon: '📅', role: 'Obligation Tracker' },
+const ALL_AGENTS = [
+  { key: 'arambha',       name: 'Arambha',       telugu: 'ఆరంభ',      icon: '🎯', role: 'Intake & Classify',    flows: ['new_doc','redline','dispute'], tavily: false,  tavilyLabel: '' },
+  { key: 'rachana',       name: 'Rachana',        telugu: 'రచన',        icon: '✏️', role: 'Draft Generation',    flows: ['new_doc'],                    tavily: false,  tavilyLabel: '' },
+  { key: 'parisheelanam', name: 'Parisheelanam',  telugu: 'పరిశీలనం',  icon: '🔍', role: 'Review & Score',      flows: ['new_doc'],                    tavily: false,  tavilyLabel: '' },
+  { key: 'jokhim',        name: 'Jokhim',         telugu: 'జోఖిమ్',    icon: '🛡️', role: 'Risk Flagging',        flows: ['new_doc','redline'],           tavily: true,   tavilyLabel: 'Tavily (conditional)' },
+  { key: 'samjoota',      name: 'Samjoota',       telugu: 'సమ్జూత',    icon: '🤝', role: 'Negotiation',         flows: ['redline'],                    tavily: false,  tavilyLabel: '' },
+  { key: 'vivada',        name: 'Vivada',         telugu: 'వివాద',      icon: '⚖️', role: 'Dispute Resolution',  flows: ['dispute'],                    tavily: true,   tavilyLabel: 'Tavily (always)' },
+  { key: 'sahee',         name: 'Sahee',          telugu: 'సహీ',        icon: '✍️', role: 'Sign & Deliver',      flows: ['new_doc','redline','dispute'], tavily: false,  tavilyLabel: '' },
+  { key: 'sruthi',        name: 'Sruthi',         telugu: 'శ్రుతి',    icon: '📅', role: 'Obligation Tracker',  flows: ['new_doc'],                    tavily: false,  tavilyLabel: '' },
 ]
 
 function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' | 'waiting'> {
-  const s = d.status
-  const completed = s === 'completed'
-  const hitl = s === 'awaiting_approval'
-
-  const arambhaDone  = d.review_score > 0 || d.loop_count > 0 || hitl || completed
-  const rachanaDone  = (d.review_score > 0 && d.loop_count > 0) || hitl || completed
-  const reviewDone   = d.review_score >= 75 || hitl || completed
-  const jokhimDone   = reviewDone
-  const saheeDone    = !!d.vault_id || completed
-  const sruthiDone   = d.obligations_count > 0 || completed
+  const sg = d.sub_graph ?? 'new_doc'
+  const hitl = d.status === 'awaiting_approval'
+  const completed = d.status === 'completed'
 
   function state(done: boolean, prev: boolean): 'done' | 'active' | 'waiting' {
     if (done) return 'done'
@@ -66,13 +63,43 @@ function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' |
     return 'waiting'
   }
 
+  if (sg === 'new_doc') {
+    const arambhaDone  = d.review_score > 0 || d.loop_count > 0 || hitl || completed
+    const rachanaDone  = (d.review_score > 0 && d.loop_count > 0) || hitl || completed
+    const reviewDone   = d.review_score >= 75 || hitl || completed
+    const jokhimDone   = reviewDone
+    const saheeDone    = !!d.vault_id || completed
+    const sruthiDone   = d.obligations_count > 0 || completed
+    return {
+      arambha:       state(arambhaDone, true),
+      rachana:       state(rachanaDone, arambhaDone),
+      parisheelanam: state(reviewDone,  rachanaDone),
+      jokhim:        state(jokhimDone,  rachanaDone),
+      sahee:         state(saheeDone,   hitl || completed),
+      sruthi:        state(sruthiDone,  saheeDone),
+    }
+  }
+
+  if (sg === 'redline') {
+    const arambhaDone  = d.loop_count > 0 || hitl || completed
+    const parallelDone = hitl || completed
+    const saheeDone    = !!d.vault_id || completed
+    return {
+      arambha:  state(arambhaDone,  true),
+      samjoota: state(parallelDone, arambhaDone),
+      jokhim:   state(parallelDone, arambhaDone),
+      sahee:    state(saheeDone,    hitl || completed),
+    }
+  }
+
+  // dispute
+  const arambhaDone = hitl || completed
+  const vivadaDone  = hitl || completed
+  const saheeDone   = !!d.vault_id || completed
   return {
-    arambha:       state(arambhaDone, true),
-    rachana:       state(rachanaDone, arambhaDone),
-    parisheelanam: state(reviewDone,  rachanaDone),
-    jokhim:        state(jokhimDone,  rachanaDone),
-    sahee:         state(saheeDone,   hitl || completed),
-    sruthi:        state(sruthiDone,  saheeDone),
+    arambha: state(arambhaDone, true),
+    vivada:  state(vivadaDone,  arambhaDone),
+    sahee:   state(saheeDone,   vivadaDone),
   }
 }
 
@@ -193,6 +220,8 @@ export default function DocumentProgressPage() {
   // ── Render helpers ──────────────────────────────────────────────────────────
 
   const agentStates = pollData ? inferAgentStates(pollData) : null
+  const subGraph = pollData?.sub_graph ?? 'new_doc'
+  const AGENTS = ALL_AGENTS.filter(a => a.flows.includes(subGraph))
   const docType = pollData?.document_type || 'Legal Document'
   const hp = pollData?.hitl_payload
 
@@ -294,7 +323,9 @@ export default function DocumentProgressPage() {
             <div className="agents-row" style={{ display: 'flex', gap: 12 }}>
               {AGENTS.map((agent, i) => {
                 const state = agentStates?.[agent.key] ?? 'waiting'
-                const isParallel = agent.key === 'jokhim'
+                const isParallel =
+                  (subGraph === 'new_doc' && agent.key === 'jokhim') ||
+                  (subGraph === 'redline' && (agent.key === 'samjoota' || agent.key === 'jokhim'))
                 return (
                   <div key={agent.key} style={{ flex: 1, position: 'relative' }}>
                     {isParallel && (
@@ -320,6 +351,13 @@ export default function DocumentProgressPage() {
                       )}
                       {state === 'waiting' && (
                         <div style={{ fontSize: 11, fontWeight: 600, color: '#A8C4B4' }}>⏳ Waiting</div>
+                      )}
+
+                      {/* Tavily badge */}
+                      {agent.tavily && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#5A7AB0', background: '#EAE8F5', padding: '3px 9px', borderRadius: 100 }}>
+                          🔍 {agent.tavilyLabel}
+                        </div>
                       )}
 
                       {/* Extra info badges */}
@@ -475,12 +513,13 @@ export default function DocumentProgressPage() {
               {/* Draft preview */}
               <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
                 <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Draft Preview</div>
-                <textarea
-                  readOnly
-                  value={hp.draft}
+                <div
                   aria-label="Document draft preview"
-                  style={{ width: '100%', height: 280, padding: '13px 15px', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: 13, color: '#0F2D1F', resize: 'vertical', lineHeight: 1.7 }}
-                />
+                  role="region"
+                  style={{ width: '100%', maxHeight: 420, overflowY: 'auto', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, padding: '16px 18px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,92,53,0.18) transparent' }}
+                >
+                  <MarkdownRenderer content={hp.draft} />
+                </div>
               </div>
 
               {/* Approve / Revise */}
@@ -549,7 +588,7 @@ export default function DocumentProgressPage() {
               {pollData.draft_preview && (
                 <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
                   <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Document Preview</div>
-                  <div style={{ fontSize: 13.5, color: '#0F2D1F', lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{pollData.draft_preview}</div>
+                  <MarkdownRenderer content={pollData.draft_preview} />
                 </div>
               )}
 
