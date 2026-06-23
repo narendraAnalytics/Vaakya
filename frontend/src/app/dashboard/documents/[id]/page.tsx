@@ -554,13 +554,21 @@ export default function DocumentProgressPage() {
               {/* Actions */}
               <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
                 {pollData.vault_id && (
-                  <a
-                    href={`${process.env.NEXT_PUBLIC_API_URL}/vault/${pollData.vault_id}`}
-                    target="_blank" rel="noopener noreferrer"
-                    style={{ flex: 1, minWidth: 180, padding: '15px 22px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 18px rgba(30,168,81,0.3)' }}
+                  <button
+                    onClick={async () => {
+                      const res = await fetch(
+                        `${process.env.NEXT_PUBLIC_API_URL}/vault/${pollData.vault_id}`,
+                        { headers: { Authorization: `Bearer ${tokenRef.current}` } }
+                      )
+                      if (res.ok) {
+                        const data = await res.json()
+                        if (data.pdf_url) window.open(data.pdf_url, '_blank')
+                      }
+                    }}
+                    style={{ flex: 1, minWidth: 180, padding: '15px 22px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 18px rgba(30,168,81,0.3)' }}
                   >
                     📥 Download PDF
-                  </a>
+                  </button>
                 )}
                 <a href="/dashboard" style={{ flex: 1, minWidth: 180, padding: '15px 22px', background: '#FDFCF8', color: '#2C4A38', borderRadius: 14, fontSize: 14, fontWeight: 700, border: '1.5px solid rgba(26,92,53,0.16)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                   ← Back to Dashboard
