@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/client'
 import type { VaultDocument } from './page'
 
 const LOGO_URL = 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782139407/logovaakya_dqmskw.png'
@@ -142,9 +144,14 @@ const STYLES = `
 `
 
 export default function DashboardClient({ username, documents }: Props) {
+  const router = useRouter()
   const [collapsed, setCollapsed] = useState(false)
   const [tab, setTab] = useState<'text' | 'upload'>('text')
   const [generating, setGenerating] = useState(false)
+  const [docType, setDocType] = useState('')
+  const [docText, setDocText] = useState('')
+  const [docTextEmpty, setDocTextEmpty] = useState(false)
+  const [genError, setGenError] = useState('')
   const [greeting, setGreeting] = useState('Good morning')
   const [dateStr, setDateStr] = useState('')
 
@@ -199,10 +206,34 @@ export default function DashboardClient({ username, documents }: Props) {
     }
   })
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (generating) return
+    if (!docText.trim()) { setDocTextEmpty(true); return }
+    setDocTextEmpty(false)
     setGenerating(true)
-    setTimeout(() => setGenerating(false), 3200)
+    setGenError('')
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const prompt = docType ? `Document Type: ${docType}\n\n${docText}` : docText
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/document/new`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ request: prompt, input_mode: 'text' }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setGenError(err?.detail || 'Failed to start generation. Please try again.')
+        setGenerating(false)
+        return
+      }
+      const { document_id } = await res.json()
+      router.push(`/dashboard/documents/${document_id}`)
+    } catch {
+      setGenError('Network error. Check your connection and try again.')
+      setGenerating(false)
+    }
   }
 
   return (
@@ -373,7 +404,7 @@ export default function DashboardClient({ username, documents }: Props) {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: '#5A7A68', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 7, display: 'block' }}>Document Type</label>
-                    <select style={{ width: '100%', padding: '11px 40px 11px 15px', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.13)', borderRadius: 12, fontFamily: 'inherit', fontSize: 14, color: '#0F2D1F', cursor: 'pointer', appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3 6l5 5 5-5' stroke='%231A5C35' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 13px center', backgroundSize: 16 }}>
+                    <select value={docType} onChange={e => setDocType(e.target.value)} style={{ width: '100%', padding: '11px 40px 11px 15px', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.13)', borderRadius: 12, fontFamily: 'inherit', fontSize: 14, color: '#0F2D1F', cursor: 'pointer', appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none'%3E%3Cpath d='M3 6l5 5 5-5' stroke='%231A5C35' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 13px center', backgroundSize: 16 }}>
                       <option value="">Select document type…</option>
                       <option>NDA (Non-Disclosure Agreement)</option>
                       <option>Service Agreement</option>
@@ -390,7 +421,13 @@ export default function DashboardClient({ username, documents }: Props) {
 
                   <div>
                     <label style={{ fontSize: 11, fontWeight: 700, color: '#5A7A68', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 7, display: 'block' }}>Describe Your Document</label>
-                    <textarea style={{ width: '100%', minHeight: 110, padding: '13px 15px', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.13)', borderRadius: 12, fontFamily: 'inherit', fontSize: 13.5, color: '#0F2D1F', resize: 'vertical', lineHeight: 1.65 }} placeholder="e.g. Create a 2-year NDA between my startup HealthTech Pvt Ltd and an AI vendor in Bangalore. Include confidentiality terms, exclusions, and Indian jurisdiction clauses…" />
+                    <textarea
+                      value={docText}
+                      onChange={e => { setDocText(e.target.value); if (e.target.value.trim()) setDocTextEmpty(false) }}
+                      style={{ width: '100%', minHeight: 110, padding: '13px 15px', background: '#F5FAF6', border: docTextEmpty ? '1.5px solid #E84545' : '1.5px solid rgba(26,92,53,0.13)', borderRadius: 12, fontFamily: 'inherit', fontSize: 13.5, color: '#0F2D1F', resize: 'vertical', lineHeight: 1.65 }}
+                      placeholder="e.g. Create a 2-year NDA between my startup HealthTech Pvt Ltd and an AI vendor in Bangalore. Include confidentiality terms, exclusions, and Indian jurisdiction clauses…"
+                    />
+                    {docTextEmpty && <div style={{ fontSize: 12, color: '#E84545', marginTop: 4, fontWeight: 500 }}>Please describe your document before generating.</div>}
                   </div>
 
                   <div>
@@ -402,6 +439,7 @@ export default function DashboardClient({ username, documents }: Props) {
                     </div>
                   </div>
 
+                  {genError && <div style={{ fontSize: 12.5, color: '#C03030', background: '#FFE8E8', border: '1px solid rgba(192,48,48,0.2)', borderRadius: 10, padding: '10px 14px', fontWeight: 500 }}>⚠️ {genError}</div>}
                   <button className="gen-btn" onClick={handleGenerate} style={{ width: '100%', padding: '15px 24px', background: 'linear-gradient(135deg,#1A5C35 0%,#1EA851 100%)', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, borderRadius: 14, letterSpacing: -0.1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                     {generating ? (
                       <>
