@@ -222,6 +222,7 @@ Arambha (classify)
 - [x] `MarkdownRenderer` component (`frontend/src/components/MarkdownRenderer.tsx`) — renders LLM draft output as styled Markdown (Georgia serif headings, green blockquote borders, GFM tables/lists)
 - [x] Agent pipeline now dynamic per `sub_graph` — `ALL_AGENTS` (8 entries) filtered by `flows` field; Tavily badge via `agent.tavily` + `agent.tavilyLabel`
 - [x] Live activity feed on agent progress page — `prevStatesRef` tracks state transitions between polls; `msgTick` counter rotates agent work messages every 2.5s
+- [x] Agent workflow page redesigned — 2-column command-center layout (vertical graph left, sticky panel right); Cloudinary agent avatars (`avatarUrl` in `ALL_AGENTS`, URLs in `projectworkflow.txt`); animated connector lines + fork/merge pipes; circular SVG score gauge; botanical decorations
 
 #### Frontend Auth — Resolved Issues
 - **Signup 500 error**: Supabase had `on_auth_user_created` trigger → `handle_new_user()` tried to INSERT into missing `profiles` table. Fixed by dropping the trigger and creating `public.profiles` (id, username, created_at) with RLS.

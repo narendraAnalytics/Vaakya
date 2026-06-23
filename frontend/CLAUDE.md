@@ -68,9 +68,18 @@ Status response also includes `sub_graph: 'new_doc' | 'redline' | 'dispute'` —
 Agent transition detection pattern: store previous states in `prevStatesRef = useRef<Record<string, string>>({})`, compare on each poll to detect done transitions for activity log entries.
 
 ## Agent Pipeline Pattern
-`ALL_AGENTS` (8 entries in `page.tsx`) has `flows: string[]`, `tavily: boolean`, `tavilyLabel: string` fields. Filter at render: `ALL_AGENTS.filter(a => a.flows.includes(subGraph))`. Never hard-code a 6-agent list — always use the filtered view.
+`ALL_AGENTS` (8 entries in `page.tsx`) has `flows: string[]`, `tavily: boolean`, `tavilyLabel: string`, `avatarUrl: string` fields. Filter at render: `ALL_AGENTS.filter(a => a.flows.includes(subGraph))`. Never hard-code a 6-agent list — always use the filtered view.
+
+`avatarUrl` — Cloudinary image URLs sourced from `../projectworkflow.txt`. Use `<img src={agent.avatarUrl}>` in agent cards; never use emoji as the primary avatar.
 
 Tavily badges are driven by `agent.tavily` / `agent.tavilyLabel` — do not add separate Tavily UI.
+
+## Agent Workflow Page Layout
+`src/app/dashboard/documents/[id]/page.tsx` uses a 2-column grid (left: vertical workflow graph, right: sticky panel). Helper components defined inside the main component: `AgentNode`, `Connector`, `ParallelSection`, `HitlNode`. CSS state classes: `node-done/active/waiting/pending`, `connector-done/active/waiting` (`connector-active` is animated dashes via `connFlow`), `pipe-green/pipe-gray` for fork/merge bars.
+
+Reference design: `frontend/samplecode/Vaakya Agent Workflow.dc.html` — canonical visual spec for the workflow page.
+
+`projectworkflow.txt` (repo root) is the user's design notes file — do not commit it.
 
 ## Markdown Rendering
 LLM agent responses contain raw Markdown. Always render via `<MarkdownRenderer content={...} />` (`src/components/MarkdownRenderer.tsx`) — never display in `<textarea readOnly>` or `pre-wrap` div. Uses `react-markdown` + `remark-gfm` + `rehype-sanitize`. Component uses inline JSX styles matching Vaakya palette; `pre` renderer returns `<>{children}</>` to avoid double-wrapping.
