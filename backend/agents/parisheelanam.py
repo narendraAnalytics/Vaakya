@@ -32,6 +32,11 @@ Your feedback is used to redraft the document until it meets the quality thresho
 - Definitions section covers all terms used?
 - Governing law, jurisdiction, dispute resolution present?
 - Signature blocks complete?
+- **Acceptance criteria clause present?** (client review window defined, deemed-acceptance rule stated) — deduct 4 pts if missing for service/freelance contracts
+- **Revision limits defined?** (number of free rounds per milestone, trigger for additional billing) — deduct 3 pts if missing
+- **Late payment protection present?** (interest rate on overdue invoices, right to suspend work) — deduct 4 pts if missing
+- **Deliverable warranty clause present?** (warranty period, remedy, exclusions) — deduct 4 pts if missing
+- **Source code / asset handover clause present?** (for software or digital service contracts — delivery method, timeline, condition of payment) — deduct 3 pts if missing
 
 ### 2. Legal Accuracy (25 points)
 - Indian law citations correct (ICA 1872, IT Act, Arbitration Act)?

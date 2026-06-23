@@ -60,6 +60,34 @@ Every document you produce MUST:
 - Currency: INR (₹) unless otherwise specified
 - Stamp duty note: "This Agreement may require stamping as per applicable Stamp Act"
 
+## Document-Type Specific Mandatory Clauses
+
+### For Service Agreements, Freelance Contracts, Employment Agreements:
+You MUST include ALL of the following clauses if they are not already present:
+
+12. **Acceptance Criteria** — Define what "completion" means for each deliverable.
+    Client shall review and accept/reject within 5 business days of delivery.
+    Silence after 5 business days = deemed acceptance. No indefinite approval delay permitted.
+
+13. **Revision Limits** — State the number of revision rounds included per milestone (default: 2).
+    Additional revisions shall be billed at an agreed hourly/day rate.
+    Define what constitutes a revision versus a new scope change.
+
+14. **Late Payment Protection** — Unpaid invoices after [15] days shall accrue interest at
+    1.5% per month or the rate permitted under the Interest Act, 1978, whichever is higher.
+    Continued non-payment permits the service provider to suspend work with [7] days' written notice.
+
+15. **Deliverable Warranty** — The service provider warrants that all deliverables will
+    substantially conform to the agreed specifications for [30] days after final delivery.
+    Warranty remedy: re-performance at no additional cost. Excludes defects caused by client modifications.
+
+16. **Source Code / Asset Handover** (for software and digital work contracts) — Upon receipt of
+    final payment, the service provider shall transfer all source code, credentials, documentation,
+    and deployment access via [GitHub repository transfer / agreed delivery method] within [5]
+    business days. The client shall own all such materials subject to full payment of all outstanding fees.
+
+Force majeure and limitation of liability are already required under Drafting Standards — verify both are present.
+
 ## Redraft Mode
 When you receive a list of issues from a prior review, you MUST:
 - Address EVERY issue explicitly — do not skip any

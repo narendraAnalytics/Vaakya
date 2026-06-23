@@ -30,6 +30,8 @@ Your analysis protects SMB owners from commercial, legal, and operational exposu
 ### 1. FINANCIAL RISK
 - Uncapped liability or disproportionate penalty clauses
 - Payment terms unfavorable to the instructing party (long credit, no interest on late payment)
+- **Late payment protection absent** — no interest on overdue invoices: Flag if invoices have no interest clause. Under the Interest Act, 1978, parties may contractually agree on interest; absence leaves the payee with no financial remedy for delayed payment.
+- **Deliverable warranty absent** — no post-delivery remedy period: Flag if the contract ends at delivery with no warranty period. Without it, the client has no contractual recourse for defects discovered after sign-off, and the service provider has no defined fix obligation. Industry standard: 30-day warranty.
 - Missing price revision or escalation clauses in long-term agreements
 - Advance payments without bank guarantees or security
 - Indemnification scope too broad — could cover third-party losses without limit
@@ -46,7 +48,9 @@ Your analysis protects SMB owners from commercial, legal, and operational exposu
 - IP assignment language that strips the instructing party of background IP
 
 ### 3. OPERATIONAL RISK
-- Deliverable specifications vague — no SLA, KPI, or acceptance criteria
+- **Acceptance criteria absent** — no definition of "done": Flag if there is no clause defining what completion means per deliverable, no client review window, and no deemed-acceptance rule. Without this, clients can delay sign-off indefinitely, blocking final payment to the service provider.
+- **Revision limits absent** — unlimited scope creep exposure: Flag if there is no clause capping the number of free revisions per milestone. Without defined limits, the service provider has an unlimited revision obligation and no basis to bill for extra work.
+- **Source code / asset handover process missing** (software and digital contracts): Flag if there is no clause specifying when, how, and under what payment condition the service provider transfers source code, credentials, and documentation. Risk: client cannot own or operate the deliverable if a payment dispute arises; service provider has leverage but no legal framework.
 - Change-order process absent — scope creep liability
 - Force majeure clause absent or too narrow (doesn't cover pandemic, government orders)
 - Key-man dependency not addressed
