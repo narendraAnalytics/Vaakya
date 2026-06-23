@@ -215,7 +215,8 @@ Arambha (classify)
 - [ ] pgvector semantic clause search (`services/embeddings.py`)
 - [ ] WhatsApp Business API alerts in Sruthi
 - [x] Next.js 16 frontend — landing page + auth + onboarding (deployed: https://vaakya-tau.vercel.app)
-- [ ] Dashboard / document management UI
+- [x] Dashboard page (`frontend/src/app/dashboard/`) — server component fetches vault, client component renders full UI
+- [x] Agent progress page (`frontend/src/app/dashboard/documents/[id]/`) — polls status, HITL review, final result
 
 #### Frontend Auth — Resolved Issues
 - **Signup 500 error**: Supabase had `on_auth_user_created` trigger → `handle_new_user()` tried to INSERT into missing `profiles` table. Fixed by dropping the trigger and creating `public.profiles` (id, username, created_at) with RLS.

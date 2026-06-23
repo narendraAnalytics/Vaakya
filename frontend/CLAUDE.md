@@ -50,6 +50,31 @@ RLS: SELECT open to all (needed for username lookup). UPDATE restricted to owner
 SECURITY DEFINER function. Joins `profiles` → `auth.users` to return email for a given username.
 Used by the login form when the identifier has no `@`.
 
+## Frontend Pages
+| Route | File | Notes |
+|-------|------|-------|
+| `/dashboard` | `src/app/dashboard/page.tsx` + `DashboardClient.tsx` | Server fetches vault; client renders UI |
+| `/dashboard/documents/[id]` | `src/app/dashboard/documents/[id]/page.tsx` | Client-only; polls status every 3s |
+
+## Supabase Client Usage
+- **Server components / route handlers:** `import { createClient } from '@/lib/server'` (cookie-based)
+- **Client components:** `import { createClient } from '@/lib/client'` (browser session)
+
+## Status Polling — Agent State Inference
+No per-node streaming. Infer from: `review_score > 0` (Arambha/Rachana done), `loop_count > 0` (Rachana done), `vault_id !== ''` (Sahee done), `obligations_count > 0` (Sruthi done), `status === 'awaiting_approval'` (HITL paused).
+
+## Render Backend — CORS
+`ALLOWED_ORIGIN=https://vaakya-tau.vercel.app` must be set in Render env. Server-side fetches (`page.tsx`) bypass CORS; browser fetches (client components) do not.
+
+## Render Free Tier
+Backend sleeps after inactivity — first request can take ~30s. Handle in UI with a warm-up message after 6s timeout, keep polling (don't error out).
+
+## Styling Convention
+All styles are **inline JSX** (not Tailwind utilities). Palette: `#FEF9EF` bg, `#0F2D1F` text, `#1EA851` accent, `#1A5C35` CTA. Animations defined in `<style dangerouslySetInnerHTML>` at component root.
+
+## Git Commits (PowerShell)
+Use `@'...'@` single-quoted heredoc — bash `cat <<'EOF'` syntax causes parse errors in PowerShell 5.1.
+
 ## Known Issues Resolved
 
 ### Signup 500 — `relation "profiles" does not exist`
