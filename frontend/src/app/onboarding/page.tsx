@@ -42,7 +42,10 @@ export default function OnboardingPage() {
       });
       if (err) { setError(err.message); return; }
       if (user) {
-        await supabase.from('profiles').upsert({ id: user.id, username: trimmed });
+        const { error: upsertErr } = await supabase
+          .from('profiles')
+          .upsert({ id: user.id, username: trimmed });
+        if (upsertErr) { setError(upsertErr.message); return; }
       }
       await supabase.auth.refreshSession();
       router.replace('/');
