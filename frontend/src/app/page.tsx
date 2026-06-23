@@ -16,6 +16,9 @@ export default function LandingPage() {
     supabase.auth.getUser().then(({ data }) => {
       const name = data.user?.user_metadata?.username ?? null;
       setUsername(name);
+      if (name) {
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`).catch(() => {});
+      }
     });
   }, []);
   return (

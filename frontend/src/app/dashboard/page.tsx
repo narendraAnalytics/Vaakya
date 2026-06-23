@@ -32,6 +32,7 @@ export default async function DashboardPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault`, {
         headers: { Authorization: `Bearer ${token}` },
         cache: 'no-store',
+        signal: AbortSignal.timeout(5000),
       })
       if (res.ok) {
         const json = await res.json()
