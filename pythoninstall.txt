@@ -4,7 +4,4 @@ vaakya/
 uv init
  uv venv --python 3.12.10
 
-
-
-
- https://nbgradneuaarkijqiqrv.supabase.co
+Next up: Supabase schema (documents, vault, obligations tables + RLS) or services/pdf_extractor.py.

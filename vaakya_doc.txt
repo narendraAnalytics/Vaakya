@@ -1,181 +1,108 @@
+page.tsx
+
+import { createClient } from '@/utils/supabase/server'
+import { cookies } from 'next/headers'
+
+export default async function Page() {
+  const cookieStore = await cookies()
+  const supabase = createClient(cookieStore)
+
+  const { data: todos } = await supabase.from('todos').select()
+
+  return (
+    <ul>
+      {todos?.map((todo) => (
+        <li key={todo.id}>{todo.name}</li>
+      ))}
+    </ul>
+  )
+}
+
+---------------------------------------- ------------------------------------------------
+utils/supabase/server.ts
+
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+export const createClient = (cookieStore: Awaited<ReturnType<typeof cookies>>) => {
+  return createServerClient(
+    supabaseUrl!,
+    supabaseKey!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing
+            // user sessions.
+          }
+        },
+      },
+    },
+  );
+};
+
+-------------------------------------------------------- ----------------------------------------
+utils/supabase/client.ts
 
 
+import { createBrowserClient } from "@supabase/ssr";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-V A A K Y A
-Autonomous Legal Document Factory
-for Indian Small & Medium Businesses
----------------------------------------------
-PROJECT BLUEPRINT & TECHNICAL DOCUMENTATION
-Version 1.0  |  June 2026
-Built with Python 3.12 · LangGraph · FastAPI · Claude AI
+export const createClient = () =>
+  createBrowserClient(
+    supabaseUrl!,
+    supabaseKey!,
+  );
 
+  ---------------------------------------------- -----------------------------------------------------
 
+utils/supabase/middleware
 
-"Vaakya" (?????) - Telugu for "Legal Statement" or "Clause"
+import { createServerClient } from "@supabase/ssr";
+import { type NextRequest, NextResponse } from "next/server";
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-1. Executive Summary
-Vaakya is an autonomous, multi-agent AI platform that eliminates the legal document bottleneck for Indian small and medium businesses (SMBs). Powered by LangGraph, FastAPI, and Claude AI, Vaakya handles the entire legal document lifecycle - from a user typing a plain-English request or uploading a PDF, all the way to e-signature, obligation tracking, and dispute resolution - without any lawyer or legal team.
+export const createClient = (request: NextRequest) => {
+  // Create an unmodified response
+  let supabaseResponse = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  });
 
-"Vaakya" (?????) is the Telugu word for a legal statement or clause - the smallest unit of law. The name reflects the project's soul: making every legal clause accessible and affordable to every Indian SMB, regardless of size or city.
-Indian SMBs lose an estimated 9.2% of their annual revenue to poor contract management - missed renewals, unenforceable clauses, and delayed agreements. Vaakya solves this with 8 specialized AI agents, a hybrid sequential-parallel LangGraph workflow, and zero dependency on expensive legal professionals for routine documents.
+  const supabase = createServerClient(
+    supabaseUrl!,
+    supabaseKey!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    },
+  );
 
-2. The Problem - What Vaakya Solves
-2.1 The SMB Legal Crisis in India
-90% of Indian SMBs - from IT firms in Hyderabad to manufacturing units in Coimbatore - cannot afford a lawyer for routine legal work. Yet every business needs NDAs, vendor agreements, employment contracts, and service agreements to operate and grow. The gap between need and access creates a cascade of real business problems:
-
-BEFORE Vaakya - SMB Pain PointsAFTER Vaakya - Problems SolvedX  Pays ?10,000-?50,000 per contract to a lawyerV  ?299-?2,999/month - 95% cheaper than a lawyerX  Waits 3-7 days for a simple NDA to be draftedV  NDA drafted, reviewed & sent for e-sign in under 4 minutesX  Uses bad Google templates - wrong clauses, wrong jurisdictionV  Jurisdiction-aware clauses: Indian Contract Act, IT Act, MSME ActX  Misses renewal dates - vendor auto-renews at +22% priceV  Auto-alerts 90 days before any contract expires or auto-renewsX  71% cannot find 10%+ of their own contractsV  Central encrypted vault - all contracts searchable and auditableX  Loses 9.2% annual revenue to poor contract managementV  AI achieves 94% risk detection - better than avg lawyer (85%)X  No tracking of obligations, payment terms, or expiry datesV  Live obligation calendar - payment dates, SLA terms, deliverablesX  Dispute resolution takes weeks with zero documented leverageV  Dispute summary with clause references generated in 26 seconds
-2.2 Documents Vaakya Handles
-Vaakya is designed to handle all high-volume, pattern-based legal documents used by Indian SMBs. The first phase covers the most common 12 document types:
-
-Contract TypeContract TypeContract TypeNDA / Confidentiality AgreementVendor / Supplier AgreementEmployment ContractFreelancer / Contractor AgreementService Agreement / SOWLease / Rental AgreementPartnership DeedDemand / Legal NoticeMSA (Master Service Agreement)IP Assignment AgreementPrivacy Policy / Terms of ServiceLoan / Promissory Note
-3. Project Name - Vaakya (?????)
-The name "Vaakya" is chosen from Telugu - the native language of Andhra Pradesh and Telangana, reflecting the South Indian roots of this project. In Telugu and Sanskrit, Vaakya (?????) means:
-
-• A sentence or statement - the fundamental unit of communication
-• In legal contexts - a clause or provision, the building block of every contract
-• Symbolically - giving every SMB owner a "voice" in legal matters, regardless of their resources
-
-"Every business deserves a voice in every contract. Vaakya gives you that voice - automatically, affordably, and accurately."
-4. User Input Modes
-Vaakya accepts user requests in two distinct modes. Both modes converge at the same LangGraph state and flow through the identical 8-agent pipeline after intake:
-
-4.1 Mode 1 - Plain Text Request
-The user types their requirement in plain English (or Telugu/Hindi) through the web dashboard or WhatsApp interface. The FastAPI endpoint POST /document/new receives a JSON body and the Arambha (Intake) Agent classifies the document type, extracts parties, jurisdiction, and key terms.
-
-Example: "I need an NDA with TechCorp Pvt Ltd, Hyderabad. They should not share my source code or client data for 3 years. I want a Rs.5 lakh penalty clause and Andhra Pradesh jurisdiction."
-4.2 Mode 2 - PDF / DOCX Upload
-The user uploads an existing contract (received from a vendor, client, or lawyer). The FastAPI endpoint POST /document/upload accepts multipart/form-data. PyMuPDF (fitz) extracts text from every page with page-level labels. The extracted plain text then enters the same LangGraph state as Mode 1 - from the Arambha Agent onward, the pipeline is identical.
-
-Example: "TechCorp sent me their NDA template. Can you review it and flag any risks before I sign?" - uploads TechCorp_NDA_draft.pdf
-5. The 8 Agents of Vaakya
-Vaakya deploys 8 specialized AI agents, each owning a distinct stage of the legal document lifecycle. Every agent is named in Telugu to reflect the South Indian identity of the project:
-
-#Agent Name (Telugu)RoleKey Action01Arambha (????) BeginningOrchestrator / IntakeReceives request (text or PDF), classifies document type, extracts parties, jurisdiction, key business terms, routes to correct sub-graph. Entry point to the entire graph.02Rachana (???) CompositionDrafting AgentGenerates the full contract from clause templates + LLM. Applies Indian Contract Act 1872, IT Act, GST clauses, and jurisdiction-specific language automatically.03Parisheelanam (????????) ExaminationReview AgentReads the draft, flags missing clauses, one-sided terms, liability gaps. Scores overall risk 0-100. Loops back to Rachana if score fails threshold (max 3 iterations).04Jokhim (?????) RiskRisk FlaggerDeep-scans for hidden risks: auto-renewal traps, unlimited liability, IP ownership ambiguity, non-compete enforceability, penalty enforceability under ICA Section 74.05Samjoota (??????) NegotiationNegotiation AgentWhen a counter-party sends a redlined version, diffs both documents, identifies all changes, flags deal-breakers, and suggests counter-proposals with specific clause references.06Sahee (???) SignatureSign & Deliver AgentPackages final PDF, sends via Digio/DocuSign webhook, tracks signer status, sends reminders, stores signed copy in encrypted vault with full searchable metadata.07Sruthi (??????) Listener/TrackerObligation TrackerAfter signing, extracts all obligations: payment dates, deliverable deadlines, renewal windows, SLA terms. Creates a live alert calendar via WhatsApp and email.08Vivada (?????) DisputeDispute AgentWhen a dispute is raised, pulls the relevant contract, extracts applicable clauses, and generates a dispute summary plus draft legal notice in under 30 seconds.
-6. Vaakya Workflow Diagram
-The diagram below shows the complete end-to-end Vaakya workflow - from user input through all agent nodes to the final contract vault. Three distinct sub-graphs handle New Document, Redline Review, and Dispute Resolution paths:
-
-
-
-Diagram key: Blue zone = New Document sub-graph (sequential + parallel fan-out). Gold zone = Redline sub-graph (parallel Samjoota + Jokhim). Red zone = Dispute sub-graph (Vivada direct path). Purple HITL checkpoint = human approval gate before any document is signed or sent.
-7. The Vaakya Workflow - Architecture
-7.1 Hybrid Sequential + Parallel Design
-Vaakya uses a Hybrid LangGraph Architecture - sequential where order matters, and parallel fan-out where agents are independent. This is the optimal design for legal document processing:
-
-Sequential ZoneArambha -> Rachana -> Parisheelanam reflexion loop. Each step depends on the previous output - you cannot review before drafting, and cannot draft before classifying.Parallel Fan-out ZoneParisheelanam (final review) + Jokhim (risk flag) run simultaneously after the draft is ready. Both read the same finished document independently - perfect candidates for parallel execution.Parallel Redline ZoneSamjoota (negotiation) + Jokhim (risk scan) run in parallel on incoming redlined contracts. Independent agents, same document.HITL CheckpointHuman-in-the-loop pause before any document is sent for signature. The user reviews, can edit, and explicitly approves. LangGraph interrupt() handles this natively.Fan-in / MergeParallel branches write to list-append fields in the TypedDict state. A merge node collects both results before proceeding to HITL.
-7.2 Sub-Graph A - New Document
-1. User sends text request or uploads PDF to FastAPI endpoint
-2. PyMuPDF extracts text if PDF - plain text enters LangGraph state
-3. Arambha Agent: classify document type, extract parties, jurisdiction, key terms
-4. Rachana Agent: generate full contract from clause library + Claude AI
-5. Parisheelanam Agent: review draft, score risk 0-100
-6. If risk score less than 75: loop back to Rachana (max 3 iterations)
-7. PARALLEL FAN-OUT: Parisheelanam (final) + Jokhim run simultaneously
-8. FAN-IN: merge results - HITL checkpoint (user reviews and approves)
-9. Sahee Agent: PDF generation - Digio e-sign - encrypted S3 vault
-10. Sruthi Agent: extract obligations - create WhatsApp alert calendar
-
-7.3 Sub-Graph B - Redline Review
-11. User uploads contract received from the other party
-12. Arambha Agent: classify and identify as counter-party document
-13. PARALLEL: Samjoota Agent + Jokhim Agent run simultaneously
-14. Samjoota: diffs with standard terms, suggests counter-proposals
-15. Jokhim: deep risk scan on incoming counter-party terms
-16. FAN-IN - HITL checkpoint - Sahee Agent sends redlined version back
-
-7.4 Sub-Graph C - Dispute Resolution
-17. User raises a dispute flag against an existing signed contract
-18. Arambha Agent: identifies relevant contract from vault by metadata
-19. Vivada Agent: extracts applicable clauses, generates dispute summary
-20. Vivada Agent: drafts legal notice under ICA / CPC as PDF
-21. Sahee Agent: delivers legal notice via WhatsApp and email
-
-8. Real-World Examples - 5 SMB Scenarios Solved by Vaakya
-The following five real-world scenarios demonstrate how Vaakya eliminates the most common legal document problems faced by Indian SMBs across different industries and cities.
-
-Example 1 - Ravi's IT Firm: NDA with a New Client (Vijayawada)
-Ravi Shankar runs a 12-person software development firm in Vijayawada. He has won a Rs.18 lakh project from TechCorp Pvt Ltd, Hyderabad. TechCorp needs an NDA signed before sharing project details. A lawyer would cost Rs.15,000 and take 5 days. The client needs it by tomorrow morning.
-Scenario A - Ravi creates the NDA (Text Input, Mode 1)
-
-StepWhat HappensRavi types:"I need an NDA with TechCorp Pvt Ltd, Hyderabad. They should not share my source code or client data for 3 years. I want a Rs.5 lakh penalty clause and Andhra Pradesh jurisdiction."Arambha Agent:Document type: NDA. Parties: Ravi's firm (Disclosing) vs TechCorp (Receiving). Duration: 3 years. Penalty: Rs.5,00,000. Jurisdiction: Andhra Pradesh, Indian Contract Act 1872. Routes to New Document sub-graph.Rachana Agent:NDA drafted in 45 seconds. 8 clauses including: definition of confidential info, scope of disclosure, IP protection, penalty clause under Section 74 ICA, dispute resolution in Hyderabad courts.Parisheelanam (Loop 1):Risk score: 62/100. Issue found: no 'return of materials' clause - TechCorp could retain copies after termination. Sends back to Rachana.Parisheelanam (Loop 2):Risk score: 91/100. Passed. All standard NDA protections present. Forwarding to parallel fan-out.PARALLEL - Jokhim:2 flags: (1) Penalty clause may be challenged - added 'pre-estimate of loss' language. (2) Auto-renewal not defined - silent expiry risk. Both fixed. Parallel complete.HITL Checkpoint:Ravi reviews the draft on his dashboard. Approves. Clicks 'Send for E-sign'.Sahee Agent:PDF generated. Sent via Digio to TechCorp's legal email. Tracking link shared with Ravi. Both parties receive signing reminders every 24 hours.Sruthi Agent:Obligation tracker activated. Will alert Ravi 90 days before the 3-year expiry via WhatsApp.Result:Under 4 minutes. Cost: included in Rs.999/month plan. Previous method: Rs.15,000 + 5 days wait.
-Scenario B - Ravi reviews TechCorp's counter-NDA (PDF Upload, Mode 2)
-
-StepWhat HappensRavi uploads:TechCorp_NDA_draft.pdf - 6 pages, 2,340 words. TechCorp's own template favours them heavily.PyMuPDF:Extracts all 6 pages with page labels. Plain text enters LangGraph state. Routes to Redline sub-graph.PARALLEL - Samjoota + Jokhim:Both agents run simultaneously on the extracted text.Jokhim finds:3 critical issues: (1) Clause 7.2 - unlimited liability on Ravi's side, no cap. (2) Jurisdiction is Mumbai - disadvantages Ravi. (3) 'Confidential info' definition too broad - includes Ravi's pre-existing IP.Samjoota suggests:Redlined version: liability capped at Rs.2L, jurisdiction changed to Hyderabad, pre-existing IP explicitly excluded from confidentiality scope.HITL Checkpoint:Ravi reviews the redline. Accepts all 3 changes. Clicks 'Send Redline to TechCorp'.Sahee Agent:Redlined PDF sent to TechCorp. Ravi notified automatically when TechCorp accepts or counter-proposes.Result:Under 6 minutes for full legal review and counter-proposal. Zero lawyer cost.
-Example 2 - Meena's Garment Export Business: Vendor Agreement Dispute (Coimbatore)
-Meena Krishnamurthy runs a garment export unit in Coimbatore with 45 employees supplying to clients in Europe. One of her fabric suppliers, SilkMart Textiles, delivered 30% defective stock worth Rs.8.2 lakh and is now refusing to refund. Meena signed a Vendor Agreement 14 months ago but cannot find the original document or remember the exact penalty clause.
-StepWhat HappensProblem:Meena cannot locate her signed contract. SilkMart denies the defective delivery claim. She has no documented leverage. A lawyer would charge Rs.25,000 for a demand notice and take 10 days.Meena types:"SilkMart Textiles dispute - they delivered defective stock worth Rs.8.2 lakh and are refusing refund. I need a legal notice immediately."Arambha Agent:Identifies as Dispute scenario. Searches vault by party name 'SilkMart Textiles' using pgvector semantic search. Locates signed Vendor Agreement from 14 months ago.Vivada Agent:Extracts Clause 6.3 (Quality Guarantee - 100% replacement or full refund for defective goods), Clause 9.1 (Dispute Resolution - arbitration in Coimbatore), and Clause 12.4 (penalty: 15% of invoice value for non-compliance). Total leverage: Rs.9.43 lakh.Vivada Agent:Drafts a formal legal demand notice referencing exact clause numbers, invoking Indian Sale of Goods Act 1930, Section 16(2) - implied condition of merchantable quality. Notice completed in 28 seconds.HITL Checkpoint:Meena reviews the notice. Makes one edit to the delivery date. Approves.Sahee Agent:PDF legal notice sent to SilkMart's registered email and WhatsApp. Copy sent to Meena. Legally timestamped delivery confirmation generated.Result:SilkMart responded within 48 hours and agreed to full refund after receiving the notice. Total cost: zero extra (covered in Meena's Rs.2,999/month Business plan). Lawyer would have cost Rs.25,000 and 10 days.
-Example 3 - Arun's Digital Marketing Agency: Freelancer Agreements at Scale (Chennai)
-Arun Balakrishnan runs a 20-person digital marketing agency in Chennai. He regularly hires freelance designers, content writers, and video editors - averaging 8-12 new freelancers per month. Each requires a Freelancer Agreement covering deliverables, IP ownership, non-disclosure, and payment terms. Previously, Arun used one standard template for everyone - missing critical clauses like IP assignment for specific project types - resulting in two disputes in the last year where freelancers claimed ownership of campaign creative work.
-StepWhat HappensProblem:One-size-fits-all freelancer template causing IP ownership disputes. Each hire takes 2 days to get an agreement signed. Dispute resolution is slow with no clear clause references.Arun's request:"Freelancer agreement for Priya Rajan, UI/UX Designer, Chennai. Contract value Rs.45,000 for a 6-week e-commerce website redesign project. All design assets, mockups, and source files must transfer to us. Non-disclosure for 2 years. Payment in 3 milestones."Arambha Agent:Document type: Freelancer/Contractor Agreement. Detects project type as 'design/creative work' - auto-flags that IP assignment clause needs to be explicit and comprehensive for creative deliverables. Routes to New Document sub-graph.Rachana Agent:Generates agreement with: explicit IP assignment clause transferring ALL work products including source files, AI-generated content policy, milestone-based payment schedule (30/40/30), 2-year NDA, non-solicitation clause for Arun's clients. Tailored for creative work type.Parisheelanam (Loop 1):Risk score: 71/100. Missing: moral rights waiver under Indian Copyright Act Section 57 - freelancer could still object to modifications. Sends back to Rachana.Parisheelanam (Loop 2):Risk score: 93/100. Moral rights waiver added. All IP protections complete.PARALLEL - Jokhim:Flags: (1) Payment milestone percentages should be tied to specific deliverable acceptance, not calendar dates. (2) Revision rounds not capped - added '3 rounds of revisions per milestone' clause. Both fixed.HITL Checkpoint:Arun reviews in 45 seconds - the tailored clauses are exactly what was missing from his old template. Approves. Sends to Priya for e-sign via Digio.Sruthi Agent:Tracks 3 milestone payment dates, 6-week project end date, and 2-year NDA expiry. WhatsApp alerts scheduled for Arun 3 days before each payment milestone.Scale impact:Arun now generates all 8-12 monthly freelancer agreements in under 10 minutes total. He created a 'Freelancer' quick-request template in Vaakya. Zero disputes since using the platform - IP ownership is unambiguous in every agreement.Result:Monthly saving: ~Rs.40,000 in lawyer fees. Time saved: 16-24 hours per month. Two disputes eliminated through proper IP assignment clauses.
-Example 4 - Dr. Suresh's Diagnostic Lab: Employment Contracts with Non-Compete (Tirupati)
-Dr. Suresh Naidu runs a chain of 3 diagnostic labs in Tirupati and Chittoor. He recently hired 2 senior lab technicians and a radiologist. His previous employment contracts had no non-compete or non-solicitation clauses. Six months ago, a senior technician left and immediately joined a competitor, taking two major hospital referral accounts worth Rs.14 lakh/year with him. Dr. Suresh needs airtight employment contracts for all new hires.
-StepWhat HappensProblem:Employment contracts missing non-compete, non-solicitation, and client-protection clauses. A senior technician defected with Rs.14 lakh in annual referral business. New contracts needed immediately for 3 hires.Dr. Suresh types:"Employment contract for Rajesh Kumar, Senior Lab Technician, Tirupati. Salary Rs.42,000/month. 6-month probation. Non-compete for healthcare diagnostics in Tirupati and Chittoor districts for 12 months after exit. Non-solicitation of our hospital referral clients for 24 months."Arambha Agent:Document type: Employment Contract. Detects 'healthcare' + 'non-compete' - auto-applies Indian healthcare employment law context, Shops and Establishments Act (Andhra Pradesh), and flags that non-compete enforceability in India requires careful scoping.Rachana Agent:Generates employment contract with: probation and notice period clauses, non-compete limited to specific districts and role type (enforceable under Indian law), non-solicitation with specific definition of 'referral clients', confidentiality of patient data under IT Act and Clinical Establishments Act, IP assignment for any lab process improvements developed on the job.Parisheelanam Review:Risk score: 88/100. One concern: non-compete clause too broad in activity scope - may not be enforceable under Indian law (courts favour employee). Narrows to 'clinical diagnostics lab operations' specifically.PARALLEL - Jokhim:Flags: (1) Termination clause missing 'for cause' definition - could lead to wrongful termination dispute. (2) Salary revision cycle not defined - added annual appraisal clause. Both critical fixes applied.HITL Checkpoint:Dr. Suresh reviews. Particularly notes the enforceable non-compete scope - exactly the gap that caused the previous defection. Approves all 3 contracts in one session.Sahee Agent:All 3 employment contracts sent to respective hires via Digio. Digitally signed and vaulted within the same day.Sruthi Agent:Tracks probation end dates (6 months), annual appraisal dates, and contract renewal reminders for all 3 employees. WhatsApp alerts to Dr. Suresh 2 weeks before each probation end.Result:3 airtight employment contracts generated in 22 minutes. Non-compete clauses are now legally scoped and enforceable. Estimated protection of Rs.14+ lakh in referral business per year. Previous cost: Rs.45,000 for a lawyer to draft all 3.
-Example 5 - Priya's EdTech Startup: SaaS MSA with a Corporate Client (Hyderabad)
-Priya Venkatesh founded an EdTech startup in Hyderabad providing corporate training software. She has just closed her first enterprise deal - a 2-year SaaS contract with a large manufacturing company, Bharat Heavy Components Ltd, for Rs.8.4 lakh/year. The client's legal team has sent their standard MSA (Master Service Agreement) - a 42-page document heavily in their favour. Priya has no in-house legal team and cannot afford to pay a law firm Rs.80,000 to review it.
-StepWhat HappensProblem:42-page enterprise MSA from a large corporate client - heavily one-sided. Priya cannot afford Rs.80,000 legal review. She must respond within 5 business days or lose the deal.Priya uploads:BharatHeavy_MSA_Draft_v3.pdf - 42 pages, 11,800 words. Major corporate standard terms.PyMuPDF:Extracts all 42 pages with section and page labels. Enters LangGraph state. Routes to Redline sub-graph.PARALLEL - Samjoota + Jokhim:Both agents run simultaneously across all 42 pages. Total parallel processing time: 38 seconds.Jokhim flags (critical):(1) Clause 14.3: Unlimited IP ownership transfer - all software customizations become client's property. (2) Clause 19.1: SLA penalty of 20% monthly fee for any downtime - no upper cap, existential risk. (3) Clause 23: Unilateral contract modification by client with 7-day notice. (4) Clause 31.2: Data portability obligation with 48-hour turnaround on request - technically impossible. (5) Jurisdiction: Delhi - disadvantages Hyderabad-based Priya.Samjoota counter-proposals:(1) IP ownership limited to client-specific configuration data only. (2) SLA penalty capped at 5% monthly fee, maximum 3 months cumulative. (3) Contract modification requires mutual written consent. (4) Data portability: 30 business days standard, 48-hour only for critical regulatory requests. (5) Jurisdiction: Hyderabad or mutual agreed arbitration.HITL Checkpoint:Priya reviews the 5 redlines. She is amazed - she would have signed the unlimited IP transfer clause without noticing it. Approves all 5 counter-proposals. Adds one custom note on support hours.Sahee Agent:Professionally formatted redlined MSA sent to Bharat Heavy's legal team. Change summary document automatically generated showing all 5 proposed amendments with clause references.Samjoota (Round 2):Bharat Heavy accepts 4 of 5 changes. Pushes back on SLA cap - wants 8% instead of 5%. Priya approves 8% via HITL. Final MSA executed.Sruthi Agent:Tracks 2-year contract term, annual renewal dates, SLA review windows, quarterly payment dates, and data portability requests. Full obligation calendar created.Result:42-page enterprise MSA reviewed, redlined, negotiated, and executed in 2 days. 5 critical clauses corrected - including unlimited IP transfer that could have cost Priya her entire product. Saved Rs.80,000 in legal fees and secured Rs.16.8 lakh in 2-year revenue.
-Summary: Across these 5 scenarios - IT NDA, Garment Dispute, Freelancer Scale, Healthcare Employment, EdTech MSA - Vaakya saved Rs.1,65,000 in lawyer fees, 26+ days of waiting time, and protected businesses from clauses that would have cost them Rs.30+ lakhs in damages and lost revenue.
-9. Complete Technology Stack
-9.1 Core Stack Overview
-
-LayerTechnologyPurposeAI OrchestrationLangGraph 0.2+Stateful multi-agent graph - sequential + parallel execution, HITL interrupts, checkpointingAI OrchestrationLangChain CorePrompt templates, message formatting, tool binding for all agentsLLMClaude claude-sonnet-4-6 (Anthropic)Primary LLM for all agent reasoning - drafting, review, risk analysis, negotiationAPI LayerFastAPIAll REST endpoints, WebSocket streaming, multipart PDF upload, webhook handlersAPI LayerPydantic v2Request/response validation, LangGraph state schema definitionPDF ProcessingPyMuPDF (fitz)PDF text extraction with page labels - handles scanned and digital PDFsDocument Generationpython-docxWord document generation for drafted contractsDocument GenerationReportLab / WeasyPrintPDF export of generated contracts for e-signatureState PersistencePostgreSQL + asyncpgLangGraph PostgresSaver checkpointer - state persists across process restartsVector SearchpgvectorSemantic clause search - find similar clauses from clause library using embeddingsEmbeddingssentence-transformersGenerate clause embeddings for pgvector semantic searchE-SignatureDigio API (India)Indian e-signature integration - legally valid Aadhaar-based e-signFile StorageAWS S3 / MinIOEncrypted contract vault - AES-256 encryption at restAlerts & NotificationsWhatsApp Business APIObligation alerts, renewal reminders, dispute notificationsObservabilityLangSmithTracing every agent node, token usage, latency - production monitoringAsync TasksCelery + RedisBackground tasks: PDF generation, email sending, obligation schedulingAuthenticationFastAPI + JWT + OAuth2User authentication, multi-tenant isolationRuntimePython 3.12.10Core runtime - all agents, FastAPI server, utility scriptsContainerizationDocker + Docker ComposeLocal dev and production deployment packagingWSGI ServerUvicorn + GunicornProduction ASGI server for FastAPI
-10. Installation & Package Setup
-10.1 Prerequisites
-• Python 3.12.10 (use pyenv or official installer)
-• Node.js 18+ (for docx generation utility)
-• PostgreSQL 15+ with pgvector extension
-• Redis 7+ (for Celery task queue)
-• Docker + Docker Compose (optional but recommended)
-
-10.2 Project Structure
-
-vaakya/ +-- agents/ ¦   +-- arambha.py          # Orchestrator / Intake Agent ¦   +-- rachana.py          # Drafting Agent ¦   +-- parisheelanam.py    # Review Agent ¦   +-- jokhim.py           # Risk Flag Agent ¦   +-- samjoota.py         # Negotiation Agent ¦   +-- sahee.py            # Sign & Deliver Agent ¦   +-- sruthi.py           # Obligation Tracker Agent ¦   +-- vivada.py           # Dispute Agent +-- graph/ ¦   +-- state.py            # TypedDict state schema ¦   +-- workflow.py         # LangGraph graph definition ¦   +-- subgraphs/          # new_doc / redline / dispute subgraphs +-- api/ ¦   +-- main.py             # FastAPI app entry point ¦   +-- routes/             # /document, /webhook, /vault endpoints ¦   +-- middleware/         # Auth, logging, rate limiting +-- services/ ¦   +-- pdf_extractor.py    # PyMuPDF extraction ¦   +-- doc_generator.py    # python-docx + ReportLab ¦   +-- digio_client.py     # E-signature integration ¦   +-- s3_vault.py         # Encrypted storage ¦   +-- whatsapp.py         # WhatsApp Business API +-- clause_library/         # JSON clause templates by document type +-- tests/                  # pytest test suite +-- requirements.txt +-- docker-compose.yml +-- .env.example
-10.3 Python Package Installation
-
-# Create and activate virtual environment python3.12 -m venv venv source venv/bin/activate   # Linux/Mac  # Core AI & Orchestration pip install langgraph==0.2.* pip install langchain-core==0.3.* pip install langchain-anthropic==0.3.* pip install anthropic==0.40.* pip install langsmith==0.2.*  # API Framework pip install fastapi==0.115.* pip install uvicorn[standard]==0.34.* pip install gunicorn==23.* pip install pydantic==2.10.* pip install python-multipart==0.0.*  # Document Processing pip install pymupdf==1.24.* pip install python-docx==1.1.* pip install reportlab==4.2.* pip install weasyprint==62.*  # Database & State Persistence pip install psycopg[async,pool]==3.2.* pip install asyncpg==0.30.* pip install sqlalchemy[asyncio]==2.0.* pip install alembic==1.14.* pip install pgvector==0.3.*  # Embeddings & Vector Search pip install sentence-transformers==3.3.* pip install numpy==2.2.*  # Async Tasks & Caching pip install celery==5.4.* pip install redis==5.2.* pip install flower==2.0.*  # Authentication pip install python-jose[cryptography]==3.3.* pip install passlib[bcrypt]==1.7.*  # Storage & External APIs pip install boto3==1.35.* pip install httpx==0.28.* pip install aiofiles==24.*  # Observability & Logging pip install structlog==24.*  # Dev & Testing pip install pytest==8.3.* pip install pytest-asyncio==0.25.* pip install python-dotenv==1.0.*
-10.4 requirements.txt (Production Pinned)
-
-# requirements.txt - Vaakya v1.0 langgraph>=0.2.0,<0.3.0 langchain-core>=0.3.0,<0.4.0 langchain-anthropic>=0.3.0,<0.4.0 anthropic>=0.40.0,<0.41.0 langsmith>=0.2.0,<0.3.0 fastapi>=0.115.0,<0.116.0 uvicorn[standard]>=0.34.0,<0.35.0 gunicorn>=23.0.0,<24.0.0 pydantic>=2.10.0,<3.0.0 python-multipart>=0.0.9 pymupdf>=1.24.0,<1.25.0 python-docx>=1.1.0,<2.0.0 reportlab>=4.2.0,<5.0.0 weasyprint>=62.0,<63.0 psycopg[async,pool]>=3.2.0,<4.0.0 asyncpg>=0.30.0,<0.31.0 sqlalchemy[asyncio]>=2.0.0,<3.0.0 alembic>=1.14.0,<2.0.0 pgvector>=0.3.0,<0.4.0 sentence-transformers>=3.3.0,<4.0.0 numpy>=2.2.0,<3.0.0 celery>=5.4.0,<6.0.0 redis>=5.2.0,<6.0.0 flower>=2.0.0,<3.0.0 python-jose[cryptography]>=3.3.0 passlib[bcrypt]>=1.7.4 boto3>=1.35.0,<2.0.0 httpx>=0.28.0,<0.29.0 aiofiles>=24.0.0 structlog>=24.0.0 python-dotenv>=1.0.0 pytest>=8.3.0 pytest-asyncio>=0.25.0
-11. Success Metrics & Business Model
-11.1 Key Performance Metrics
-
-MetricBefore VaakyaAfter VaakyaNDA turnaround time3-7 daysUnder 4 minutesRisk detection accuracy85% (avg lawyer)94% (AI)Review time (NDA)92 minutes26 secondsCost per contractRs.10,000-50,000Rs.199-600 (plan-based)Contract review reductionManual 100%80% automatedPost-signature disputesHigh (inconsistent)60% reductionRevenue leak from contracts9.2% annualNear zeroRenewal miss rate67% of businessesZero (auto-alerts)
-11.2 Pricing Model
-
-PlanStarterGrowthBusinessPriceRs.299/monthRs.999/monthRs.2,999/monthDocuments5 docs/month25 docs/monthUnlimitedAgents includedArambha, Rachana, Parisheelanam+ Jokhim, SruthiAll 8 agentsE-signatureIncludedIncludedIncludedObligation trackerBasic alertsFull calendarFull + WhatsAppDispute agentNot includedNot includedIncludedPay-per-docRs.199/docRs.149/docRs.99/doc
-12. Phased Development Roadmap
-Phase 1 - Foundation (Weeks 1-4)
-22. Set up LangGraph state schema (TypedDict), PostgreSQL checkpointer
-23. Build Arambha Agent + Rachana Agent + Parisheelanam reflexion loop
-24. FastAPI endpoints: POST /document/new and POST /document/upload
-25. Clause library: NDA + Vendor Agreement JSON templates
-26. Test end-to-end with 10 real NDA scenarios
-
-Phase 2 - Parallel Agents & E-Sign (Weeks 5-8)
-27. Add Jokhim Agent (parallel fan-out with Parisheelanam)
-28. Add Sruthi Agent (obligation tracker + WhatsApp alerts)
-29. Integrate Digio e-signature API + Sahee Agent
-30. Build encrypted S3 vault with metadata search
-31. Add 5 more document types to clause library
-
-Phase 3 - Negotiation & Disputes (Weeks 9-12)
-32. Build Samjoota Agent (redline diff + counter-proposal)
-33. Build Vivada Agent (dispute summary + legal notice generation)
-34. Add pgvector semantic clause search
-35. Launch dashboard frontend + WhatsApp bot integration
-36. Beta launch with 50 SMBs in Andhra Pradesh
-
-13. Conclusion
-Vaakya is not a chatbot, not a template generator, and not a toy project. It is a production-grade autonomous business - a legal department that runs itself, 24 hours a day, for any Indian SMB that needs it.
-
-The combination of LangGraph's stateful graph architecture, FastAPI's production-ready API layer, Claude AI's legal reasoning, and the hybrid sequential-parallel execution pattern creates a system that is faster than any human lawyer for routine work, more accurate at risk detection, and available to a business owner in Vijayawada at the same price as a Netflix subscription.
-
-The five real-world examples - IT firm NDA, garment export dispute, freelancer scale-up, healthcare employment contract, and enterprise SaaS MSA - prove that Vaakya is not solving a hypothetical problem. Every one of these scenarios is happening today, every week, in SMBs across Andhra Pradesh, Tamil Nadu, and beyond.
-
-"From a Rs.15,000 lawyer's fee and a 5-day wait - to a Rs.199 document ready in 4 minutes. That is the Vaakya promise, built on South India's culture of hard work and innovation, powered by the best of autonomous AI."
-
-- End of Document -
-VAAKYA   |   Autonomous Legal Document Factory for Indian SMBs
-
-Vaakya v1.0  |  June 2026  |  Confidential Project Documentation    Page 1
-
+  return supabaseResponse
+};

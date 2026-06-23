@@ -158,9 +158,10 @@ Arambha (classify)
 
 - All API routes protected by `Authorization: Bearer <supabase_jwt>`
 - FastAPI dependency `get_current_user()` verifies JWT locally via Supabase JWKS (no per-request API call)
+- **JWT algorithm: ES256** — new Supabase projects use ECDSA P-256 keys, NOT RS256 or HS256. `api/middleware/auth.py` uses `algorithms=["ES256"]`. The legacy HS256 JWT secret only applies to anon/service_role API keys.
 - Row-Level Security (RLS) on all Supabase tables — users only see their own documents
 - Never expose Supabase service role key to frontend
-- `DEV_AUTH_BYPASS=true` in `.env` skips JWT verification for local testing (Bearer value used as user_id)
+- `DEV_AUTH_BYPASS=true` in `.env` skips JWT verification for local testing (Bearer value used as user_id) — **never set this on Render**
 
 ---
 
@@ -207,6 +208,7 @@ Arambha (classify)
 - [x] `services/doc_generator.py` (ReportLab platypus — contract PDF + redline report PDF; populates final_pdf_url)
 - [x] `clause_library/` — 6 doc types, 67 clauses (NDA, Vendor Agreement, Employment, Service, Lease, Partnership Deed)
 - [x] Backend deployed to Render — https://vaakya.onrender.com (health ✅ `db: connected`)
+- [x] Agent prompts hardened — Rachana drafts 5 mandatory clauses (acceptance criteria, revision limits, late payment protection, deliverable warranty, source code handover); Parisheelanam scores them; Jokhim flags when absent
 - [ ] Supabase Storage vault with pgvector metadata
 - [ ] Digio API integration in Sahee (e-signatures)
 - [ ] `tests/test_nda_pipeline.py` (10 scenarios)
@@ -223,6 +225,13 @@ Arambha (classify)
 - **Next.js 16 proxy conflict**: `src/middleware.ts` + `src/proxy.ts` cannot coexist. Deleted `middleware.ts`; `src/proxy.ts` exports `async function proxy()` (not `middleware`).
 - **Onboarding redirect loop**: `updateUser()` updates `user_metadata` but JWT stays stale. Proxy reads old JWT → no username → bounces back. Fixed by calling `supabase.auth.refreshSession()` before `router.replace('/')`.
 - **Username login**: Added `username` column to `profiles`. Onboarding upserts username there. Login form accepts email OR username — if no `@`, calls `get_email_by_username(p_username)` SECURITY DEFINER RPC to resolve email, then signs in normally.
+
+#### Production Bug Fixes — Resolved Issues
+- **JWT algorithm mismatch**: `auth.py` used `algorithms=["RS256"]` but new Supabase projects sign JWTs with **ES256** (ECDSA P-256) via JWKS. Fixed: `algorithms=["ES256"]` in `api/middleware/auth.py`. The legacy HS256 JWT secret only signs anon/service_role API keys — never user session tokens.
+- **Dashboard cold-start blank page**: Dashboard is SSR; vault fetch blocks HTML delivery; Render free-tier cold start takes ~30s. Fixed: warmup ping to `/health` fired from landing page `useEffect` when user is logged in; `AbortSignal.timeout(5000)` on vault fetch so SSR never hangs longer than 5s.
+- **PDF download "Not authenticated"**: `<a href target="_blank">` sends no `Authorization` header; `/vault/{id}` requires Bearer token. Fixed: replaced with `<button>` that fetches vault record with auth, gets Supabase signed URL, opens it in new tab.
+- **Dashboard shows 0 documents**: `documents.document_type TEXT NOT NULL` constraint — initial INSERT omitted this field → PostgreSQL NOT NULL violation → silently caught → no row inserted → `_persist_state` UPDATE matched nothing → `vault_documents` never populated. Fixed: added `"document_type": ""` to both INSERT statements in `backend/api/routes/document.py` (`/new` and `/upload`). Status polling still worked because it reads from LangGraph PostgreSQL checkpoint, not Supabase.
+- **Textarea accessibility errors**: Two `<textarea>` elements in the agent progress page had no labels. Fixed: added `aria-label="Document draft preview"` and `aria-label="Revision feedback"` in `frontend/src/app/dashboard/documents/[id]/page.tsx`.
 
 ---
 
@@ -264,7 +273,7 @@ WHATSAPP_API_KEY=               # Phase 2
 | Service | Platform | URL |
 |---------|----------|-----|
 | Backend (FastAPI) | Render | https://vaakya.onrender.com |
-| Frontend (Next.js) | Vercel | TBD — Phase 3 |
+| Frontend (Next.js) | Vercel | https://vaakya-tau.vercel.app |
 
 ---
 
