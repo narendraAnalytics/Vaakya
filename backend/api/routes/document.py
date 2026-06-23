@@ -160,11 +160,12 @@ async def create_document(
     if not settings.DEV_AUTH_BYPASS:
         try:
             get_supabase().table("documents").insert({
-                "id":         document_id,
-                "user_id":    user_id,
-                "input_mode": body.input_mode,
-                "raw_input":  body.request,
-                "status":     "processing",
+                "id":            document_id,
+                "user_id":       user_id,
+                "document_type": "",
+                "input_mode":    body.input_mode,
+                "raw_input":     body.request,
+                "status":        "processing",
             }).execute()
         except Exception as exc:
             print(f"[WARN] Supabase insert failed: {exc}")
@@ -233,11 +234,12 @@ async def upload_document(
             print(f"[WARN] PDF upload to storage failed: {exc}")
         try:
             get_supabase().table("documents").insert({
-                "id":         document_id,
-                "user_id":    user_id,
-                "input_mode": "pdf",
-                "raw_input":  raw_text[:2000],
-                "status":     "processing",
+                "id":            document_id,
+                "user_id":       user_id,
+                "document_type": "",
+                "input_mode":    "pdf",
+                "raw_input":     raw_text[:2000],
+                "status":        "processing",
             }).execute()
         except Exception as exc:
             print(f"[WARN] Supabase insert failed: {exc}")
