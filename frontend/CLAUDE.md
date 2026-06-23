@@ -63,6 +63,21 @@ Used by the login form when the identifier has no `@`.
 ## Status Polling — Agent State Inference
 No per-node streaming. Infer from: `review_score > 0` (Arambha/Rachana done), `loop_count > 0` (Rachana done), `vault_id !== ''` (Sahee done), `obligations_count > 0` (Sruthi done), `status === 'awaiting_approval'` (HITL paused).
 
+Status response also includes `sub_graph: 'new_doc' | 'redline' | 'dispute'` — use this to filter `ALL_AGENTS` for the correct pipeline display.
+
+Agent transition detection pattern: store previous states in `prevStatesRef = useRef<Record<string, string>>({})`, compare on each poll to detect done transitions for activity log entries.
+
+## Agent Pipeline Pattern
+`ALL_AGENTS` (8 entries in `page.tsx`) has `flows: string[]`, `tavily: boolean`, `tavilyLabel: string` fields. Filter at render: `ALL_AGENTS.filter(a => a.flows.includes(subGraph))`. Never hard-code a 6-agent list — always use the filtered view.
+
+Tavily badges are driven by `agent.tavily` / `agent.tavilyLabel` — do not add separate Tavily UI.
+
+## Markdown Rendering
+LLM agent responses contain raw Markdown. Always render via `<MarkdownRenderer content={...} />` (`src/components/MarkdownRenderer.tsx`) — never display in `<textarea readOnly>` or `pre-wrap` div. Uses `react-markdown` + `remark-gfm` + `rehype-sanitize`. Component uses inline JSX styles matching Vaakya palette; `pre` renderer returns `<>{children}</>` to avoid double-wrapping.
+
+## TypeScript Check
+Run `npx tsc --noEmit` before every commit to verify zero type errors.
+
 ## Render Backend — CORS
 `ALLOWED_ORIGIN=https://vaakya-tau.vercel.app` must be set in Render env. Server-side fetches (`page.tsx`) bypass CORS; browser fetches (client components) do not.
 

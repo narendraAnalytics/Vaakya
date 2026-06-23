@@ -171,7 +171,7 @@ Arambha (classify)
 |--------|------|-----------|-------------|
 | POST | `/document/new` | new_doc | Text input → draft → review → HITL → sign. Returns 202 + document_id |
 | POST | `/document/upload` | redline | PDF multipart upload → negotiate + risk → HITL → sign. Returns 202 + document_id |
-| GET | `/document/{id}/status` | — | Poll graph state; returns HITL payload when paused at approval |
+| GET | `/document/{id}/status` | — | Poll graph state; returns HITL payload + `sub_graph` field when paused at approval |
 | POST | `/document/{id}/approve` | — | Resume after HITL. `approved=true` → Sahee; `approved=false` → back to Rachana |
 | GET | `/health` | — | Liveness check + DB connection status |
 
@@ -219,6 +219,9 @@ Arambha (classify)
 - [x] Next.js 16 frontend — landing page + auth + onboarding (deployed: https://vaakya-tau.vercel.app)
 - [x] Dashboard page (`frontend/src/app/dashboard/`) — server component fetches vault, client component renders full UI
 - [x] Agent progress page (`frontend/src/app/dashboard/documents/[id]/`) — polls status, HITL review, final result
+- [x] `MarkdownRenderer` component (`frontend/src/components/MarkdownRenderer.tsx`) — renders LLM draft output as styled Markdown (Georgia serif headings, green blockquote borders, GFM tables/lists)
+- [x] Agent pipeline now dynamic per `sub_graph` — `ALL_AGENTS` (8 entries) filtered by `flows` field; Tavily badge via `agent.tavily` + `agent.tavilyLabel`
+- [x] Live activity feed on agent progress page — `prevStatesRef` tracks state transitions between polls; `msgTick` counter rotates agent work messages every 2.5s
 
 #### Frontend Auth — Resolved Issues
 - **Signup 500 error**: Supabase had `on_auth_user_created` trigger → `handle_new_user()` tried to INSERT into missing `profiles` table. Fixed by dropping the trigger and creating `public.profiles` (id, username, created_at) with RLS.
@@ -232,6 +235,9 @@ Arambha (classify)
 - **PDF download "Not authenticated"**: `<a href target="_blank">` sends no `Authorization` header; `/vault/{id}` requires Bearer token. Fixed: replaced with `<button>` that fetches vault record with auth, gets Supabase signed URL, opens it in new tab.
 - **Dashboard shows 0 documents**: `documents.document_type TEXT NOT NULL` constraint — initial INSERT omitted this field → PostgreSQL NOT NULL violation → silently caught → no row inserted → `_persist_state` UPDATE matched nothing → `vault_documents` never populated. Fixed: added `"document_type": ""` to both INSERT statements in `backend/api/routes/document.py` (`/new` and `/upload`). Status polling still worked because it reads from LangGraph PostgreSQL checkpoint, not Supabase.
 - **Textarea accessibility errors**: Two `<textarea>` elements in the agent progress page had no labels. Fixed: added `aria-label="Document draft preview"` and `aria-label="Revision feedback"` in `frontend/src/app/dashboard/documents/[id]/page.tsx`.
+- **Status response missing `sub_graph`**: `/document/{id}/status` didn't expose `sub_graph` from `VaakyaState`, so the frontend couldn't distinguish flows. Fixed: added `"sub_graph": values.get("sub_graph", "new_doc")` to return dict in `backend/api/routes/document.py`.
+- **Agent pipeline hard-coded for `new_doc`**: Frontend `AGENTS` array showed only 6 agents. Fixed: replaced with `ALL_AGENTS` (8 agents with `flows: string[]` and `tavily: bool` metadata), filtered at render time via `ALL_AGENTS.filter(a => a.flows.includes(subGraph))`.
+- **Raw Markdown in agent responses**: LLM draft output contains `**bold**`, `## headings`, `- lists` — displayed as raw symbols before fix. Fixed: created `frontend/src/components/MarkdownRenderer.tsx` (react-markdown + remark-gfm + rehype-sanitize, inline JSX styles matching Vaakya palette). Use `<MarkdownRenderer content={...} />` for all LLM text output.
 
 ---
 
