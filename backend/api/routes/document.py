@@ -310,6 +310,7 @@ async def get_document_status(
     return {
         "document_id": document_id,
         "status": "awaiting_approval" if hitl_payload else ("completed" if not next_nodes else "processing"),
+        "sub_graph": values.get("sub_graph", "new_doc"),
         "document_type": values.get("document_type", ""),
         "review_score": values.get("review_score", 0),
         "loop_count": values.get("loop_count", 0),
