@@ -103,6 +103,36 @@ function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' |
   }
 }
 
+// ── Agent activity messages ───────────────────────────────────────────────────
+
+const AGENT_MESSAGES: Record<string, string[]> = {
+  arambha:       ['Reading your request…', 'Identifying contract type…', 'Extracting party names…', 'Determining jurisdiction…', 'Classifying document…'],
+  rachana:       ['Loading clause library…', 'Structuring contract sections…', 'Drafting legal provisions…', 'Applying Indian Contract Act 1872…', 'Writing standard clauses…', 'Composing agreement terms…'],
+  parisheelanam: ['Reviewing draft clauses…', 'Checking compliance requirements…', 'Scoring contract quality…', 'Identifying missing provisions…', 'Computing confidence score…', 'Verifying clause completeness…'],
+  jokhim:        ['Scanning for liability risks…', 'Checking auto-renewal traps…', 'Reviewing IP ownership clauses…', 'Assessing penalty provisions…', 'Searching Indian law database…', 'Flagging jurisdiction concerns…'],
+  samjoota:      ['Comparing with standard terms…', 'Flagging unfavorable clauses…', 'Drafting counter-proposals…', 'Analysing redline changes…', 'Negotiating clause positions…'],
+  vivada:        ['Searching case law references…', 'Identifying applicable provisions…', 'Drafting dispute summary…', 'Preparing legal notice…', 'Analysing dispute clauses…'],
+  sahee:         ['Generating PDF document…', 'Uploading to secure vault…', 'Creating signed URL…', 'Saving to Legal Vault…'],
+  sruthi:        ['Extracting payment dates…', 'Identifying renewal milestones…', 'Tracking SLA obligations…', 'Setting deadline reminders…', 'Logging contract obligations…'],
+}
+
+type LogEntry = { key: string; name: string; icon: string; summary: string; ts: number }
+
+function getDoneSummary(key: string, d: StatusResponse): string {
+  const hp = d.hitl_payload
+  switch (key) {
+    case 'arambha':       return d.document_type ? `Classified: ${d.document_type} · ${d.hitl_payload?.parties?.length ?? 0} parties` : 'Document classified'
+    case 'rachana':       return `Draft ready — loop ${d.loop_count}/3`
+    case 'parisheelanam': return d.review_score > 0 ? `Score ${d.review_score}/100 — ${d.review_score >= 90 ? 'Excellent' : d.review_score >= 75 ? 'Good' : 'Needs work'}` : 'Review complete'
+    case 'jokhim':        return hp ? `${hp.risk_summary.total} risk flag${hp.risk_summary.total !== 1 ? 's' : ''} identified` : 'Risk analysis complete'
+    case 'samjoota':      return 'Redline & counter-proposals ready'
+    case 'vivada':        return 'Dispute analysis complete'
+    case 'sahee':         return 'PDF generated & saved to vault'
+    case 'sruthi':        return `${d.obligations_count} obligation${d.obligations_count !== 1 ? 's' : ''} tracked`
+    default:              return 'Complete'
+  }
+}
+
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const STYLES = `
@@ -114,6 +144,9 @@ const STYLES = `
   @keyframes dotBlink { 0%,100% { opacity:1; } 50% { opacity:0.28; } }
   @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
   @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes msgFade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes sweep { 0%{left:0%;width:0%} 50%{left:0%;width:100%} 100%{left:100%;width:0%} }
+  @keyframes logSlide { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:translateX(0); } }
   .agent-card { transition: all 0.3s; border-radius: 18px; padding: 18px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
   .agent-done  { background: #F0FBF4; border: 1.5px solid #1EA851; }
   .agent-active { background: linear-gradient(135deg,#E8F7EE,#F2FEF4); border: 1.5px solid #1EA851; animation: pulseGlow 2.4s ease-in-out infinite; }
@@ -146,10 +179,13 @@ export default function DocumentProgressPage() {
   const [feedback, setFeedback] = useState('')
   const [approveError, setApproveError] = useState('')
   const [expandedRisks, setExpandedRisks] = useState(false)
+  const [msgTick, setMsgTick] = useState(0)
+  const [activityLog, setActivityLog] = useState<LogEntry[]>([])
 
-  const tokenRef = useRef<string | null>(null)
-  const pollRef  = useRef<ReturnType<typeof setInterval> | null>(null)
-  const warmRef  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const tokenRef      = useRef<string | null>(null)
+  const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null)
+  const warmRef       = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const prevStatesRef = useRef<Record<string, string>>({})
 
   const stopPolling = useCallback(() => {
     if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
@@ -167,6 +203,19 @@ export default function DocumentProgressPage() {
       if (!res.ok) { setPageStatus('error'); stopPolling(); return }
       const data: StatusResponse = await res.json()
       setPollData(data)
+
+      // Detect agent completions → push to activity log
+      const newStates = inferAgentStates(data)
+      const newEntries: LogEntry[] = []
+      for (const [key, newState] of Object.entries(newStates)) {
+        if (newState === 'done' && prevStatesRef.current[key] !== 'done') {
+          const def = ALL_AGENTS.find(a => a.key === key)
+          if (def) newEntries.push({ key, name: def.name, icon: def.icon, summary: getDoneSummary(key, data), ts: Date.now() })
+        }
+      }
+      if (newEntries.length > 0) setActivityLog(log => [...log, ...newEntries])
+      prevStatesRef.current = newStates
+
       if (data.status === 'completed' || data.status === 'awaiting_approval') {
         setPageStatus(data.status as 'completed' | 'awaiting_approval')
         if (data.status === 'completed') stopPolling()
@@ -190,6 +239,13 @@ export default function DocumentProgressPage() {
     })
     return () => stopPolling()
   }, [fetchStatus, router, stopPolling])
+
+  // Rotate agent messages every 2.5s while processing
+  useEffect(() => {
+    if (pageStatus !== 'processing') return
+    const t = setInterval(() => setMsgTick(n => n + 1), 2500)
+    return () => clearInterval(t)
+  }, [pageStatus])
 
   async function handleApprove(approved: boolean) {
     if (!tokenRef.current || approving) return
@@ -341,12 +397,32 @@ export default function DocumentProgressPage() {
 
                       {/* State indicator */}
                       {state === 'done' && (
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#1A5C35', background: '#E0F5E8', padding: '3px 10px', borderRadius: 100 }}>✅ Done</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#1A5C35', background: '#E0F5E8', padding: '3px 10px', borderRadius: 100 }}>✅ Done</div>
+                          {pollData && (
+                            <div style={{ fontSize: 10, color: '#5A7A68', textAlign: 'center', lineHeight: 1.4, maxWidth: 110 }}>
+                              {getDoneSummary(agent.key, pollData)}
+                            </div>
+                          )}
+                        </div>
                       )}
                       {state === 'active' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#1A5C35' }}>
-                          <div style={{ width: 6, height: 6, background: '#1EA851', borderRadius: '50%', animation: 'dotBlink 1s ease-in-out infinite' }} />
-                          Working…
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: '100%' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#1A5C35' }}>
+                            <div style={{ width: 6, height: 6, background: '#1EA851', borderRadius: '50%', animation: 'dotBlink 1s ease-in-out infinite' }} />
+                            Working…
+                          </div>
+                          {/* Sweep progress bar */}
+                          <div style={{ position: 'relative', width: '80%', height: 3, background: 'rgba(30,168,81,0.12)', borderRadius: 100, overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', top: 0, height: '100%', background: '#1EA851', borderRadius: 100, animation: 'sweep 2s ease-in-out infinite' }} />
+                          </div>
+                          {/* Rotating message */}
+                          <div
+                            key={msgTick}
+                            style={{ fontSize: 10, color: '#4A6858', textAlign: 'center', lineHeight: 1.4, maxWidth: 110, animation: 'msgFade 0.35s ease-out both' }}
+                          >
+                            {(AGENT_MESSAGES[agent.key] ?? ['Processing…'])[msgTick % (AGENT_MESSAGES[agent.key]?.length ?? 1)]}
+                          </div>
                         </div>
                       )}
                       {state === 'waiting' && (
@@ -378,6 +454,30 @@ export default function DocumentProgressPage() {
               })}
             </div>
           </div>
+
+          {/* ── Live Activity Feed ── */}
+          {activityLog.length > 0 && pageStatus !== 'completed' && (
+            <div style={{ background: '#FDFCF8', borderRadius: 16, border: '1px solid rgba(26,92,53,0.09)', padding: '16px 20px', marginBottom: 24 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Live Activity</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {activityLog.map((entry, i) => (
+                  <div
+                    key={`${entry.key}-${entry.ts}`}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 12px', background: '#F5FAF6', borderRadius: 10, animation: 'logSlide 0.4s ease-out both', animationDelay: `${i === activityLog.length - 1 ? 0 : 0}ms` }}
+                  >
+                    <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{entry.icon}</span>
+                    <div style={{ flex: 1 }}>
+                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0F2D1F' }}>{entry.name}</span>
+                      <span style={{ fontSize: 12, color: '#5A7A68', marginLeft: 8 }}>{entry.summary}</span>
+                    </div>
+                    <div style={{ fontSize: 10, color: '#A8C4B4', fontWeight: 600, flexShrink: 0 }}>
+                      {Math.round((Date.now() - entry.ts) / 1000) < 5 ? 'just now' : `${Math.round((Date.now() - entry.ts) / 1000)}s ago`}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ── Status Bar ── */}
           <div style={{ background: '#FDFCF8', borderRadius: 16, border: '1px solid rgba(26,92,53,0.09)', padding: '16px 22px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -577,7 +677,7 @@ export default function DocumentProgressPage() {
                 <div style={{ fontSize: 52, lineHeight: 1 }}>🎉</div>
                 <div>
                   <div style={{ fontSize: 20, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.5 }}>{pollData.document_type} — Done!</div>
-                  <div style={{ fontSize: 13, color: '#5A7A68', marginTop: 4 }}>All 6 agents completed. Document saved to your Legal Vault.</div>
+                  <div style={{ fontSize: 13, color: '#5A7A68', marginTop: 4 }}>All {AGENTS.length} agents completed. Document saved to your Legal Vault.</div>
                   {pollData.obligations_count > 0 && (
                     <div style={{ fontSize: 12.5, color: '#1A5C35', fontWeight: 600, marginTop: 6 }}>📅 {pollData.obligations_count} obligation{pollData.obligations_count !== 1 ? 's' : ''} tracked by Sruthi</div>
                   )}
