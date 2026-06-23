@@ -478,6 +478,7 @@ export default function DocumentProgressPage() {
                 <textarea
                   readOnly
                   value={hp.draft}
+                  aria-label="Document draft preview"
                   style={{ width: '100%', height: 280, padding: '13px 15px', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, fontFamily: '"Plus Jakarta Sans", sans-serif', fontSize: 13, color: '#0F2D1F', resize: 'vertical', lineHeight: 1.7 }}
                 />
               </div>
@@ -509,6 +510,7 @@ export default function DocumentProgressPage() {
                   <textarea
                     value={feedback}
                     onChange={e => setFeedback(e.target.value)}
+                    aria-label="Revision feedback"
                     placeholder="e.g. Strengthen the confidentiality clause, add a 6-month non-compete, and include a specific arbitration clause under Indian law…"
                     style={{ width: '100%', minHeight: 90, padding: '12px 14px', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.13)', borderRadius: 12, fontFamily: 'inherit', fontSize: 13.5, color: '#0F2D1F', resize: 'vertical', lineHeight: 1.65 }}
                   />
