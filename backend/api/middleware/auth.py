@@ -59,7 +59,7 @@ async def get_current_user(
         if key is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="No matching JWKS key")
         public_key = jwk.construct(key)
-        payload = jwt.decode(token, public_key, algorithms=["RS256"], audience="authenticated")
+        payload = jwt.decode(token, public_key, algorithms=["ES256"], audience="authenticated")
         user_id: str | None = payload.get("sub")
         if not user_id:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token missing sub claim")
