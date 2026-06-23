@@ -5,7 +5,7 @@ import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/client'
 
-// ── Types ────────────────────────────────────────────────────────────────────
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 type RiskFlag = { severity: string; description: string; clause?: string }
 
@@ -42,15 +42,17 @@ type StatusResponse = {
 // ── Agent definitions ─────────────────────────────────────────────────────────
 
 const ALL_AGENTS = [
-  { key: 'arambha',       name: 'Arambha',       telugu: 'ఆరంభ',      icon: '🎯', role: 'Intake & Classify',    flows: ['new_doc','redline','dispute'], tavily: false,  tavilyLabel: '' },
-  { key: 'rachana',       name: 'Rachana',        telugu: 'రచన',        icon: '✏️', role: 'Draft Generation',    flows: ['new_doc'],                    tavily: false,  tavilyLabel: '' },
-  { key: 'parisheelanam', name: 'Parisheelanam',  telugu: 'పరిశీలనం',  icon: '🔍', role: 'Review & Score',      flows: ['new_doc'],                    tavily: false,  tavilyLabel: '' },
-  { key: 'jokhim',        name: 'Jokhim',         telugu: 'జోఖిమ్',    icon: '🛡️', role: 'Risk Flagging',        flows: ['new_doc','redline'],           tavily: true,   tavilyLabel: 'Tavily (conditional)' },
-  { key: 'samjoota',      name: 'Samjoota',       telugu: 'సమ్జూత',    icon: '🤝', role: 'Negotiation',         flows: ['redline'],                    tavily: false,  tavilyLabel: '' },
-  { key: 'vivada',        name: 'Vivada',         telugu: 'వివాద',      icon: '⚖️', role: 'Dispute Resolution',  flows: ['dispute'],                    tavily: true,   tavilyLabel: 'Tavily (always)' },
-  { key: 'sahee',         name: 'Sahee',          telugu: 'సహీ',        icon: '✍️', role: 'Sign & Deliver',      flows: ['new_doc','redline','dispute'], tavily: false,  tavilyLabel: '' },
-  { key: 'sruthi',        name: 'Sruthi',         telugu: 'శ్రుతి',    icon: '📅', role: 'Obligation Tracker',  flows: ['new_doc'],                    tavily: false,  tavilyLabel: '' },
+  { key: 'arambha',       name: 'Arambha',       telugu: 'ఆరంభ',     icon: '🎯', role: 'Intake & Classify',   flows: ['new_doc','redline','dispute'], tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782233709/AI_orchestrator_f4ofoe.png' },
+  { key: 'rachana',       name: 'Rachana',        telugu: 'రచన',       icon: '✏️', role: 'Draft Generation',   flows: ['new_doc'],                    tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782233709/rachanalegaldrafter_cnujab.png' },
+  { key: 'parisheelanam', name: 'Parisheelanam',  telugu: 'పరిశీలనం', icon: '🔍', role: 'Review & Score',     flows: ['new_doc'],                    tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782233734/Parisheelanamlegalreviewer_cu79iv.png' },
+  { key: 'jokhim',        name: 'Jokhim',         telugu: 'జోఖిమ్',   icon: '🛡️', role: 'Risk Flagging',      flows: ['new_doc','redline'],           tavily: true,  tavilyLabel: 'Tavily (conditional)', avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782233729/jokhimriskguardianagent_wix8mv.png' },
+  { key: 'samjoota',      name: 'Samjoota',       telugu: 'సమ్జూత',   icon: '🤝', role: 'Negotiation',        flows: ['redline'],                    tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782234527/SamjootaNegotiationExpert_hyafxv.png' },
+  { key: 'vivada',        name: 'Vivada',         telugu: 'వివాద',     icon: '⚖️', role: 'Dispute Resolution', flows: ['dispute'],                    tavily: true,  tavilyLabel: 'Tavily (always)',      avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782235257/vivadadisputeresolver_w5ecmr.png' },
+  { key: 'sahee',         name: 'Sahee',          telugu: 'సహీ',       icon: '✍️', role: 'Sign & Deliver',     flows: ['new_doc','redline','dispute'], tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782234843/SaheeSignatureSpecialist_k1hszo.png' },
+  { key: 'sruthi',        name: 'Sruthi',         telugu: 'శ్రుతి',   icon: '📅', role: 'Obligation Tracker', flows: ['new_doc'],                    tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782235128/sruthiobligationtracer_ogrpjb.png' },
 ]
+
+// ── State inference (unchanged) ───────────────────────────────────────────────
 
 function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' | 'waiting'> {
   const sg = d.sub_graph ?? 'new_doc'
@@ -92,7 +94,6 @@ function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' |
     }
   }
 
-  // dispute
   const arambhaDone = hitl || completed
   const vivadaDone  = hitl || completed
   const saheeDone   = !!d.vault_id || completed
@@ -103,7 +104,7 @@ function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' |
   }
 }
 
-// ── Agent activity messages ───────────────────────────────────────────────────
+// ── Agent messages (unchanged) ────────────────────────────────────────────────
 
 const AGENT_MESSAGES: Record<string, string[]> = {
   arambha:       ['Reading your request…', 'Identifying contract type…', 'Extracting party names…', 'Determining jurisdiction…', 'Classifying document…'],
@@ -137,32 +138,51 @@ function getDoneSummary(key: string, d: StatusResponse): string {
 
 const STYLES = `
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  @keyframes pulseGlow {
-    0%,100% { box-shadow: 0 4px 22px rgba(30,168,81,0.38), 0 2px 6px rgba(30,168,81,0.18); }
-    50%      { box-shadow: 0 6px 36px rgba(30,168,81,0.6), 0 0 52px rgba(30,168,81,0.18); }
-  }
-  @keyframes dotBlink { 0%,100% { opacity:1; } 50% { opacity:0.28; } }
-  @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes msgFade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes sweep { 0%{left:0%;width:0%} 50%{left:0%;width:100%} 100%{left:100%;width:0%} }
-  @keyframes logSlide { from { opacity:0; transform:translateX(-12px); } to { opacity:1; transform:translateX(0); } }
-  .agent-card { transition: all 0.3s; border-radius: 18px; padding: 18px 16px; display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
-  .agent-done  { background: #F0FBF4; border: 1.5px solid #1EA851; }
-  .agent-active { background: linear-gradient(135deg,#E8F7EE,#F2FEF4); border: 1.5px solid #1EA851; animation: pulseGlow 2.4s ease-in-out infinite; }
-  .agent-waiting { background: #FAFAFA; border: 1.5px solid rgba(26,92,53,0.1); opacity: 0.6; }
-  .approve-btn { cursor: pointer; transition: all 0.2s; border: none; }
-  .approve-btn:hover { transform: translateY(-2px); }
-  .page-main::-webkit-scrollbar { width: 4px; }
-  .page-main::-webkit-scrollbar-track { background: transparent; }
-  .page-main::-webkit-scrollbar-thumb { background: rgba(26,92,53,0.18); border-radius: 100px; }
-  .risk-chip { display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px; border-radius: 100px; font-size: 11.5px; font-weight: 700; }
-  .fade-in { animation: fadeIn 0.4s ease-out both; }
-  @media (max-width: 900px) {
-    .agents-row { flex-wrap: wrap !important; }
-    .agent-card { flex: 0 0 calc(50% - 8px) !important; }
-    .hitl-cols { flex-direction: column !important; }
-  }
+  @keyframes spin        { from { transform:rotate(0deg); }  to { transform:rotate(360deg); } }
+  @keyframes blink       { 0%,100% { opacity:1; } 50% { opacity:0.22; } }
+  @keyframes cardGlow    { 0%,100% { box-shadow:0 0 0 0 rgba(30,168,81,0); } 50% { box-shadow:0 0 0 8px rgba(30,168,81,0.13),0 6px 28px rgba(30,168,81,0.14); } }
+  @keyframes cardGoldGlow{ 0%,100% { box-shadow:0 0 0 0 rgba(200,160,16,0); } 50% { box-shadow:0 0 0 8px rgba(200,160,16,0.16),0 6px 24px rgba(200,160,16,0.12); } }
+  @keyframes avatarRing  { 0%,100% { outline-color:rgba(30,168,81,0.3); } 50% { outline-color:rgba(30,168,81,0.78); } }
+  @keyframes connFlow    { 0% { background-position:0 0; } 100% { background-position:0 40px; } }
+  @keyframes msgFade     { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes logSlide    { from { opacity:0; transform:translateX(-10px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes particle    { 0%,100% { transform:translateY(0) scale(1); opacity:.45; } 50% { transform:translateY(-18px) scale(1.25); opacity:.75; } }
+  @keyframes tavilyIn    { from { opacity:0; transform:scale(0.95) translateY(-4px); } to { opacity:1; transform:scale(1) translateY(0); } }
+  @keyframes successPop  { 0% { transform:scale(0.9); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+  @keyframes fadeIn      { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes sweep       { 0%{left:0%;width:0%} 50%{left:0%;width:100%} 100%{left:100%;width:0%} }
+
+  .agent-card   { border-radius:18px; padding:16px 20px; display:flex; align-items:center; gap:14px; transition:all 0.32s; }
+  .node-done    { background:linear-gradient(135deg,#F0FBF4,#E8F7EE); border:1.5px solid rgba(30,168,81,0.42); }
+  .node-active  { background:linear-gradient(135deg,#E4F6EC,#D5F0E0); border:1.5px solid #1EA851; animation:cardGlow 2.4s ease-in-out infinite; }
+  .node-waiting { background:#FDFCF8; border:1.5px solid rgba(26,92,53,0.1); opacity:0.62; }
+  .node-pending { background:linear-gradient(135deg,#FFFBE8,#FFF4B8); border:1.5px solid rgba(200,160,16,0.52); animation:cardGoldGlow 2.4s ease-in-out infinite; }
+
+  .avatar-active { outline:3px solid rgba(30,168,81,0.45); outline-offset:2.5px; animation:avatarRing 1.9s ease-in-out infinite; }
+
+  .cl { width:2.5px; border-radius:2px; }
+  .connector-done    { background:#1EA851; }
+  .connector-active  { background:repeating-linear-gradient(to bottom,#1EA851 0,#1EA851 8px,#A8DFB8 8px,#A8DFB8 16px); background-size:2.5px 16px; animation:connFlow 0.9s linear infinite; }
+  .connector-waiting { background:repeating-linear-gradient(to bottom,rgba(180,210,195,0.42) 0,rgba(180,210,195,0.42) 5px,transparent 5px,transparent 10px); }
+
+  .pipe-green { background:#1EA851 !important; }
+  .pipe-gray  { background:rgba(180,210,195,0.32) !important; }
+  .arr-g { color:#1EA851; }
+  .arr-m { color:rgba(180,210,195,0.42); }
+
+  .log-entry { border-radius:11px; transition:background 0.14s; animation:logSlide 0.4s ease-out both; cursor:default; }
+  .log-entry:hover { background:#EFF8F2 !important; }
+  .tavily-panel { animation:tavilyIn 0.35s ease-out both; }
+  .fade-in { animation:fadeIn 0.4s ease-out both; }
+  .completed-banner { animation:successPop 0.5s cubic-bezier(0.34,1.56,0.64,1) both; }
+  .approve-btn { cursor:pointer; transition:all 0.2s; border:none; }
+  .approve-btn:hover { transform:translateY(-2px); }
+  .risk-chip { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:100px; font-size:11.5px; font-weight:700; }
+  .scr::-webkit-scrollbar { width:3px; }
+  .scr::-webkit-scrollbar-track { background:transparent; }
+  .scr::-webkit-scrollbar-thumb { background:rgba(26,92,53,0.18); border-radius:100px; }
+  @media (max-width:1060px) { .mgrid { grid-template-columns:1fr 360px !important; } }
+  @media (max-width:820px)  { .mgrid { grid-template-columns:1fr !important; } .right-panel { position:static !important; } .hitl-cols { flex-direction:column !important; } }
 `
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -171,15 +191,15 @@ export default function DocumentProgressPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
 
-  const [pollData, setPollData] = useState<StatusResponse | null>(null)
-  const [pageStatus, setPageStatus] = useState<'loading' | 'processing' | 'awaiting_approval' | 'completed' | 'error'>('loading')
-  const [warming, setWarming] = useState(false)
-  const [approving, setApproving] = useState(false)
+  const [pollData, setPollData]       = useState<StatusResponse | null>(null)
+  const [pageStatus, setPageStatus]   = useState<'loading' | 'processing' | 'awaiting_approval' | 'completed' | 'error'>('loading')
+  const [warming, setWarming]         = useState(false)
+  const [approving, setApproving]     = useState(false)
   const [showRevision, setShowRevision] = useState(false)
-  const [feedback, setFeedback] = useState('')
+  const [feedback, setFeedback]       = useState('')
   const [approveError, setApproveError] = useState('')
   const [expandedRisks, setExpandedRisks] = useState(false)
-  const [msgTick, setMsgTick] = useState(0)
+  const [msgTick, setMsgTick]         = useState(0)
   const [activityLog, setActivityLog] = useState<LogEntry[]>([])
 
   const tokenRef      = useRef<string | null>(null)
@@ -204,7 +224,6 @@ export default function DocumentProgressPage() {
       const data: StatusResponse = await res.json()
       setPollData(data)
 
-      // Detect agent completions → push to activity log
       const newStates = inferAgentStates(data)
       const newEntries: LogEntry[] = []
       for (const [key, newState] of Object.entries(newStates)) {
@@ -232,7 +251,6 @@ export default function DocumentProgressPage() {
     supabase.auth.getSession().then(({ data: { session } }) => {
       tokenRef.current = session?.access_token ?? null
       if (!tokenRef.current) { router.replace('/auth/login'); return }
-      // Warm-up warning if first fetch is slow
       warmRef.current = setTimeout(() => setWarming(true), 6000)
       fetchStatus()
       pollRef.current = setInterval(fetchStatus, 3000)
@@ -240,7 +258,6 @@ export default function DocumentProgressPage() {
     return () => stopPolling()
   }, [fetchStatus, router, stopPolling])
 
-  // Rotate agent messages every 2.5s while processing
   useEffect(() => {
     if (pageStatus !== 'processing') return
     const t = setInterval(() => setMsgTick(n => n + 1), 2500)
@@ -263,9 +280,7 @@ export default function DocumentProgressPage() {
       }
       setShowRevision(false); setFeedback('')
       setPageStatus('processing')
-      if (!pollRef.current) {
-        pollRef.current = setInterval(fetchStatus, 3000)
-      }
+      if (!pollRef.current) pollRef.current = setInterval(fetchStatus, 3000)
     } catch {
       setApproveError('Network error. Try again.')
     } finally {
@@ -273,30 +288,199 @@ export default function DocumentProgressPage() {
     }
   }
 
-  // ── Render helpers ──────────────────────────────────────────────────────────
+  // ── Derived values ────────────────────────────────────────────────────────
 
   const agentStates = pollData ? inferAgentStates(pollData) : null
-  const subGraph = pollData?.sub_graph ?? 'new_doc'
-  const AGENTS = ALL_AGENTS.filter(a => a.flows.includes(subGraph))
-  const docType = pollData?.document_type || 'Legal Document'
-  const hp = pollData?.hitl_payload
+  const subGraph    = pollData?.sub_graph ?? 'new_doc'
+  const AGENTS      = ALL_AGENTS.filter(a => a.flows.includes(subGraph))
+  const docType     = pollData?.document_type || 'Legal Document'
+  const hp          = pollData?.hitl_payload
 
-  function scoreColor(s: number) {
-    if (s >= 90) return '#1A5C35'
-    if (s >= 75) return '#B07010'
-    return '#C03030'
+  const hitlState: 'pending' | 'done' | 'waiting' =
+    pageStatus === 'awaiting_approval' ? 'pending' :
+    (pageStatus === 'completed' || pollData?.hitl_approved) ? 'done' : 'waiting'
+
+  const parallelDone =
+    subGraph === 'new_doc' ? (agentStates?.parisheelanam === 'done' && agentStates?.jokhim === 'done') :
+    subGraph === 'redline' ? (agentStates?.samjoota === 'done' && agentStates?.jokhim === 'done') : false
+
+  const parallelActive =
+    subGraph === 'new_doc' ? (agentStates?.parisheelanam !== 'waiting' || agentStates?.jokhim !== 'waiting') :
+    subGraph === 'redline' ? (agentStates?.samjoota !== 'waiting' || agentStates?.jokhim !== 'waiting') : false
+
+  const branchPipe = parallelActive ? 'pipe-green' : 'pipe-gray'
+  const mergePipe  = parallelDone  ? 'pipe-green' : 'pipe-gray'
+  const mergeArrow = parallelDone  ? '#1EA851' : 'rgba(180,210,195,0.42)'
+
+  function connCls(fromKey: string, toKey: string): string {
+    if (!agentStates) return 'connector-waiting'
+    const to = agentStates[toKey] ?? 'waiting'
+    const from = agentStates[fromKey] ?? 'waiting'
+    if (to === 'done') return 'connector-done'
+    if (from === 'done') return 'connector-active'
+    return 'connector-waiting'
   }
-  function scoreBg(s: number) {
-    if (s >= 90) return '#E0F5E8'
-    if (s >= 75) return '#FFF0D8'
-    return '#FFE8E8'
+  function arrCls(fromKey: string, toKey: string): string {
+    if (!agentStates) return 'arr-m'
+    return (agentStates[fromKey] === 'done' || agentStates[toKey] === 'done') ? 'arr-g' : 'arr-m'
   }
+
+  const preHitlConn = hitlState !== 'waiting' ? 'connector-done' :
+    (subGraph === 'dispute' ? agentStates?.vivada === 'done' : parallelDone) ? 'connector-active' :
+    'connector-waiting'
+
+  const hitlToSaheeConn = agentStates?.sahee === 'done' ? 'connector-done' :
+    hitlState === 'done' ? 'connector-active' : 'connector-waiting'
+
+  function scoreColor(s: number) { return s >= 90 ? '#1A5C35' : s >= 75 ? '#B07010' : '#C03030' }
+  function scoreBg(s: number)    { return s >= 90 ? '#E0F5E8' : s >= 75 ? '#FFF0D8' : '#FFE8E8' }
   function severityColor(sev: string) {
     const s = sev.toLowerCase()
     if (s === 'critical') return { color: '#C03030', bg: '#FFE8E8' }
     if (s === 'high')     return { color: '#B07010', bg: '#FFF0D8' }
     if (s === 'medium')   return { color: '#5A7AB0', bg: '#EAE8F5' }
     return { color: '#4A6858', bg: '#E0F5E8' }
+  }
+
+  const riskLevel = hp?.risk_summary
+    ? hp.risk_summary.critical > 0 ? { label: 'High',   color: '#C03030', dot: '#C03030' }
+    : hp.risk_summary.high > 0     ? { label: 'Medium', color: '#B07010', dot: '#E8C840' }
+    : { label: 'Low', color: '#1A5C35', dot: '#1EA851' }
+    : null
+
+  const gaugeScore    = pollData?.review_score ?? 0
+  const gaugeOffset   = Math.round(207 * (1 - gaugeScore / 100))
+  const estCompletion = (() => {
+    if (pageStatus === 'completed')         return 'Complete!'
+    if (pageStatus === 'awaiting_approval') return 'Awaiting Review'
+    if (!agentStates)                       return '~4 min'
+    const done = Object.values(agentStates).filter(s => s === 'done').length
+    if (done === 0) return '~4 min'
+    if (done <= 2)  return '~2 min 30s'
+    if (done <= 4)  return '~1 min'
+    return '~30s'
+  })()
+
+  // ── Agent card renderer ───────────────────────────────────────────────────
+
+  function AgentNode({ agentKey, size = 'large' }: { agentKey: string; size?: 'large' | 'small' }) {
+    const agent = ALL_AGENTS.find(a => a.key === agentKey)!
+    const st    = agentStates?.[agentKey] ?? 'waiting'
+    const av    = size === 'large' ? 52 : 44
+    const showTavily = agent.tavily && st === 'active'
+    const cardCls = st === 'done' ? 'agent-card node-done' : st === 'active' ? 'agent-card node-active' : 'agent-card node-waiting'
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div className={cardCls}>
+          {/* Avatar */}
+          <img
+            src={agent.avatarUrl}
+            alt={agent.name}
+            className={st === 'active' ? 'avatar-active' : ''}
+            style={{ width: av, height: av, borderRadius: '50%', objectFit: 'cover', flexShrink: 0, boxShadow: '0 3px 14px rgba(26,92,53,0.15)' }}
+          />
+          {/* Text */}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: size === 'large' ? 13.5 : 12.5, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.3 }}>
+              {agent.name} Agent
+            </div>
+            <div style={{ fontSize: size === 'large' ? 11.5 : 11, color: '#7B9A8A', marginTop: 1 }}>{agent.role}</div>
+            {st === 'active' && (
+              <div key={msgTick} style={{ fontSize: 11, color: '#1A5C35', marginTop: 4, animation: 'msgFade 0.35s ease both' }}>
+                {(AGENT_MESSAGES[agent.key] ?? ['Processing…'])[msgTick % (AGENT_MESSAGES[agent.key]?.length ?? 1)]}
+              </div>
+            )}
+            {st === 'done' && pollData && (
+              <div style={{ fontSize: 11, color: '#5A7A68', marginTop: 3 }}>
+                {getDoneSummary(agent.key, pollData)}
+              </div>
+            )}
+          </div>
+          {/* Status badge */}
+          {st === 'done' && (
+            <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#1A5C35,#1EA851)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FEF9EF', fontSize: 15, flexShrink: 0, boxShadow: '0 2px 10px rgba(26,92,53,0.28)' }}>✓</div>
+          )}
+          {st === 'active' && (
+            <div style={{ width: 24, height: 24, border: '3px solid rgba(30,168,81,0.18)', borderTopColor: '#1EA851', borderRadius: '50%', animation: 'spin 0.8s linear infinite', flexShrink: 0 }} />
+          )}
+          {st === 'waiting' && (
+            <div style={{ fontSize: 11.5, color: '#C8DAD0', fontWeight: 600, flexShrink: 0 }}>⏳ Waiting</div>
+          )}
+        </div>
+        {/* Tavily search panel */}
+        {showTavily && (
+          <div className="tavily-panel" style={{ background: 'linear-gradient(135deg,#E8F7EE,#D4EEE0)', border: '1.5px solid rgba(30,168,81,0.32)', borderRadius: 13, padding: '11px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
+              <div style={{ width: 7, height: 7, background: '#1EA851', borderRadius: '50%', animation: 'blink 1s ease-in-out infinite' }} />
+              <span style={{ fontSize: 10.5, fontWeight: 800, color: '#1A5C35', letterSpacing: 0.3 }}>TAVILY SEARCH ACTIVE</span>
+              <div style={{ marginLeft: 'auto', background: '#C8E8D0', color: '#1A5C35', fontSize: 9.5, fontWeight: 700, padding: '2px 8px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.2)' }}>🔍 Legal DB</div>
+            </div>
+            <div style={{ fontSize: 10.5, color: '#3A6A4E', lineHeight: 1.55 }}>Searching Indian laws, regulations, case law & legal precedents…</div>
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  function Connector({ cls, height = 28 }: { cls: string; height?: number }) {
+    const arrowColor = cls === 'connector-done' || cls === 'connector-active' ? '#1EA851' : 'rgba(180,210,195,0.42)'
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 0' }}>
+        <div className={`cl ${cls}`} style={{ height }} />
+        <div style={{ fontSize: 10, lineHeight: 1, marginTop: -1, color: arrowColor }}>▼</div>
+      </div>
+    )
+  }
+
+  function ParallelSection({ leftKey, rightKey }: { leftKey: string; rightKey: string }) {
+    return (
+      <>
+        {/* Short stem before fork */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '2px 0' }}>
+          <div className={`cl ${branchPipe === 'pipe-green' ? 'connector-active' : 'connector-waiting'}`} style={{ height: 18 }} />
+        </div>
+        {/* Fork */}
+        <div style={{ position: 'relative', height: 56, width: '100%' }}>
+          <div className={branchPipe} style={{ position: 'absolute', left: '50%', top: 0, width: 2.5, height: 28, borderRadius: '2px 2px 0 0', transform: 'translateX(-50%)' }} />
+          <div className={branchPipe} style={{ position: 'absolute', left: '24%', right: '24%', top: 27, height: 2.5 }} />
+          <div className={branchPipe} style={{ position: 'absolute', left: '24%', top: 27, width: 2.5, height: 29, borderRadius: '0 0 2px 2px', transform: 'translateX(-50%)' }} />
+          <div className={branchPipe} style={{ position: 'absolute', right: '24%', top: 27, width: 2.5, height: 29, borderRadius: '0 0 2px 2px', transform: 'translateX(50%)' }} />
+          <div style={{ position: 'absolute', top: 32, left: '50%', transform: 'translateX(-50%)', background: '#F5F9F0', border: '1px solid rgba(26,92,53,0.12)', borderRadius: 100, padding: '2px 11px', fontSize: 9.5, fontWeight: 700, color: '#8BAA96', letterSpacing: 0.5, whiteSpace: 'nowrap' }}>PARALLEL</div>
+        </div>
+        {/* Parallel cards */}
+        <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}><AgentNode agentKey={leftKey} size="small" /></div>
+          <div style={{ flex: 1 }}><AgentNode agentKey={rightKey} size="small" /></div>
+        </div>
+        {/* Merge */}
+        <div style={{ position: 'relative', height: 56, width: '100%', marginTop: 8 }}>
+          <div className={mergePipe} style={{ position: 'absolute', left: '24%', top: 0, width: 2.5, height: 28, borderRadius: '2px 2px 0 0', transform: 'translateX(-50%)' }} />
+          <div className={mergePipe} style={{ position: 'absolute', right: '24%', top: 0, width: 2.5, height: 28, borderRadius: '2px 2px 0 0', transform: 'translateX(50%)' }} />
+          <div className={mergePipe} style={{ position: 'absolute', left: '24%', right: '24%', top: 27, height: 2.5 }} />
+          <div className={mergePipe} style={{ position: 'absolute', left: '50%', top: 27, width: 2.5, height: 29, borderRadius: '0 0 2px 2px', transform: 'translateX(-50%)' }} />
+          <div style={{ position: 'absolute', left: '50%', top: 51, transform: 'translateX(-50%)', fontSize: 10, lineHeight: 1, color: mergeArrow }}>▼</div>
+        </div>
+      </>
+    )
+  }
+
+  function HitlNode() {
+    const cardCls = hitlState === 'pending' ? 'agent-card node-pending' : hitlState === 'done' ? 'agent-card node-done' : 'agent-card node-waiting'
+    return (
+      <div className={cardCls}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', background: 'linear-gradient(135deg,#FFEE90,#E8C050)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, boxShadow: '0 3px 14px rgba(200,130,0,0.2)' }}>👥</div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.3 }}>HITL Approval</div>
+          <div style={{ fontSize: 11.5, color: '#7B9A8A', marginTop: 1 }}>Human-in-the-Loop Review</div>
+          {hitlState === 'pending' && <div style={{ fontSize: 11, color: '#A07810', marginTop: 3, fontWeight: 500 }}>Your review & approval is required</div>}
+          {hitlState === 'done'    && <div style={{ fontSize: 11, color: '#1A5C35', marginTop: 3, fontWeight: 500 }}>Approved ✓ — proceeding to signing</div>}
+        </div>
+        {hitlState === 'pending' && <div style={{ background: 'linear-gradient(135deg,#F5E870,#E8C848)', color: '#7A5000', fontSize: 11.5, fontWeight: 800, padding: '5px 14px', borderRadius: 100, flexShrink: 0, border: '1px solid rgba(200,160,0,0.3)' }}>Pending</div>}
+        {hitlState === 'done'    && <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg,#1A5C35,#1EA851)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#FEF9EF', fontSize: 15, flexShrink: 0 }}>✓</div>}
+        {hitlState === 'waiting' && <div style={{ fontSize: 11.5, color: '#C8DAD0', fontWeight: 600, flexShrink: 0 }}>⏳ Waiting</div>}
+      </div>
+    )
   }
 
   // ── Loading screen ──────────────────────────────────────────────────────────
@@ -340,386 +524,433 @@ export default function DocumentProgressPage() {
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: STYLES }} />
-      <div style={{ minHeight: '100vh', background: '#FEF9EF', fontFamily: '"Plus Jakarta Sans", sans-serif' }}>
 
-        {/* Header */}
-        <div style={{ background: '#FDFCF8', borderBottom: '1px solid rgba(26,92,53,0.09)', padding: '16px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 10, boxShadow: '0 1px 8px rgba(26,92,53,0.06)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#2C4A38', textDecoration: 'none', background: '#EAF5EE', padding: '7px 14px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.12)' }}>← Dashboard</a>
+      {/* Background botanical decorations */}
+      <div style={{ position: 'fixed', top: 0, right: 0, pointerEvents: 'none', zIndex: 0, opacity: 0.55 }}>
+        <svg width="200" height="230" viewBox="0 0 200 230" fill="none">
+          <path d="M160 210C160 210 70 162 74 78C78-6 184 8 184 88C184 164 160 210 160 210Z" fill="rgba(30,168,81,0.14)" />
+          <path d="M160 210C160 210 148 124 154 72C160 20 180 46 180 84" stroke="rgba(30,168,81,0.26)" strokeWidth="2.8" fill="none" />
+          <path d="M154 100C154 100 178 110 196 130" stroke="rgba(30,168,81,0.16)" strokeWidth="1.6" fill="none" />
+          <path d="M152 138C152 138 174 146 188 168" stroke="rgba(30,168,81,0.12)" strokeWidth="1.4" fill="none" />
+        </svg>
+      </div>
+      <div style={{ position: 'fixed', bottom: 30, left: 10, pointerEvents: 'none', zIndex: 0, opacity: 0.38, transform: 'rotate(175deg)' }}>
+        <svg width="120" height="148" viewBox="0 0 200 230" fill="none">
+          <path d="M160 210C160 210 70 162 74 78C78-6 184 8 184 88C184 164 160 210 160 210Z" fill="rgba(30,168,81,0.16)" />
+          <path d="M160 210C160 210 148 124 154 72C160 20 180 46 180 84" stroke="rgba(30,168,81,0.22)" strokeWidth="2.8" fill="none" />
+        </svg>
+      </div>
+      {/* Sparkle particles */}
+      <div style={{ position: 'fixed', top: 180, right: 300, width: 8, height: 8, background: '#E8C84A', borderRadius: '50%', animation: 'particle 3.6s ease-in-out infinite', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', top: 340, right: 148, width: 5, height: 5, background: '#1EA851', borderRadius: '50%', animation: 'particle 4.3s ease-in-out infinite 1.1s', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', top: 560, left: 300, width: 6, height: 6, background: '#E8C84A', borderRadius: '50%', animation: 'particle 3.9s ease-in-out infinite 0.5s', pointerEvents: 'none', zIndex: 0 }} />
+      <div style={{ position: 'fixed', top: 430, right: 420, width: 4, height: 4, background: '#8CE8A8', borderRadius: '50%', animation: 'particle 5.1s ease-in-out infinite 2.1s', pointerEvents: 'none', zIndex: 0 }} />
+
+      <div style={{ minHeight: '100vh', background: '#FEF9EF', fontFamily: '"Plus Jakarta Sans", sans-serif', position: 'relative' }}>
+
+        {/* ── Header ── */}
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 1440, margin: '0 auto', padding: '44px 56px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap' }}>
+            {/* Left: title + live badge */}
             <div>
-              <div style={{ fontSize: 16, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.4 }}>{docType}</div>
-              <div style={{ fontSize: 11.5, color: '#8BAA96', marginTop: 1 }}>Document ID: {id}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 6 }}>
+                <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, color: '#2C4A38', textDecoration: 'none', background: '#EAF5EE', padding: '7px 14px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.12)' }}>← Dashboard</a>
+                <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.8, lineHeight: 1.1 }}>{docType}</h1>
+                {pageStatus === 'processing' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#E0F5E8', border: '1px solid rgba(30,168,81,0.32)', borderRadius: 100, padding: '5px 14px', flexShrink: 0 }}>
+                    <div style={{ width: 7, height: 7, background: '#1EA851', borderRadius: '50%', animation: 'blink 1.6s ease-in-out infinite' }} />
+                    <span style={{ fontSize: 11.5, fontWeight: 800, color: '#1A5C35', letterSpacing: 0.3 }}>LIVE</span>
+                  </div>
+                )}
+                {pageStatus === 'awaiting_approval' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#FFF0D8', border: '1px solid rgba(180,112,16,0.32)', borderRadius: 100, padding: '5px 14px', flexShrink: 0 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 800, color: '#B07010' }}>⏸ AWAITING REVIEW</span>
+                  </div>
+                )}
+                {pageStatus === 'completed' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#E0F5E8', border: '1px solid rgba(30,168,81,0.3)', borderRadius: 100, padding: '5px 14px', flexShrink: 0 }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 800, color: '#1A5C35' }}>✅ COMPLETED</span>
+                  </div>
+                )}
+              </div>
+              <p style={{ fontSize: 13, color: '#7B9A8A', fontWeight: 400 }}>8 Specialized AI Agents working on your legal document</p>
             </div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            {pageStatus === 'processing' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#E0F5E8', border: '1px solid rgba(30,168,81,0.22)', borderRadius: 100, padding: '6px 14px' }}>
-                <div style={{ width: 7, height: 7, background: '#1EA851', borderRadius: '50%', animation: 'dotBlink 1.6s ease-in-out infinite' }} />
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#1A5C35' }}>AGENTS WORKING</span>
+            {/* Right: Est. completion + Doc ID */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 22, background: '#FDFCF8', border: '1px solid rgba(26,92,53,0.09)', borderRadius: 18, padding: '14px 24px', boxShadow: '0 2px 14px rgba(26,92,53,0.06)', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                <div style={{ width: 38, height: 38, background: 'linear-gradient(135deg,#E0F5E8,#C8E8D0)', borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, flexShrink: 0 }}>⏱</div>
+                <div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6 }}>Est. Completion</div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.5, marginTop: 1 }}>{estCompletion}</div>
+                </div>
               </div>
-            )}
-            {pageStatus === 'awaiting_approval' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#FFF0D8', border: '1px solid rgba(180,112,16,0.22)', borderRadius: 100, padding: '6px 14px' }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#B07010' }}>⏸ AWAITING YOUR REVIEW</span>
+              <div style={{ width: 1, height: 36, background: 'rgba(26,92,53,0.1)' }} />
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6 }}>Document ID</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#0F2D1F', marginTop: 1, letterSpacing: -0.2, maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{id}</div>
               </div>
-            )}
-            {pageStatus === 'completed' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: '#E0F5E8', border: '1px solid rgba(30,168,81,0.3)', borderRadius: 100, padding: '6px 14px' }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: '#1A5C35' }}>✅ COMPLETED</span>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
-        <div className="page-main" style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 24px 60px' }}>
+        {/* ── Main 2-col grid ── */}
+        <div className="mgrid" style={{ position: 'relative', zIndex: 2, maxWidth: 1440, margin: '0 auto', padding: '28px 56px 80px', display: 'grid', gridTemplateColumns: '1fr 430px', gap: 36, alignItems: 'start' }}>
 
-          {/* ── Agent Pipeline ── */}
-          <div style={{ marginBottom: 24 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 14 }}>Agent Pipeline</div>
-            <div className="agents-row" style={{ display: 'flex', gap: 12 }}>
-              {AGENTS.map((agent, i) => {
-                const state = agentStates?.[agent.key] ?? 'waiting'
-                const isParallel =
-                  (subGraph === 'new_doc' && agent.key === 'jokhim') ||
-                  (subGraph === 'redline' && (agent.key === 'samjoota' || agent.key === 'jokhim'))
-                return (
-                  <div key={agent.key} style={{ flex: 1, position: 'relative' }}>
-                    {isParallel && (
-                      <div style={{ position: 'absolute', top: -10, left: '50%', transform: 'translateX(-50%)', fontSize: 9.5, fontWeight: 700, color: '#8BAA96', letterSpacing: 0.5, whiteSpace: 'nowrap', background: '#FEF9EF', padding: '0 4px' }}>PARALLEL</div>
-                    )}
-                    <div className={`agent-card agent-${state}`}>
-                      <div style={{ fontSize: 34, lineHeight: 1 }}>{agent.icon}</div>
-                      <div>
-                        <div style={{ fontSize: 13.5, fontWeight: 800, color: '#0F2D1F', lineHeight: 1.2 }}>{agent.name}</div>
-                        <div style={{ fontSize: 11, color: '#8BAA96', marginTop: 1 }}>{agent.telugu}</div>
-                      </div>
-                      <div style={{ fontSize: 11.5, color: '#5A7A68', fontWeight: 500 }}>{agent.role}</div>
+          {/* ════ LEFT: Workflow + panels ════ */}
+          <div>
+            <div style={{ marginBottom: 20 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.4 }}>AI Agents Workflow</h2>
+              <p style={{ fontSize: 12, color: '#7B9A8A', marginTop: 3 }}>Specialized agents collaborating on your {docType}</p>
+            </div>
 
-                      {/* State indicator */}
-                      {state === 'done' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: '#1A5C35', background: '#E0F5E8', padding: '3px 10px', borderRadius: 100 }}>✅ Done</div>
-                          {pollData && (
-                            <div style={{ fontSize: 10, color: '#5A7A68', textAlign: 'center', lineHeight: 1.4, maxWidth: 110 }}>
-                              {getDoneSummary(agent.key, pollData)}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      {state === 'active' && (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, width: '100%' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, fontWeight: 700, color: '#1A5C35' }}>
-                            <div style={{ width: 6, height: 6, background: '#1EA851', borderRadius: '50%', animation: 'dotBlink 1s ease-in-out infinite' }} />
-                            Working…
-                          </div>
-                          {/* Sweep progress bar */}
-                          <div style={{ position: 'relative', width: '80%', height: 3, background: 'rgba(30,168,81,0.12)', borderRadius: 100, overflow: 'hidden' }}>
-                            <div style={{ position: 'absolute', top: 0, height: '100%', background: '#1EA851', borderRadius: 100, animation: 'sweep 2s ease-in-out infinite' }} />
-                          </div>
-                          {/* Rotating message */}
-                          <div
-                            key={msgTick}
-                            style={{ fontSize: 10, color: '#4A6858', textAlign: 'center', lineHeight: 1.4, maxWidth: 110, animation: 'msgFade 0.35s ease-out both' }}
-                          >
-                            {(AGENT_MESSAGES[agent.key] ?? ['Processing…'])[msgTick % (AGENT_MESSAGES[agent.key]?.length ?? 1)]}
-                          </div>
-                        </div>
-                      )}
-                      {state === 'waiting' && (
-                        <div style={{ fontSize: 11, fontWeight: 600, color: '#A8C4B4' }}>⏳ Waiting</div>
-                      )}
+            {/* ── Vertical workflow graph ── */}
+            <div style={{ maxWidth: 560, display: 'flex', flexDirection: 'column' }}>
 
-                      {/* Tavily badge */}
-                      {agent.tavily && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, fontWeight: 700, color: '#5A7AB0', background: '#EAE8F5', padding: '3px 9px', borderRadius: 100 }}>
-                          🔍 {agent.tavilyLabel}
-                        </div>
-                      )}
+              {/* new_doc flow */}
+              {subGraph === 'new_doc' && (
+                <>
+                  <AgentNode agentKey="arambha" />
+                  <Connector cls={connCls('arambha', 'rachana')} />
+                  <AgentNode agentKey="rachana" />
+                  <ParallelSection leftKey="parisheelanam" rightKey="jokhim" />
+                  {/* stem after merge */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1px 0' }}>
+                    <div className={`cl ${preHitlConn}`} style={{ height: 6 }} />
+                  </div>
+                  <HitlNode />
+                  <Connector cls={hitlToSaheeConn} />
+                  <AgentNode agentKey="sahee" />
+                  <Connector cls={connCls('sahee', 'sruthi')} />
+                  <AgentNode agentKey="sruthi" />
+                </>
+              )}
 
-                      {/* Extra info badges */}
-                      {agent.key === 'rachana' && pollData && pollData.loop_count > 1 && (
-                        <div style={{ fontSize: 10, fontWeight: 700, color: '#B07010', background: '#FFF0D8', padding: '2px 8px', borderRadius: 100 }}>Loop {pollData.loop_count}/3</div>
-                      )}
-                      {agent.key === 'parisheelanam' && pollData && pollData.review_score > 0 && (
-                        <div style={{ fontSize: 10, fontWeight: 700, color: scoreColor(pollData.review_score), background: scoreBg(pollData.review_score), padding: '2px 8px', borderRadius: 100 }}>Score: {pollData.review_score}/100</div>
-                      )}
+              {/* redline flow */}
+              {subGraph === 'redline' && (
+                <>
+                  <AgentNode agentKey="arambha" />
+                  <ParallelSection leftKey="samjoota" rightKey="jokhim" />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '1px 0' }}>
+                    <div className={`cl ${preHitlConn}`} style={{ height: 6 }} />
+                  </div>
+                  <HitlNode />
+                  <Connector cls={hitlToSaheeConn} />
+                  <AgentNode agentKey="sahee" />
+                </>
+              )}
 
-                      {/* Connector arrow (except last) */}
-                    </div>
-                    {i < AGENTS.length - 1 && (
-                      <div style={{ position: 'absolute', right: -10, top: '50%', transform: 'translateY(-50%)', zIndex: 2, fontSize: 14, color: 'rgba(26,92,53,0.3)' }}>›</div>
+              {/* dispute flow */}
+              {subGraph === 'dispute' && (
+                <>
+                  <AgentNode agentKey="arambha" />
+                  <Connector cls={connCls('arambha', 'vivada')} />
+                  <AgentNode agentKey="vivada" />
+                  <Connector cls={preHitlConn} />
+                  <HitlNode />
+                  <Connector cls={hitlToSaheeConn} />
+                  <AgentNode agentKey="sahee" />
+                </>
+              )}
+
+              {/* Completed banner */}
+              {pageStatus === 'completed' && (
+                <div className="completed-banner" style={{ marginTop: 20, background: 'linear-gradient(135deg,#E0F5E8,#C4E8D4)', border: '1.5px solid rgba(30,168,81,0.38)', borderRadius: 20, padding: '26px 28px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
+                  <div style={{ fontSize: 18, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.5, marginBottom: 5 }}>Document Complete!</div>
+                  <div style={{ fontSize: 13, color: '#5A7A68', marginBottom: 16 }}>All {AGENTS.length} agents completed. Saved to Legal Vault.</div>
+                  <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                    <a href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#F0FFF6', borderRadius: 100, textDecoration: 'none', fontSize: 13.5, fontWeight: 700, boxShadow: '0 3px 14px rgba(26,92,53,0.28)' }}>← Dashboard</a>
+                    {pollData?.vault_id && (
+                      <button
+                        onClick={async () => {
+                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault/${pollData.vault_id}`, { headers: { Authorization: `Bearer ${tokenRef.current}` } })
+                          if (res.ok) { const d = await res.json(); if (d.pdf_url) window.open(d.pdf_url, '_blank') }
+                        }}
+                        style={{ padding: '11px 22px', background: '#FDFCF8', color: '#1A5C35', border: '1.5px solid rgba(26,92,53,0.2)', borderRadius: 100, fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
+                      >📥 Download PDF</button>
                     )}
                   </div>
-                )
-              })}
+                </div>
+              )}
             </div>
-          </div>
 
-          {/* ── Live Activity Feed ── */}
-          {activityLog.length > 0 && pageStatus !== 'completed' && (
-            <div style={{ background: '#FDFCF8', borderRadius: 16, border: '1px solid rgba(26,92,53,0.09)', padding: '16px 20px', marginBottom: 24 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 12 }}>Live Activity</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {activityLog.map((entry, i) => (
-                  <div
-                    key={`${entry.key}-${entry.ts}`}
-                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 12px', background: '#F5FAF6', borderRadius: 10, animation: 'logSlide 0.4s ease-out both', animationDelay: `${i === activityLog.length - 1 ? 0 : 0}ms` }}
-                  >
-                    <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{entry.icon}</span>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: '#0F2D1F' }}>{entry.name}</span>
-                      <span style={{ fontSize: 12, color: '#5A7A68', marginLeft: 8 }}>{entry.summary}</span>
-                    </div>
-                    <div style={{ fontSize: 10, color: '#A8C4B4', fontWeight: 600, flexShrink: 0 }}>
-                      {Math.round((Date.now() - entry.ts) / 1000) < 5 ? 'just now' : `${Math.round((Date.now() - entry.ts) / 1000)}s ago`}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ── Status Bar ── */}
-          <div style={{ background: '#FDFCF8', borderRadius: 16, border: '1px solid rgba(26,92,53,0.09)', padding: '16px 22px', marginBottom: 24, display: 'flex', alignItems: 'center', gap: 14 }}>
-            {pageStatus === 'processing' && (
-              <>
-                <div style={{ width: 22, height: 22, border: '2.5px solid rgba(30,168,81,0.2)', borderTopColor: '#1EA851', borderRadius: '50%', animation: 'spin 0.9s linear infinite', flexShrink: 0 }} />
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0F2D1F' }}>Agents are working on your document…</div>
-                  <div style={{ fontSize: 12, color: '#7B9A8A', marginTop: 2 }}>This page updates automatically every 3 seconds. You can leave and come back.</div>
-                </div>
-              </>
-            )}
-            {warming && pageStatus === 'processing' && (
-              <div style={{ fontSize: 12.5, color: '#B07010', background: '#FFF0D8', borderRadius: 10, padding: '8px 14px', fontWeight: 500, marginLeft: 'auto' }}>⏱ Backend warming up — hang tight…</div>
-            )}
-            {pageStatus === 'awaiting_approval' && (
-              <>
-                <div style={{ fontSize: 24 }}>📋</div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0F2D1F' }}>Your document is ready for review</div>
-                  <div style={{ fontSize: 12, color: '#7B9A8A', marginTop: 2 }}>Review the draft, check risk flags, then approve or request a revision below.</div>
-                </div>
-              </>
-            )}
-            {pageStatus === 'completed' && (
-              <>
-                <div style={{ fontSize: 24 }}>🎉</div>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700, color: '#0F2D1F' }}>Document generated successfully!</div>
-                  <div style={{ fontSize: 12, color: '#7B9A8A', marginTop: 2 }}>Your document has been saved to the Legal Vault.</div>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* ── HITL Review Panel ── */}
-          {pageStatus === 'awaiting_approval' && hp && (
-            <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 18, marginBottom: 24 }}>
-
-              {/* Scores + risk summary row */}
-              <div className="hitl-cols" style={{ display: 'flex', gap: 16 }}>
-
-                {/* Review score */}
-                <div style={{ flex: 1, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Review Score</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                    <div style={{ fontSize: 40, fontWeight: 800, color: scoreColor(hp.review_score), lineHeight: 1 }}>{hp.review_score}</div>
-                    <div style={{ flex: 1 }}>
-                      <div style={{ height: 8, background: '#EAF5EE', borderRadius: 100, overflow: 'hidden' }}>
-                        <div style={{ height: '100%', width: `${hp.review_score}%`, background: `linear-gradient(90deg,${scoreColor(hp.review_score)},#1EA851)`, borderRadius: 100, transition: 'width 0.6s ease' }} />
-                      </div>
-                      <div style={{ fontSize: 11, color: '#7B9A8A', marginTop: 5 }}>
-                        {hp.review_score >= 90 ? 'Excellent' : hp.review_score >= 75 ? 'Good — meets threshold' : 'Below threshold — revision recommended'}
+            {/* ── HITL Review Panel ── */}
+            {pageStatus === 'awaiting_approval' && hp && (
+              <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 28 }}>
+                <div className="hitl-cols" style={{ display: 'flex', gap: 16 }}>
+                  {/* Review score */}
+                  <div style={{ flex: 1, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Review Score</div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                      <div style={{ fontSize: 40, fontWeight: 800, color: scoreColor(hp.review_score), lineHeight: 1 }}>{hp.review_score}</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ height: 8, background: '#EAF5EE', borderRadius: 100, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${hp.review_score}%`, background: `linear-gradient(90deg,${scoreColor(hp.review_score)},#1EA851)`, borderRadius: 100, transition: 'width 0.6s ease' }} />
+                        </div>
+                        <div style={{ fontSize: 11, color: '#7B9A8A', marginTop: 5 }}>
+                          {hp.review_score >= 90 ? 'Excellent' : hp.review_score >= 75 ? 'Good — meets threshold' : 'Below threshold — revision recommended'}
+                        </div>
                       </div>
                     </div>
+                    {hp.low_confidence && <div style={{ marginTop: 12, fontSize: 12, color: '#B07010', background: '#FFF0D8', borderRadius: 8, padding: '8px 12px', fontWeight: 500 }}>⚠️ Low confidence ({Math.round(hp.confidence_score * 100)}%) — manual review advised</div>}
+                    {hp.max_loops_reached && <div style={{ marginTop: 8, fontSize: 12, color: '#C03030', background: '#FFE8E8', borderRadius: 8, padding: '8px 12px', fontWeight: 500 }}>⚠️ Max revision loops reached — score below 75</div>}
                   </div>
-                  {hp.low_confidence && (
-                    <div style={{ marginTop: 12, fontSize: 12, color: '#B07010', background: '#FFF0D8', borderRadius: 8, padding: '8px 12px', fontWeight: 500 }}>⚠️ Low confidence ({Math.round(hp.confidence_score * 100)}%) — manual review advised</div>
-                  )}
-                  {hp.max_loops_reached && (
-                    <div style={{ marginTop: 8, fontSize: 12, color: '#C03030', background: '#FFE8E8', borderRadius: 8, padding: '8px 12px', fontWeight: 500 }}>⚠️ Max revision loops reached — score below 75</div>
-                  )}
+                  {/* Risk summary */}
+                  <div style={{ flex: 1, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Risk Summary</div>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      <span className="risk-chip" style={{ background: '#FFE8E8', color: '#C03030' }}>🚨 {hp.risk_summary.critical} Critical</span>
+                      <span className="risk-chip" style={{ background: '#FFF0D8', color: '#B07010' }}>⚠️ {hp.risk_summary.high} High</span>
+                      <span className="risk-chip" style={{ background: '#EAE8F5', color: '#5A7AB0' }}>📊 {hp.risk_summary.total} Total</span>
+                    </div>
+                    {hp.risk_summary.critical > 0 && (
+                      <div style={{ marginTop: 12 }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#C03030', marginBottom: 6 }}>Critical flags:</div>
+                        {hp.risk_summary.critical_flags.map((f, i) => (
+                          <div key={i} style={{ fontSize: 12, color: '#4A2828', background: '#FFF4F4', borderRadius: 8, padding: '7px 11px', marginBottom: 5, lineHeight: 1.5 }}>{f.description}</div>
+                        ))}
+                      </div>
+                    )}
+                    {hp.review_issues.length > 0 && (
+                      <div style={{ marginTop: 12 }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 700, color: '#5A7A68', marginBottom: 6 }}>Review issues:</div>
+                        {hp.review_issues.slice(0, 3).map((issue, i) => (
+                          <div key={i} style={{ fontSize: 12, color: '#4A6858', background: '#F5FAF6', borderRadius: 8, padding: '6px 10px', marginBottom: 4, lineHeight: 1.5 }}>• {issue}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Risk summary */}
-                <div style={{ flex: 1, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Risk Summary</div>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    <span className="risk-chip" style={{ background: '#FFE8E8', color: '#C03030' }}>🚨 {hp.risk_summary.critical} Critical</span>
-                    <span className="risk-chip" style={{ background: '#FFF0D8', color: '#B07010' }}>⚠️ {hp.risk_summary.high} High</span>
-                    <span className="risk-chip" style={{ background: '#EAE8F5', color: '#5A7AB0' }}>📊 {hp.risk_summary.total} Total</span>
-                  </div>
-                  {hp.risk_summary.critical > 0 && (
-                    <div style={{ marginTop: 12 }}>
-                      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#C03030', marginBottom: 6 }}>Critical flags:</div>
-                      {hp.risk_summary.critical_flags.map((f, i) => (
-                        <div key={i} style={{ fontSize: 12, color: '#4A2828', background: '#FFF4F4', borderRadius: 8, padding: '7px 11px', marginBottom: 5, lineHeight: 1.5 }}>{f.description}</div>
+                {/* Parties */}
+                {hp.parties.length > 0 && (
+                  <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '18px 22px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Parties</div>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {hp.parties.map((p, i) => (
+                        <div key={i} style={{ background: '#EAF5EE', borderRadius: 12, padding: '8px 14px' }}>
+                          <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>{p.name}</div>
+                          <div style={{ fontSize: 11, color: '#7B9A8A', marginTop: 2 }}>{p.role}</div>
+                        </div>
                       ))}
                     </div>
-                  )}
-                  {hp.review_issues.length > 0 && (
-                    <div style={{ marginTop: 12 }}>
-                      <div style={{ fontSize: 11.5, fontWeight: 700, color: '#5A7A68', marginBottom: 6 }}>Review issues:</div>
-                      {hp.review_issues.slice(0, 3).map((issue, i) => (
-                        <div key={i} style={{ fontSize: 12, color: '#4A6858', background: '#F5FAF6', borderRadius: 8, padding: '6px 10px', marginBottom: 4, lineHeight: 1.5 }}>• {issue}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Parties */}
-              {hp.parties.length > 0 && (
-                <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '18px 22px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Parties</div>
-                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                    {hp.parties.map((p, i) => (
-                      <div key={i} style={{ background: '#EAF5EE', borderRadius: 12, padding: '8px 14px' }}>
-                        <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>{p.name}</div>
-                        <div style={{ fontSize: 11, color: '#7B9A8A', marginTop: 2 }}>{p.role}</div>
-                      </div>
-                    ))}
                   </div>
-                </div>
-              )}
-
-              {/* Full risk flags (collapsible) */}
-              {hp.risk_flags.length > 0 && (
-                <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', overflow: 'hidden' }}>
-                  <button onClick={() => setExpandedRisks(r => !r)} style={{ width: '100%', padding: '16px 22px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left' }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>🛡️ All Risk Flags ({hp.risk_flags.length})</span>
-                    <span style={{ fontSize: 14, color: '#5A7A68' }}>{expandedRisks ? '▲' : '▼'}</span>
-                  </button>
-                  {expandedRisks && (
-                    <div style={{ padding: '0 22px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      {hp.risk_flags.map((f, i) => {
-                        const sc = severityColor(f.severity)
-                        return (
-                          <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', background: '#F9FCF9', borderRadius: 10 }}>
-                            <span className="risk-chip" style={{ background: sc.bg, color: sc.color, flexShrink: 0 }}>{f.severity}</span>
-                            <div>
-                              <div style={{ fontSize: 13, color: '#0F2D1F', lineHeight: 1.5 }}>{f.description}</div>
-                              {f.clause && <div style={{ fontSize: 11.5, color: '#7B9A8A', marginTop: 3 }}>Clause: {f.clause}</div>}
-                            </div>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Draft preview */}
-              <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
-                <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Draft Preview</div>
-                <div
-                  aria-label="Document draft preview"
-                  role="region"
-                  style={{ width: '100%', maxHeight: 420, overflowY: 'auto', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, padding: '16px 18px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,92,53,0.18) transparent' }}
-                >
-                  <MarkdownRenderer content={hp.draft} />
-                </div>
-              </div>
-
-              {/* Approve / Revise */}
-              {approveError && <div style={{ fontSize: 12.5, color: '#C03030', background: '#FFE8E8', borderRadius: 10, padding: '10px 14px', fontWeight: 500 }}>⚠️ {approveError}</div>}
-
-              {!showRevision ? (
-                <div style={{ display: 'flex', gap: 14 }}>
-                  <button
-                    className="approve-btn"
-                    onClick={() => handleApprove(true)}
-                    disabled={approving}
-                    style={{ flex: 1, padding: '16px 24px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: approving ? 0.7 : 1 }}
-                  >
-                    {approving ? <><span style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.75s linear infinite' }} /> Processing…</> : <>✅ Approve & Generate PDF</>}
-                  </button>
-                  <button
-                    className="approve-btn"
-                    onClick={() => setShowRevision(true)}
-                    style={{ flex: 1, padding: '16px 24px', background: '#FDFCF8', color: '#2C4A38', borderRadius: 14, fontSize: 15, fontWeight: 700, border: '1.5px solid rgba(26,92,53,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
-                  >
-                    ✏️ Request Revision
-                  </button>
-                </div>
-              ) : (
-                <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>What should the agents change?</div>
-                  <textarea
-                    value={feedback}
-                    onChange={e => setFeedback(e.target.value)}
-                    aria-label="Revision feedback"
-                    placeholder="e.g. Strengthen the confidentiality clause, add a 6-month non-compete, and include a specific arbitration clause under Indian law…"
-                    style={{ width: '100%', minHeight: 90, padding: '12px 14px', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.13)', borderRadius: 12, fontFamily: 'inherit', fontSize: 13.5, color: '#0F2D1F', resize: 'vertical', lineHeight: 1.65 }}
-                  />
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button
-                      className="approve-btn"
-                      onClick={() => handleApprove(false)}
-                      disabled={approving || !feedback.trim()}
-                      style={{ flex: 1, padding: '13px 20px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', borderRadius: 12, fontSize: 14, fontWeight: 700, border: 'none', opacity: (approving || !feedback.trim()) ? 0.6 : 1, cursor: (approving || !feedback.trim()) ? 'not-allowed' : 'pointer' }}
-                    >
-                      {approving ? 'Submitting…' : 'Send for Revision'}
-                    </button>
-                    <button onClick={() => { setShowRevision(false); setFeedback('') }} style={{ padding: '13px 20px', background: '#FDFCF8', color: '#7B9A8A', borderRadius: 12, fontSize: 14, fontWeight: 600, border: '1.5px solid rgba(26,92,53,0.12)', cursor: 'pointer' }}>Cancel</button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* ── Final Result ── */}
-          {pageStatus === 'completed' && pollData && (
-            <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
-              {/* Success banner */}
-              <div style={{ background: 'linear-gradient(135deg,#E0F5E8,#C8E8D0)', borderRadius: 20, border: '1.5px solid rgba(30,168,81,0.3)', padding: '28px 28px', display: 'flex', alignItems: 'center', gap: 20 }}>
-                <div style={{ fontSize: 52, lineHeight: 1 }}>🎉</div>
-                <div>
-                  <div style={{ fontSize: 20, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.5 }}>{pollData.document_type} — Done!</div>
-                  <div style={{ fontSize: 13, color: '#5A7A68', marginTop: 4 }}>All {AGENTS.length} agents completed. Document saved to your Legal Vault.</div>
-                  {pollData.obligations_count > 0 && (
-                    <div style={{ fontSize: 12.5, color: '#1A5C35', fontWeight: 600, marginTop: 6 }}>📅 {pollData.obligations_count} obligation{pollData.obligations_count !== 1 ? 's' : ''} tracked by Sruthi</div>
-                  )}
-                </div>
-              </div>
-
-              {/* Draft preview */}
-              {pollData.draft_preview && (
-                <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Document Preview</div>
-                  <MarkdownRenderer content={pollData.draft_preview} />
-                </div>
-              )}
-
-              {/* Actions */}
-              <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-                {pollData.vault_id && (
-                  <button
-                    onClick={async () => {
-                      const res = await fetch(
-                        `${process.env.NEXT_PUBLIC_API_URL}/vault/${pollData.vault_id}`,
-                        { headers: { Authorization: `Bearer ${tokenRef.current}` } }
-                      )
-                      if (res.ok) {
-                        const data = await res.json()
-                        if (data.pdf_url) window.open(data.pdf_url, '_blank')
-                      }
-                    }}
-                    style={{ flex: 1, minWidth: 180, padding: '15px 22px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 700, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 18px rgba(30,168,81,0.3)' }}
-                  >
-                    📥 Download PDF
-                  </button>
                 )}
-                <a href="/dashboard" style={{ flex: 1, minWidth: 180, padding: '15px 22px', background: '#FDFCF8', color: '#2C4A38', borderRadius: 14, fontSize: 14, fontWeight: 700, border: '1.5px solid rgba(26,92,53,0.16)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  ← Back to Dashboard
-                </a>
-                <a href="/dashboard" style={{ flex: 1, minWidth: 180, padding: '15px 22px', background: '#EAF5EE', color: '#1A5C35', borderRadius: 14, fontSize: 14, fontWeight: 700, border: '1.5px solid rgba(26,92,53,0.16)', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                  ✨ Create Another
-                </a>
+
+                {/* Risk flags collapsible */}
+                {hp.risk_flags.length > 0 && (
+                  <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', overflow: 'hidden' }}>
+                    <button onClick={() => setExpandedRisks(r => !r)} style={{ width: '100%', padding: '16px 22px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left' }}>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>🛡️ All Risk Flags ({hp.risk_flags.length})</span>
+                      <span style={{ fontSize: 14, color: '#5A7A68' }}>{expandedRisks ? '▲' : '▼'}</span>
+                    </button>
+                    {expandedRisks && (
+                      <div style={{ padding: '0 22px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {hp.risk_flags.map((f, i) => {
+                          const sc = severityColor(f.severity)
+                          return (
+                            <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', background: '#F9FCF9', borderRadius: 10 }}>
+                              <span className="risk-chip" style={{ background: sc.bg, color: sc.color, flexShrink: 0 }}>{f.severity}</span>
+                              <div>
+                                <div style={{ fontSize: 13, color: '#0F2D1F', lineHeight: 1.5 }}>{f.description}</div>
+                                {f.clause && <div style={{ fontSize: 11.5, color: '#7B9A8A', marginTop: 3 }}>Clause: {f.clause}</div>}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Draft preview */}
+                <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Draft Preview</div>
+                  <div
+                    aria-label="Document draft preview"
+                    role="region"
+                    style={{ width: '100%', maxHeight: 420, overflowY: 'auto', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, padding: '16px 18px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,92,53,0.18) transparent' }}
+                  >
+                    <MarkdownRenderer content={hp.draft} />
+                  </div>
+                </div>
+
+                {/* Approve / Revise */}
+                {approveError && <div style={{ fontSize: 12.5, color: '#C03030', background: '#FFE8E8', borderRadius: 10, padding: '10px 14px', fontWeight: 500 }}>⚠️ {approveError}</div>}
+                {!showRevision ? (
+                  <div style={{ display: 'flex', gap: 14 }}>
+                    <button className="approve-btn" onClick={() => handleApprove(true)} disabled={approving}
+                      style={{ flex: 1, padding: '16px 24px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', borderRadius: 14, fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: approving ? 0.7 : 1 }}>
+                      {approving ? <><span style={{ width: 16, height: 16, border: '2.5px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block', animation: 'spin 0.75s linear infinite' }} /> Processing…</> : <>✅ Approve & Generate PDF</>}
+                    </button>
+                    <button className="approve-btn" onClick={() => setShowRevision(true)}
+                      style={{ flex: 1, padding: '16px 24px', background: '#FDFCF8', color: '#2C4A38', borderRadius: 14, fontSize: 15, fontWeight: 700, border: '1.5px solid rgba(26,92,53,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      ✏️ Request Revision
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>What should the agents change?</div>
+                    <textarea value={feedback} onChange={e => setFeedback(e.target.value)} aria-label="Revision feedback"
+                      placeholder="e.g. Strengthen the confidentiality clause, add a 6-month non-compete…"
+                      style={{ width: '100%', minHeight: 90, padding: '12px 14px', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.13)', borderRadius: 12, fontFamily: 'inherit', fontSize: 13.5, color: '#0F2D1F', resize: 'vertical', lineHeight: 1.65 }} />
+                    <div style={{ display: 'flex', gap: 10 }}>
+                      <button className="approve-btn" onClick={() => handleApprove(false)} disabled={approving || !feedback.trim()}
+                        style={{ flex: 1, padding: '13px 20px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', borderRadius: 12, fontSize: 14, fontWeight: 700, border: 'none', opacity: (approving || !feedback.trim()) ? 0.6 : 1, cursor: (approving || !feedback.trim()) ? 'not-allowed' : 'pointer' }}>
+                        {approving ? 'Submitting…' : 'Send for Revision'}
+                      </button>
+                      <button onClick={() => { setShowRevision(false); setFeedback('') }}
+                        style={{ padding: '13px 20px', background: '#FDFCF8', color: '#7B9A8A', borderRadius: 12, fontSize: 14, fontWeight: 600, border: '1.5px solid rgba(26,92,53,0.12)', cursor: 'pointer' }}>Cancel</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* ── Final Result (completed) ── */}
+            {pageStatus === 'completed' && pollData && pollData.draft_preview && (
+              <div className="fade-in" style={{ marginTop: 28, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
+                <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Document Preview</div>
+                <MarkdownRenderer content={pollData.draft_preview} />
+              </div>
+            )}
+          </div>
+
+          {/* ════ RIGHT: Sticky panel ════ */}
+          <div className="right-panel" style={{ position: 'sticky', top: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* ── Live Agent Activity ── */}
+            <div style={{ background: '#FDFCF8', borderRadius: 20, border: '1px solid rgba(26,92,53,0.09)', boxShadow: '0 4px 22px rgba(26,92,53,0.06)', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid rgba(26,92,53,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                  <span style={{ fontSize: 15 }}>💚</span>
+                  <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.3 }}>Live Agent Activity</h3>
+                </div>
+                {pageStatus === 'processing' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#E0F5E8', borderRadius: 100, padding: '4px 11px', border: '1px solid rgba(30,168,81,0.22)' }}>
+                    <div style={{ width: 6, height: 6, background: '#1EA851', borderRadius: '50%', animation: 'blink 1.6s ease-in-out infinite' }} />
+                    <span style={{ fontSize: 11, fontWeight: 700, color: '#1A5C35' }}>Live</span>
+                  </div>
+                )}
+              </div>
+              <div className="scr" style={{ maxHeight: 232, overflowY: 'auto', padding: '8px 14px 12px' }}>
+                {activityLog.length === 0 ? (
+                  <div style={{ padding: '22px 0', textAlign: 'center' }}>
+                    <div style={{ fontSize: 26, marginBottom: 7 }}>⏳</div>
+                    <div style={{ fontSize: 12, color: '#A8C4B4', fontWeight: 500 }}>Agents starting up…</div>
+                  </div>
+                ) : (
+                  [...activityLog].reverse().map((entry) => (
+                    <div key={`${entry.key}-${entry.ts}`} className="log-entry" style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '9px 8px', borderBottom: '1px solid rgba(26,92,53,0.05)' }}>
+                      <div style={{ fontSize: 10.5, color: '#A8C4B4', fontWeight: 600, flexShrink: 0, minWidth: 76, paddingTop: 1.5 }}>
+                        {new Date(entry.ts).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
+                      </div>
+                      <div style={{ width: 28, height: 28, background: '#EAF5EE', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, flexShrink: 0 }}>{entry.icon}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0F2D1F', lineHeight: 1.3 }}>{entry.name} completed</div>
+                        <div style={{ fontSize: 11.5, color: '#7B9A8A', marginTop: 2, lineHeight: 1.4 }}>{entry.summary}</div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
-          )}
+
+            {/* ── Document Summary ── */}
+            <div style={{ background: '#FDFCF8', borderRadius: 20, border: '1px solid rgba(26,92,53,0.09)', boxShadow: '0 4px 22px rgba(26,92,53,0.06)', padding: '18px 20px' }}>
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.3, marginBottom: 16 }}>Document Summary</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>Document Type</div>
+                    <div style={{ fontSize: 15, fontWeight: 800, color: '#0F2D1F' }}>{docType}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>Jurisdiction</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F2D1F' }}>{pollData?.hitl_payload?.parties?.[0] ? 'India' : '—'}</div>
+                  </div>
+                  {hp?.parties && hp.parties.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>Parties</div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#0F2D1F', lineHeight: 1.55 }}>
+                        {hp.parties.map(p => p.name).join('\n')}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                {/* Score gauge */}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6, textAlign: 'center', marginBottom: 4 }}>Review Score</div>
+                  <div style={{ position: 'relative', width: 80, height: 80 }}>
+                    <svg width="80" height="80" viewBox="0 0 80 80">
+                      <circle cx="40" cy="40" r="33" fill="none" stroke="#E0F5E8" strokeWidth="7.5" />
+                      <circle cx="40" cy="40" r="33" fill="none" stroke="#1EA851" strokeWidth="7.5"
+                        strokeDasharray="207" strokeDashoffset={gaugeOffset} strokeLinecap="round"
+                        transform="rotate(-90 40 40)" style={{ transition: 'stroke-dashoffset 1.2s ease' }} />
+                    </svg>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 21, fontWeight: 800, color: '#0F2D1F', lineHeight: 1 }}>{gaugeScore > 0 ? gaugeScore : '—'}</span>
+                      {gaugeScore > 0 && <span style={{ fontSize: 9, color: '#7B9A8A', fontWeight: 600, lineHeight: 1 }}>/100</span>}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Risk + confidence + obligations */}
+              <div style={{ marginTop: 14, paddingTop: 13, borderTop: '1px solid rgba(26,92,53,0.07)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {riskLevel && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: '#7B9A8A' }}>Risk Level</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                      <div style={{ width: 9, height: 9, background: riskLevel.dot, borderRadius: '50%', boxShadow: `0 0 0 2px ${riskLevel.dot}40` }} />
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>{riskLevel.label}</span>
+                    </div>
+                  </div>
+                )}
+                {gaugeScore > 0 && (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: '#7B9A8A' }}>Quality Score</span>
+                      <span style={{ fontSize: 13.5, fontWeight: 800, color: '#0F2D1F' }}>{gaugeScore}%</span>
+                    </div>
+                    <div style={{ height: 7, background: '#E8F5EE', borderRadius: 100, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${gaugeScore}%`, background: 'linear-gradient(90deg,#1A5C35,#1EA851)', borderRadius: 100, transition: 'width 1.4s ease' }} />
+                    </div>
+                  </div>
+                )}
+                {pollData && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <span style={{ fontSize: 11.5, fontWeight: 600, color: '#7B9A8A' }}>Obligations Identified</span>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>{pollData.obligations_count}</span>
+                  </div>
+                )}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 600, color: '#7B9A8A' }}>Est. Completion</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>{estCompletion}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* ── HITL info card ── */}
+            <div style={{ background: 'linear-gradient(135deg,#FFFBE4,#FFF4B0)', borderRadius: 20, border: '1.5px solid rgba(200,160,16,0.32)', boxShadow: '0 4px 22px rgba(200,160,16,0.08)', padding: '18px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 13, marginBottom: 11 }}>
+                <div style={{ width: 46, height: 46, background: 'linear-gradient(135deg,#FFEC80,#E8C050)', borderRadius: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, boxShadow: '0 3px 12px rgba(200,140,0,0.18)' }}>👥</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 800, color: '#6A4A00', letterSpacing: -0.3 }}>Human-in-the-Loop</div>
+                  <div style={{ fontSize: 11.5, color: '#9A7820', marginTop: 1, fontWeight: 500 }}>Your approval is required after processing</div>
+                </div>
+                {hitlState === 'pending' && <div style={{ background: 'linear-gradient(135deg,#F0E060,#E0B840)', color: '#6A4A00', fontSize: 11, fontWeight: 800, padding: '5px 13px', borderRadius: 100, flexShrink: 0, border: '1px solid rgba(200,150,0,0.28)' }}>Pending</div>}
+                {hitlState === 'done'    && <div style={{ background: '#E0F5E8', color: '#1A5C35', fontSize: 11, fontWeight: 800, padding: '5px 13px', borderRadius: 100, flexShrink: 0 }}>Approved ✓</div>}
+                {hitlState === 'waiting' && <div style={{ background: 'rgba(200,160,16,0.12)', color: '#9A7820', fontSize: 11, fontWeight: 700, padding: '5px 13px', borderRadius: 100, flexShrink: 0 }}>Waiting</div>}
+              </div>
+              <p style={{ fontSize: 12.5, color: '#7A6020', lineHeight: 1.62 }}>We will notify you when the document is ready for your review. You can approve or request revisions before final signing and delivery.</p>
+            </div>
+
+            {/* Warming notice */}
+            {warming && pageStatus === 'processing' && (
+              <div style={{ fontSize: 12.5, color: '#B07010', background: '#FFF0D8', borderRadius: 12, padding: '10px 14px', fontWeight: 500, border: '1px solid rgba(180,112,16,0.18)' }}>⏱ Backend warming up (free tier) — this can take up to 30s. Hang tight…</div>
+            )}
+          </div>
 
         </div>
       </div>
