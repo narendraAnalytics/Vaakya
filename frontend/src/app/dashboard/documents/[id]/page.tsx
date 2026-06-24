@@ -624,6 +624,25 @@ export default function DocumentProgressPage() {
                   <AgentNode agentKey="sahee" />
                   <Connector cls={connCls('sahee', 'sruthi')} />
                   <AgentNode agentKey="sruthi" />
+
+                  {/* ── Other workflows — greyed ── */}
+                  <div style={{ marginTop: 22, borderTop: '1px dashed rgba(26,92,53,0.15)', paddingTop: 18 }}>
+                    <div style={{ fontSize: 10.5, fontWeight: 700, color: '#A5BFB4', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 14, textAlign: 'center' }}>
+                      Available in other workflows
+                    </div>
+                    <div style={{ opacity: 0.42, pointerEvents: 'none' }}>
+                      <AgentNode agentKey="samjoota" />
+                    </div>
+                    <div style={{ textAlign: 'center', fontSize: 11, color: '#8BAA96', marginBottom: 14, marginTop: -2 }}>
+                      📄 Triggers when you <strong>Upload a PDF</strong> (Redline Review flow)
+                    </div>
+                    <div style={{ opacity: 0.42, pointerEvents: 'none' }}>
+                      <AgentNode agentKey="vivada" />
+                    </div>
+                    <div style={{ textAlign: 'center', fontSize: 11, color: '#8BAA96', marginTop: -2 }}>
+                      ⚖️ Triggers when you <strong>Raise a Dispute</strong> (Dispute flow)
+                    </div>
+                  </div>
                 </>
               )}
 
@@ -659,7 +678,7 @@ export default function DocumentProgressPage() {
                 <div className="completed-banner" style={{ marginTop: 20, background: 'linear-gradient(135deg,#E0F5E8,#C4E8D4)', border: '1.5px solid rgba(30,168,81,0.38)', borderRadius: 20, padding: '26px 28px', textAlign: 'center' }}>
                   <div style={{ fontSize: 36, marginBottom: 8 }}>🎉</div>
                   <div style={{ fontSize: 18, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.5, marginBottom: 5 }}>Document Complete!</div>
-                  <div style={{ fontSize: 13, color: '#5A7A68', marginBottom: 16 }}>All {AGENTS.length} agents completed. Saved to Legal Vault.</div>
+                  <div style={{ fontSize: 13, color: '#5A7A68', marginBottom: 16 }}>All 8 specialized AI agents completed. Saved to Legal Vault.</div>
                   <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                     <a href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#F0FFF6', borderRadius: 100, textDecoration: 'none', fontSize: 13.5, fontWeight: 700, boxShadow: '0 3px 14px rgba(26,92,53,0.28)' }}>← Dashboard</a>
                     {pollData?.vault_id && (
