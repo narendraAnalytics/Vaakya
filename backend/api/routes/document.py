@@ -91,16 +91,22 @@ async def _persist_state(graph, document_id: str, config: dict) -> None:
 
         # Write vault_documents row when document is completed with a vault_id
         if doc_status == "completed" and v.get("vault_id"):
+            vault_id = v["vault_id"]
             sb.table("vault_documents").upsert({
-                "id":             v["vault_id"],
+                "id":             vault_id,
                 "user_id":        v.get("user_id", ""),
                 "document_id":    document_id,
                 "document_type":  v.get("document_type", ""),
                 "jurisdiction":   v.get("jurisdiction", "India"),
                 "parties":        v.get("parties", []),
                 "esign_status":   v.get("esign_status", "pending_signature"),
+                "final_pdf_url":  v.get("final_pdf_url", ""),
                 "updated_at":     now,
             }).execute()
+            # Remove the placeholder row created at document creation time
+            # (placeholder uses document_id as its id; real vault row uses vault_id)
+            if vault_id != document_id:
+                sb.table("vault_documents").delete().eq("id", document_id).execute()
 
         # Write obligations rows (idempotent — delete + re-insert)
         if doc_status == "completed" and v.get("obligations"):

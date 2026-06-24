@@ -44,10 +44,12 @@ function getDocIcon(type: string): string {
 function getStatusBadge(status: string): { label: string; color: string; bg: string } {
   switch (status) {
     case 'completed':
+    case 'pending_signature':
       return { label: '✅ Completed', color: '#1A5C35', bg: '#E0F5E8' }
     case 'reviewing':
     case 'hitl_pending':
     case 'pending_review':
+    case 'awaiting_approval':
       return { label: '🔍 Reviewing', color: '#B07010', bg: '#FFF0D8' }
     case 'risk_flagged':
       return { label: '⚠️ Risks', color: '#C03030', bg: '#FFE8E8' }
@@ -582,7 +584,7 @@ export default function DashboardClient({ username, documents }: Props) {
                     <span style={{ fontSize: 12.5, color: '#4A6858', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{party}</span>
                     <span style={{ fontSize: 12, color: '#7B9A8A' }}>{formatDocDate(doc.created_at)}</span>
                     <div><span style={{ fontSize: 11, fontWeight: 700, color: badge.color, background: badge.bg, padding: '3px 10px', borderRadius: 100 }}>{badge.label}</span></div>
-                    <a href={doc.status === 'completed' ? `/dashboard/vault/${doc.id}` : `/dashboard/documents/${doc.id}`} style={{ fontSize: 12.5, fontWeight: 600, color: '#1A5C35', cursor: 'pointer', textDecoration: 'none' }}>View</a>
+                    <a href={(doc.status === 'completed' || doc.status === 'pending_signature') ? `/dashboard/vault/${doc.id}` : `/dashboard/documents/${doc.id}`} style={{ fontSize: 12.5, fontWeight: 600, color: '#1A5C35', cursor: 'pointer', textDecoration: 'none' }}>View</a>
                   </div>
                 )
               })}
