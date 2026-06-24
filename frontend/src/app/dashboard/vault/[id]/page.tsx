@@ -179,26 +179,20 @@ export default function VaultDocumentPage() {
               <div style={{ height: 1, background: 'rgba(26,92,53,0.08)' }} />
 
               {/* Actions */}
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div>
                 {doc.final_pdf_url ? (
                   <button
                     onClick={handleDownloadPdf}
                     disabled={downloading}
-                    style={{ flex: 1, padding: '13px 20px', background: downloading ? '#A8C4B4' : 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 14.5, fontWeight: 700, cursor: downloading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
+                    style={{ width: '100%', padding: '14px 20px', background: downloading ? '#A8C4B4' : 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: downloading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
                   >
                     {downloading ? '⏳ Getting link…' : '📥 Download PDF'}
                   </button>
                 ) : (
-                  <div style={{ flex: 1, padding: '13px 20px', background: '#F0FAF3', border: '1.5px solid rgba(26,92,53,0.15)', borderRadius: 14, fontSize: 13.5, fontWeight: 600, color: '#8BAA96', textAlign: 'center' }}>
-                    📄 PDF not ready yet
+                  <div style={{ padding: '14px 20px', background: '#F0FAF3', border: '1.5px solid rgba(26,92,53,0.15)', borderRadius: 14, fontSize: 13.5, fontWeight: 600, color: '#8BAA96', textAlign: 'center' }}>
+                    📄 PDF will be available once the document is processed through the pipeline
                   </div>
                 )}
-                <button
-                  onClick={() => router.push(`/dashboard/documents/${doc.id}`)}
-                  style={{ padding: '13px 20px', background: '#FDFCF8', border: '1.5px solid rgba(26,92,53,0.14)', borderRadius: 14, fontSize: 13.5, fontWeight: 600, color: '#2C4A38', cursor: 'pointer' }}
-                >
-                  🤖 View Pipeline
-                </button>
               </div>
             </div>
           </>
