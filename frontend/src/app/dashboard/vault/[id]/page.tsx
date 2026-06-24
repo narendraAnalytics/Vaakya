@@ -76,20 +76,22 @@ export default function VaultDocumentPage() {
     try {
       const supabase = createClient()
       const { data: { session } } = await supabase.auth.getSession()
-      const token = session?.access_token
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault/${doc.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      if (!res.ok) throw new Error(`Server error ${res.status}`)
-      const json = await res.json()
-      const pdfUrl = json.pdf_url || json.final_pdf_url
-      if (pdfUrl) {
-        window.open(pdfUrl, '_blank')
+      if (!session) {
+        alert('Session expired. Please log in again.')
+        setDownloading(false)
+        return
+      }
+      const path = `${session.user.id}/${doc.id}.pdf`
+      const { data, error } = await supabase.storage
+        .from('vaakya-contracts')
+        .createSignedUrl(path, 3600)
+      if (error || !data?.signedUrl) {
+        alert('PDF not ready yet. Please try again in a moment.')
       } else {
-        alert('PDF is still being generated. Please try again in a moment.')
+        window.open(data.signedUrl, '_blank')
       }
     } catch (e) {
-      alert(`Could not download PDF: ${e instanceof Error ? e.message : 'Unknown error'}. Please try again.`)
+      alert(`Download failed: ${e instanceof Error ? e.message : 'Unknown error'}`)
     }
     setDownloading(false)
   }
