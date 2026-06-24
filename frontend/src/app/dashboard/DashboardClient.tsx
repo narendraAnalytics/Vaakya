@@ -30,8 +30,14 @@ function getDocIcon(type: string): string {
   if (t.includes('freelance')) return '💼'
   if (t.includes('mou') || t.includes('memorandum')) return '📝'
   if (t.includes('shareholder')) return '📊'
-  if (t.includes('consulting')) return '💡'
+  if (t.includes('consulting')) return '🧠'
   if (t.includes('service')) return '⚙️'
+  if (t.includes('msa') || t.includes('master service')) return '🗂️'
+  if (t.includes('ip assignment') || t.includes('intellectual property')) return '💡'
+  if (t.includes('loan')) return '💰'
+  if (t.includes('legal notice') || t.includes('notice')) return '⚖️'
+  if (t.includes('privacy policy') || t.includes('privacy')) return '🔒'
+  if (t.includes('terms of service') || t.includes('terms')) return '📜'
   return '📄'
 }
 
@@ -416,6 +422,12 @@ export default function DashboardClient({ username, documents }: Props) {
                       <option>MOU (Memorandum of Understanding)</option>
                       <option>Shareholder Agreement</option>
                       <option>Consulting Agreement</option>
+                      <option>MSA (Master Service Agreement)</option>
+                      <option>IP Assignment Agreement</option>
+                      <option>Loan Agreement</option>
+                      <option>Legal Notice</option>
+                      <option>Privacy Policy</option>
+                      <option>Terms of Service</option>
                     </select>
                   </div>
 
