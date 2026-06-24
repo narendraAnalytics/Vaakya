@@ -16,8 +16,8 @@ export async function GET(
     { cookies: { getAll: () => cookieStore.getAll() } }
   )
 
-  const { data: { session } } = await supabase.auth.getSession()
-  if (!session) {
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
+  if (authError || !user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -25,7 +25,7 @@ export async function GET(
     .from('vault_documents')
     .select('id')
     .eq('id', vaultId)
-    .eq('user_id', session.user.id)
+    .eq('user_id', user.id)
     .single()
 
   if (!doc) {
@@ -39,7 +39,7 @@ export async function GET(
 
   const { data, error } = await admin.storage
     .from('vaakya-contracts')
-    .createSignedUrl(`${session.user.id}/${vaultId}.pdf`, 3600)
+    .createSignedUrl(`${user.id}/${vaultId}.pdf`, 3600)
 
   if (error || !data?.signedUrl) {
     return NextResponse.json({ error: 'PDF not ready yet' }, { status: 404 })
