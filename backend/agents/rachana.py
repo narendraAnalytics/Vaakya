@@ -88,6 +88,95 @@ You MUST include ALL of the following clauses if they are not already present:
 
 Force majeure and limitation of liability are already required under Drafting Standards — verify both are present.
 
+### For NDA (Non-Disclosure Agreements):
+You MUST include ALL of the following:
+
+17. **Mutual vs Unilateral Scope** — Explicitly state whether the NDA is mutual (both parties disclose) or unilateral (only one party discloses).
+
+18. **Confidential Information Definition** — Define precisely what constitutes Confidential Information. Include mandatory carve-outs:
+    (a) information already in the public domain through no fault of the receiving party;
+    (b) information independently developed without use of Confidential Information;
+    (c) information received lawfully from a third party without restriction;
+    (d) information required to be disclosed by law or court order (with prior written notice to the disclosing party).
+
+19. **Permitted Purpose Clause** — Receiving party may use Confidential Information solely for [stated purpose] and for no other purpose.
+
+20. **Post-Term Survival** — Confidentiality obligations shall survive termination of this Agreement for a period of [minimum 3] years.
+
+21. **Return / Destruction of Information** — Upon termination or written request, the receiving party shall promptly return or certifiably destroy all Confidential Information and confirm destruction in writing.
+
+22. **Injunctive Relief** — A breach of this Agreement may cause irreparable harm for which monetary damages would be inadequate. The disclosing party is entitled to seek injunctive or other equitable relief without the requirement to post a bond.
+
+### For Vendor Agreements:
+You MUST include ALL of the following:
+
+23. **Delivery Schedule** — Specific milestones, delivery dates, and consequences for delay.
+
+24. **SLA / Performance Standards** — Measurable performance metrics. Breach of SLA shall attract a penalty of [X]% of the contract value per week of delay, not to exceed [Y]%.
+
+25. **Price and Payment Terms** — Total contract value in INR (₹), payment schedule, due dates, GST treatment (inclusive/exclusive), and applicable TDS under Section 194C/194J of the Income Tax Act, 1961.
+
+26. **Inspection and Acceptance Period** — Buyer shall inspect and accept/reject goods or services within [7] business days of delivery. Silence after [7] business days = deemed acceptance.
+
+27. **Warranty** — Vendor warrants goods/services for [minimum 90] days post-acceptance. Remedy: replacement or repair at vendor's cost. Excludes misuse by buyer.
+
+28. **IP Indemnity** — Vendor shall indemnify Buyer against any third-party claim that the goods/services infringe any patent, copyright, or trade secret.
+
+29. **Audit Right** — Buyer may audit Vendor's records relevant to this Agreement on [15] days' written notice, not more than once per calendar year.
+
+### For Lease Agreements:
+You MUST include ALL of the following:
+
+30. **Late Rent Penalty** — Rent unpaid after [7] days from the due date shall attract a late fee of ₹500 per day or 1% per month on the outstanding amount, whichever is higher.
+
+31. **Security Deposit Terms** — State the deposit amount, permitted deductions (unpaid rent, property damage beyond normal wear and tear), and refund timeline ([30] days after vacant possession and key handover).
+
+32. **Rent Escalation Clause** — Upon renewal, monthly rent shall increase by [5–10]% or as mutually agreed in writing at least [30] days before expiry.
+
+33. **Inventory and Fixture Schedule** — A schedule of all fixtures, fittings, and movable assets provided with the property shall be appended as Schedule A and form part of this Agreement.
+
+34. **Permitted Use Restriction** — The premises shall be used solely for [residential / commercial] purposes. Any change in use requires prior written consent of the Landlord.
+
+35. **Property Damage Liability** — Tenant shall be liable for all damage to the premises beyond normal wear and tear. The cost of repair shall be deducted from the security deposit; any excess shall be payable within [15] days of a written demand.
+
+36. **Default and Eviction Clause** — Repeated non-payment of rent (two or more consecutive months) shall constitute material breach. Landlord may terminate this Agreement by giving [15] days' written notice and initiate eviction proceedings under applicable law.
+
+37. **Renewal and Notice-to-Vacate** — Either party wishing to terminate or not renew this Agreement shall give [30] days' prior written notice before expiry. Failure to give notice shall result in automatic month-to-month continuation at the same rent.
+
+38. **Landlord Inspection Rights** — Landlord shall have the right to inspect the premises with [24] hours' prior written notice at mutually agreeable times.
+
+### For Partnership Deeds:
+You MUST include ALL of the following:
+
+39. **Capital Contribution** — Each partner's initial capital contribution (amount and payment timeline). Additional capital calls require unanimous written consent.
+
+40. **Profit and Loss Sharing Ratio** — Profits and losses shall be shared in the ratio of [Partner A: X%, Partner B: Y%]. This ratio may be amended only by written agreement of all partners.
+
+41. **Partner Duties and Authority Limits** — Define each partner's operational role, decision-making authority, and any expenditure limits requiring joint approval.
+
+42. **Restriction on Transfer of Interest** — No partner may transfer, assign, or pledge their partnership interest without prior written consent of all other partners.
+
+43. **Retirement and Exit Mechanism** — A retiring partner shall give [60] days' written notice. Valuation of their interest shall be determined by [mutual agreement / certified CA valuation]. Goodwill to be valued at [agreed method].
+
+44. **Dissolution Procedure** — Upon dissolution, all liabilities shall be settled first, followed by return of capital contributions pro rata, followed by distribution of surplus in the profit-sharing ratio. The Indian Partnership Act, 1932 shall govern any matters not addressed herein.
+
+45. **Decision-Making and Deadlock Resolution** — Routine decisions by majority; strategic decisions (new borrowing, immovable property acquisition, admission of new partner) require unanimity. Deadlock: refer to [mediator / senior counsel] within [30] days.
+
+### For MOU (Memorandum of Understanding):
+You MUST include ALL of the following:
+
+46. **Non-Binding Declaration** — This MOU is not a legally binding contract. The parties intend to negotiate and execute a definitive agreement within [90] days of this MOU.
+
+47. **Scope of Collaboration** — Describe the intended collaboration, joint activities, and each party's role without creating binding obligations.
+
+48. **Exclusivity** — State whether the parties are in exclusive or non-exclusive discussions during the MOU period.
+
+49. **Confidentiality During MOU Period** — All information exchanged during the MOU period shall be kept confidential and subject to the terms of [the NDA attached as Schedule A / the confidentiality clause below].
+
+50. **Conversion Timeline** — The parties shall use commercially reasonable efforts to execute a definitive agreement by [DATE]. Failure to execute by this date shall automatically terminate this MOU unless extended in writing.
+
+51. **Termination** — Either party may terminate this MOU on [15] days' written notice.
+
 ## Redraft Mode
 When you receive a list of issues from a prior review, you MUST:
 - Address EVERY issue explicitly — do not skip any

@@ -85,6 +85,44 @@ Return a list of risk flags. Each flag must include:
 If the document is well-drafted and low risk, return a minimal list with only genuine risks.
 Do not invent risks. An empty list is valid if the document is sound.
 
+## Document-Type Specific Risk Checklist
+Prioritise these checks for the given document_type BEFORE applying the generic categories above:
+
+**LEASE AGREEMENT:**
+- HIGH: No late rent penalty clause → landlord has no financial remedy for delayed rent
+- HIGH: No inventory / fixture schedule → damage disputes cannot be resolved objectively
+- HIGH: No default and eviction clause → repeated non-payment not legally defined as breach
+- MEDIUM: No rent escalation clause → renewal negotiations have no reference point
+- MEDIUM: No renewal / notice-to-vacate process → tenant or landlord may have no exit clarity
+- LOW: No force majeure clause → standard protection often omitted in residential leases
+
+**NDA:**
+- CRITICAL: Confidential Information defined too broadly without carve-outs → definition may be unenforceable under ICA §27 as an unreasonable restraint
+- HIGH: No carve-outs (public domain, prior knowledge, compelled disclosure) → receiving party faces overreach
+- HIGH: No post-term survival period → confidentiality protection expires with the agreement
+- MEDIUM: No return / destruction obligation → recipient retains information indefinitely with no obligation
+- MEDIUM: Indefinite NDA term → Indian courts may read down or refuse enforcement
+
+**VENDOR AGREEMENT:**
+- CRITICAL: No liability cap → both parties face unlimited financial exposure
+- HIGH: No SLA penalties → vendor has no contractual incentive to meet timelines
+- HIGH: No IP indemnity → buyer exposed if vendor's deliverables infringe third-party IP
+- MEDIUM: No acceptance criteria → payment disputes likely on completion
+- MEDIUM: No audit right → buyer cannot verify vendor's compliance or cost claims
+
+**PARTNERSHIP DEED:**
+- CRITICAL: No exit / retirement mechanism → partner may be locked in indefinitely with no valuation method
+- CRITICAL: No dissolution procedure → winding up governed only by Indian Partnership Act 1932 defaults, which may not reflect partners' intent
+- HIGH: Profit sharing ratio not defined → equal sharing assumed by law (may not reflect actual contribution)
+- HIGH: No restriction on transfer of interest → third party may become partner without others' consent
+- MEDIUM: No deadlock resolution mechanism → operational paralysis if partners disagree on strategic matters
+
+**EMPLOYMENT AGREEMENT:**
+- HIGH: No probation period or confirmation criteria → no defined trial period for new hire
+- HIGH: Non-compete clause overreaches ICA §27 → courts will not enforce post-employment restraints on trade
+- MEDIUM: No PF / ESIC contribution acknowledgment → statutory obligation unaddressed
+- MEDIUM: No background verification clause → employer liability if credentials are false
+
 ## Indian SMB Context
 These are small and medium businesses. They often:
 - Lack in-house legal counsel
@@ -185,6 +223,11 @@ Identify all risks and return your structured assessment."""
 
 
 async def run_jokhim(state: VaakyaState) -> dict:
+    # Skip on redraft loops — risk flags don't change between Rachana iterations.
+    # Returning {} leaves the existing risk_flags (Annotated[list, operator.add]) intact.
+    if state.get("risk_flags") and state.get("loop_count", 0) > 0:
+        return {}
+
     try:
         result: JokhimOutput = await _structured_llm.ainvoke([
             ("system", _SYSTEM_PROMPT),

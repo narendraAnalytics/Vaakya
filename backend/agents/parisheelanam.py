@@ -28,15 +28,51 @@ Your feedback is used to redraft the document until it meets the quality thresho
 ## Review Dimensions (100 points total)
 
 ### 1. Legal Completeness (25 points)
-- All required clauses present for this document type?
-- Definitions section covers all terms used?
-- Governing law, jurisdiction, dispute resolution present?
-- Signature blocks complete?
-- **Acceptance criteria clause present?** (client review window defined, deemed-acceptance rule stated) — deduct 4 pts if missing for service/freelance contracts
-- **Revision limits defined?** (number of free rounds per milestone, trigger for additional billing) — deduct 3 pts if missing
-- **Late payment protection present?** (interest rate on overdue invoices, right to suspend work) — deduct 4 pts if missing
-- **Deliverable warranty clause present?** (warranty period, remedy, exclusions) — deduct 4 pts if missing
-- **Source code / asset handover clause present?** (for software or digital service contracts — delivery method, timeline, condition of payment) — deduct 3 pts if missing
+Check all required clauses for this document type. Deduct points for each missing clause as listed below.
+
+**Universal deductions (ALL document types):**
+- No governing law clause: -3 pts
+- No dispute resolution mechanism: -3 pts
+- No termination clause: -3 pts
+- No definitions section: -2 pts
+- Signature block incomplete or missing: -3 pts
+
+**For SERVICE AGREEMENT / FREELANCE CONTRACT / EMPLOYMENT AGREEMENT — deduct additionally:**
+- Acceptance criteria absent (no client review window, no deemed-acceptance rule): -4 pts
+- Revision limits not defined (unlimited free revisions, no billing trigger): -3 pts
+- Late payment protection absent (no interest on overdue invoices, no suspension right): -4 pts
+- Deliverable warranty clause absent (no warranty period, no remedy, no exclusions): -4 pts
+- Source code / asset handover process missing (for software/digital contracts): -3 pts
+
+**For LEASE AGREEMENT — deduct additionally:**
+- No late rent penalty clause (no consequence for delayed rent payment): -4 pts
+- No rent escalation clause (renewal terms left undefined): -3 pts
+- No inventory / fixture schedule (damage disputes unresolvable): -4 pts
+- No default and eviction clause (repeated non-payment not defined as breach): -4 pts
+- No property damage liability beyond normal wear and tear: -3 pts
+- No renewal / notice-to-vacate process: -3 pts
+- No force majeure clause: -2 pts
+
+**For NDA — deduct additionally:**
+- No carve-outs to Confidential Information definition (public domain, independent development, compelled disclosure): -4 pts
+- No permitted purpose restriction: -3 pts
+- No post-term survival period stated: -3 pts
+- No return / destruction of information obligation: -3 pts
+- No injunctive relief clause: -2 pts
+
+**For VENDOR AGREEMENT — deduct additionally:**
+- No SLA / performance standards with penalty: -4 pts
+- No inspection and acceptance period: -3 pts
+- No warranty clause on goods/services: -4 pts
+- No IP indemnity from vendor: -3 pts
+- No audit right: -2 pts
+
+**For PARTNERSHIP DEED — deduct additionally:**
+- No profit and loss sharing ratio defined: -5 pts
+- No exit / retirement mechanism: -4 pts
+- No dissolution procedure: -4 pts
+- No partner authority limits or expenditure approval thresholds: -3 pts
+- No restriction on transfer of partnership interest: -3 pts
 
 ### 2. Legal Accuracy (25 points)
 - Indian law citations correct (ICA 1872, IT Act, Arbitration Act)?
