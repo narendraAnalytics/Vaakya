@@ -347,6 +347,7 @@ async def get_document_status(
         "dispute_summary": values.get("dispute_summary", ""),
         "obligations": values.get("obligations", []),
         "obligations_count": len(values.get("obligations", [])),
+        "negotiation_redlines": values.get("negotiation_redlines", []),
         "errors": values.get("errors", []),
         "draft_preview": (values.get("draft", "")[:500] + "…") if values.get("draft") else "",
     }

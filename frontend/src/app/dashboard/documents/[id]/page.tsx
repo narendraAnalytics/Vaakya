@@ -53,6 +53,21 @@ type StatusResponse = {
   errors: string[]
   draft_preview: string
   dispute_summary?: string
+  negotiation_redlines?: Array<{
+    clause_reference: string
+    current_text: string
+    recommendation: string
+    counter_proposal: string
+    risk_level: string
+    reason: string
+    business_impact: string
+    legal_impact: string
+    negotiation_priority: string
+    deal_breaker: boolean
+    suggested_redline: string
+    fallback_position: string
+    walkaway_position: string
+  }>
 }
 
 // ── Agent definitions ─────────────────────────────────────────────────────────
@@ -142,7 +157,13 @@ function getDoneSummary(key: string, d: StatusResponse): string {
     case 'rachana':       return d.loop_count === 0 ? 'Draft ready — initial pass' : `Draft ready — revised · loop ${d.loop_count}/3`
     case 'parisheelanam': return d.review_score > 0 ? `Score ${d.review_score}/100 — ${d.review_score >= 90 ? 'Excellent' : d.review_score >= 75 ? 'Good' : 'Needs work'}` : 'Review complete'
     case 'jokhim':        return hp ? `${hp.risk_summary.total} risk flag${hp.risk_summary.total !== 1 ? 's' : ''} identified` : 'Risk analysis complete'
-    case 'samjoota':      return 'Redline & counter-proposals ready'
+    case 'samjoota': {
+      const redlines = d.negotiation_redlines ?? []
+      const db = redlines.filter(r => r.deal_breaker).length
+      return redlines.length > 0
+        ? `${redlines.length} clause${redlines.length !== 1 ? 's' : ''} reviewed${db > 0 ? ` · ⚠ ${db} deal-breaker${db !== 1 ? 's' : ''}` : ''}`
+        : 'Redline & counter-proposals ready'
+    }
     case 'vivada':        return 'Dispute analysis complete'
     case 'sahee':         return 'PDF generated & saved to vault'
     case 'sruthi':        return `${d.obligations_count} obligation${d.obligations_count !== 1 ? 's' : ''} tracked`
@@ -870,6 +891,80 @@ export default function DocumentProgressPage() {
                 <MarkdownRenderer content={pollData.dispute_summary} />
               </div>
             )}
+
+            {/* ── Redline Analysis (redline sub-graph) ── */}
+            {pollData?.sub_graph === 'redline' && pollData?.negotiation_redlines && pollData.negotiation_redlines.length > 0 && (() => {
+              const redlines = pollData.negotiation_redlines!
+              const dealBreakers = redlines.filter(r => r.deal_breaker).length
+              const score = Math.max(0, 100 - redlines.reduce((acc, r) => acc + (r.deal_breaker ? 20 : r.business_impact === 'CRITICAL' || r.business_impact === 'HIGH' ? 10 : r.business_impact === 'MEDIUM' ? 5 : 0), 0))
+              const p1 = redlines.filter(r => r.negotiation_priority === 'P1').length
+              const sorted = [...redlines].sort((a, b) => {
+                const pri: Record<string, number> = { P1: 0, P2: 1, P3: 2 }
+                return (pri[a.negotiation_priority] ?? 2) - (pri[b.negotiation_priority] ?? 2)
+              })
+              function impactColor(impact: string) {
+                const i = impact.toUpperCase()
+                if (i === 'CRITICAL') return { color: '#C03030', bg: '#FFE8E8', border: '#E09090' }
+                if (i === 'HIGH')     return { color: '#B07010', bg: '#FFF0D8', border: '#E0B870' }
+                if (i === 'MEDIUM')   return { color: '#5A7AB0', bg: '#EAE8F5', border: '#A8B8DC' }
+                return { color: '#1A5C35', bg: '#E0F5E8', border: '#7BC89A' }
+              }
+              return (
+                <div className="fade-in" style={{ marginTop: 28, background: '#FFFFFF', borderRadius: 18, border: '1.5px solid #D4E8DC', padding: '24px 26px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                    <span style={{ fontSize: 18 }}>🤝</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: '#0F2D1F' }}>Redline Analysis</span>
+                    <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#1A5C35', background: '#E0F5E8', borderRadius: 20, padding: '3px 10px' }}>Samjoota · {redlines.length}</span>
+                  </div>
+                  {/* Summary row */}
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 16 }}>
+                    <span className="risk-chip" style={{ background: score >= 70 ? '#E0F5E8' : score >= 40 ? '#FFF0D8' : '#FFE8E8', color: score >= 70 ? '#1A5C35' : score >= 40 ? '#B07010' : '#C03030' }}>
+                      Score {score}/100
+                    </span>
+                    {dealBreakers > 0 && (
+                      <span className="risk-chip" style={{ background: '#FFE8E8', color: '#C03030' }}>🚨 {dealBreakers} deal-breaker{dealBreakers !== 1 ? 's' : ''}</span>
+                    )}
+                    {p1 > 0 && (
+                      <span className="risk-chip" style={{ background: '#FFF0D8', color: '#B07010' }}>P1: {p1} must-fix</span>
+                    )}
+                  </div>
+                  {/* Clause cards */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {sorted.map((r, i) => {
+                      const ic = impactColor(r.business_impact)
+                      return (
+                        <div key={i} style={{ background: '#F7FBF8', borderRadius: 10, padding: '12px 14px', borderLeft: `3px solid ${ic.border}` }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#0F2D1F', flex: 1, lineHeight: 1.4 }}>{r.clause_reference || `Clause ${i + 1}`}</span>
+                            {r.deal_breaker && <span className="risk-chip" style={{ background: '#FFE8E8', color: '#C03030', flexShrink: 0 }}>🚨 Deal-Breaker</span>}
+                            <span className="risk-chip" style={{ background: ic.bg, color: ic.color, flexShrink: 0 }}>{r.negotiation_priority} · {r.business_impact}</span>
+                          </div>
+                          {r.current_text && (
+                            <div style={{ fontSize: 11.5, color: '#7B9A8A', background: '#F0F4F2', borderRadius: 6, padding: '5px 9px', marginBottom: 6, fontStyle: 'italic', lineHeight: 1.5 }}>
+                              "{r.current_text.slice(0, 140)}{r.current_text.length > 140 ? '…' : ''}"
+                            </div>
+                          )}
+                          <div style={{ fontSize: 11.5, color: '#4A6858', lineHeight: 1.55, marginBottom: r.suggested_redline || r.fallback_position ? 6 : 0 }}>{r.reason}</div>
+                          {r.suggested_redline && (
+                            <div style={{ background: '#F5FFF8', border: '1px solid rgba(26,92,53,0.12)', borderRadius: 7, padding: '7px 10px', marginBottom: 5, fontFamily: 'monospace', fontSize: 11 }}>
+                              {r.suggested_redline.split('\n').map((line, li) => (
+                                <div key={li} style={{ color: line.startsWith('+') ? '#1A5C35' : line.startsWith('-') ? '#C03030' : '#5A7A68', lineHeight: 1.6 }}>{line}</div>
+                              ))}
+                            </div>
+                          )}
+                          {(r.fallback_position || r.walkaway_position) && (
+                            <div style={{ fontSize: 10.5, color: '#7B9A8A', lineHeight: 1.6, marginTop: 4 }}>
+                              {r.fallback_position && <div><span style={{ fontWeight: 700, color: '#B07010' }}>Fallback:</span> {r.fallback_position}</div>}
+                              {r.walkaway_position && <div><span style={{ fontWeight: 700, color: '#C03030' }}>Walk away:</span> {r.walkaway_position}</div>}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })()}
 
             {/* ── Obligations (shown post-completion when Sruthi extracted obligations) ── */}
             {pollData?.obligations && pollData.obligations.length > 0 && (
