@@ -77,7 +77,7 @@ function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' |
       rachana:       state(rachanaDone, arambhaDone),
       parisheelanam: state(reviewDone,  rachanaDone),
       jokhim:        state(jokhimDone,  rachanaDone),
-      sahee:         state(saheeDone,   hitl || completed),
+      sahee:         state(saheeDone,   d.hitl_approved || completed),
       sruthi:        state(sruthiDone,  saheeDone),
     }
   }
@@ -90,7 +90,7 @@ function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' |
       arambha:  state(arambhaDone,  true),
       samjoota: state(parallelDone, arambhaDone),
       jokhim:   state(parallelDone, arambhaDone),
-      sahee:    state(saheeDone,    hitl || completed),
+      sahee:    state(saheeDone,    d.hitl_approved || completed),
     }
   }
 
@@ -100,7 +100,7 @@ function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' |
   return {
     arambha: state(arambhaDone, true),
     vivada:  state(vivadaDone,  arambhaDone),
-    sahee:   state(saheeDone,   vivadaDone),
+    sahee:   state(saheeDone,   d.hitl_approved || completed),
   }
 }
 
@@ -123,7 +123,7 @@ function getDoneSummary(key: string, d: StatusResponse): string {
   const hp = d.hitl_payload
   switch (key) {
     case 'arambha':       return d.document_type ? `Classified: ${d.document_type} · ${d.hitl_payload?.parties?.length ?? 0} parties` : 'Document classified'
-    case 'rachana':       return `Draft ready — loop ${d.loop_count}/3`
+    case 'rachana':       return d.loop_count === 0 ? 'Draft ready — initial pass' : `Draft ready — revised · loop ${d.loop_count}/3`
     case 'parisheelanam': return d.review_score > 0 ? `Score ${d.review_score}/100 — ${d.review_score >= 90 ? 'Excellent' : d.review_score >= 75 ? 'Good' : 'Needs work'}` : 'Review complete'
     case 'jokhim':        return hp ? `${hp.risk_summary.total} risk flag${hp.risk_summary.total !== 1 ? 's' : ''} identified` : 'Risk analysis complete'
     case 'samjoota':      return 'Redline & counter-proposals ready'
@@ -367,7 +367,7 @@ export default function DocumentProgressPage() {
     const agent = ALL_AGENTS.find(a => a.key === agentKey)!
     const st    = agentStates?.[agentKey] ?? 'waiting'
     const av    = size === 'large' ? 52 : 44
-    const showTavily = agent.tavily && st === 'active'
+    const showTavily = agent.tavily && (st === 'active' || st === 'done')
     const cardCls = st === 'done' ? 'agent-card node-done' : st === 'active' ? 'agent-card node-active' : 'agent-card node-waiting'
 
     return (
@@ -412,11 +412,13 @@ export default function DocumentProgressPage() {
         {showTavily && (
           <div className="tavily-panel" style={{ background: 'linear-gradient(135deg,#E8F7EE,#D4EEE0)', border: '1.5px solid rgba(30,168,81,0.32)', borderRadius: 13, padding: '11px 14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 6 }}>
-              <div style={{ width: 7, height: 7, background: '#1EA851', borderRadius: '50%', animation: 'blink 1s ease-in-out infinite' }} />
-              <span style={{ fontSize: 10.5, fontWeight: 800, color: '#1A5C35', letterSpacing: 0.3 }}>TAVILY SEARCH ACTIVE</span>
+              <div style={{ width: 7, height: 7, background: '#1EA851', borderRadius: '50%', animation: st === 'active' ? 'blink 1s ease-in-out infinite' : 'none', opacity: st === 'done' ? 0.55 : 1 }} />
+              <span style={{ fontSize: 10.5, fontWeight: 800, color: '#1A5C35', letterSpacing: 0.3 }}>{st === 'active' ? 'TAVILY SEARCH ACTIVE' : 'TAVILY SEARCH COMPLETE'}</span>
               <div style={{ marginLeft: 'auto', background: '#C8E8D0', color: '#1A5C35', fontSize: 9.5, fontWeight: 700, padding: '2px 8px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.2)' }}>🔍 Legal DB</div>
             </div>
-            <div style={{ fontSize: 10.5, color: '#3A6A4E', lineHeight: 1.55 }}>Searching Indian laws, regulations, case law & legal precedents…</div>
+            <div style={{ fontSize: 10.5, color: '#3A6A4E', lineHeight: 1.55 }}>
+              {st === 'active' ? 'Searching Indian laws, regulations, case law & legal precedents…' : 'Indian law database consulted — risk flags sourced from legal precedents'}
+            </div>
           </div>
         )}
       </div>
