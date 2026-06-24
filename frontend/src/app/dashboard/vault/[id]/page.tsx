@@ -30,7 +30,6 @@ export default function VaultDocumentPage() {
   const [doc, setDoc] = useState<VaultDoc | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -69,27 +68,6 @@ export default function VaultDocumentPage() {
     }
     load()
   }, [id, router])
-
-  async function handleDownloadPdf() {
-    if (!doc) return
-    setDownloading(true)
-    try {
-      const res = await fetch(`/api/download/${doc.id}`)
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}))
-        alert(err.error === 'PDF not ready yet'
-          ? 'PDF not ready yet. Please try again in a moment.'
-          : `Download failed (${res.status}). Please try again.`)
-        setDownloading(false)
-        return
-      }
-      const { signedUrl } = await res.json()
-      window.open(signedUrl, '_blank')
-    } catch (e) {
-      alert(`Download failed: ${e instanceof Error ? e.message : 'Unknown error'}`)
-    }
-    setDownloading(false)
-  }
 
   const badge = doc ? getStatusBadge(doc.esign_status) : null
   const dateStr = doc?.updated_at
@@ -181,13 +159,14 @@ export default function VaultDocumentPage() {
 
               {/* Actions */}
               <div>
-                <button
-                  onClick={handleDownloadPdf}
-                  disabled={downloading}
-                  style={{ width: '100%', padding: '14px 20px', background: downloading ? '#A8C4B4' : 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: downloading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
+                <a
+                  href={`/api/download/${doc.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ width: '100%', padding: '14px 20px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, textDecoration: 'none' }}
                 >
-                  {downloading ? '⏳ Getting link…' : '📥 Download PDF'}
-                </button>
+                  📥 Download PDF
+                </a>
               </div>
             </div>
           </>

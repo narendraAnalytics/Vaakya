@@ -45,5 +45,5 @@ export async function GET(
     return NextResponse.json({ error: 'PDF not ready yet' }, { status: 404 })
   }
 
-  return NextResponse.json({ signedUrl: data.signedUrl })
+  return NextResponse.redirect(data.signedUrl)
 }
