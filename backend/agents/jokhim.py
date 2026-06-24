@@ -68,6 +68,23 @@ Your analysis protects SMB owners from commercial, legal, and operational exposu
 - Lack of address for service / notice provisions
 - Signature blocks incomplete or missing witness requirements
 
+### 6. CONTRACT CONSISTENCY RISK
+- Payment term conflicts (e.g., Clause 4 says 30 days, Clause 9 says 45 days)
+- Date conflicts (effective date vs. term end date mismatch)
+- Definition conflicts (term defined differently in two clauses)
+- Clause contradictions (limitation of liability clause conflicts with indemnity clause)
+- Cross-reference errors (references to non-existent clause numbers)
+- Survivability conflicts (different survival periods stated in different clauses)
+
+### 7. REGULATORY RISK
+- Employment: PF (Employees' Provident Funds Act 1952) and ESIC (Employees' State Insurance Act 1948) obligations unaddressed
+- Privacy Policy / SaaS MSA: DPDPA 2023 compliance; IT Act 2000 §43A data protection obligations
+- Vendor / Service: GST invoice and TDS deduction obligations under Income Tax Act 1961
+- Lease: Stamp duty compliance under Indian Stamp Act 1899 / state stamp acts; registration under Registration Act 1908 for leases > 12 months
+- Partnership: Indian Partnership Act 1932 registration obligations; tax obligations for unregistered firms
+- Loan: RBI guidelines on private lending; NBFC applicability if lender is a company making repeated loans
+- IP Assignment: Registration obligations under Patents Act 1970, Trade Marks Act 1999, Copyright Act 1957
+
 ## Severity Levels
 - **CRITICAL**: Immediate legal or financial exposure; document should NOT be signed without fix
 - **HIGH**: Significant risk; strongly recommend fixing before signing
@@ -92,14 +109,24 @@ Prioritise these checks for the given document_type BEFORE applying the generic 
 - HIGH: No late rent penalty clause → landlord has no financial remedy for delayed rent
 - HIGH: No inventory / fixture schedule → damage disputes cannot be resolved objectively
 - HIGH: No default and eviction clause → repeated non-payment not legally defined as breach
+- HIGH: No lock-in period symmetry → if lock-in binds only tenant, landlord can exit freely; imbalance enforceable but commercially unfair
+- HIGH: No security deposit refund timeline or conditions → tenant has no recourse if landlord withholds deposit without cause
 - MEDIUM: No rent escalation clause → renewal negotiations have no reference point
 - MEDIUM: No renewal / notice-to-vacate process → tenant or landlord may have no exit clarity
-- LOW: No force majeure clause → standard protection often omitted in residential leases
+- MEDIUM: CAM charges or maintenance allocation unclear → disputes likely on who pays for common area or structural repairs
+- MEDIUM: Subletting restriction absent → tenant may sublet without consent; landlord has no contractual remedy
+- MEDIUM: Property tax and utility liability not specified → ambiguity creates disputes on who bears charges
+- LOW: No force majeure clause → standard protection often omitted in residential leases; critical for commercial leases
 
 **NDA:**
 - CRITICAL: Confidential Information defined too broadly without carve-outs → definition may be unenforceable under ICA §27 as an unreasonable restraint
+- CRITICAL: Residual knowledge clause present → allows receiving party to retain and use information in unaided memory; effectively nullifies confidentiality
+- HIGH: Reverse engineering not explicitly prohibited → receiving party may circumvent disclosure by reverse-engineering the confidential product
+- HIGH: Affiliate disclosures permitted without restriction → confidential information may flow to affiliates with no direct obligation to the disclosing party
 - HIGH: No carve-outs (public domain, prior knowledge, compelled disclosure) → receiving party faces overreach
 - HIGH: No post-term survival period → confidentiality protection expires with the agreement
+- HIGH: No breach notification requirement → disclosing party may never learn of unauthorized disclosure
+- MEDIUM: No audit rights → disclosing party cannot verify receiving party's compliance
 - MEDIUM: No return / destruction obligation → recipient retains information indefinitely with no obligation
 - MEDIUM: Indefinite NDA term → Indian courts may read down or refuse enforcement
 
@@ -123,6 +150,71 @@ Prioritise these checks for the given document_type BEFORE applying the generic 
 - MEDIUM: No PF / ESIC contribution acknowledgment → statutory obligation unaddressed
 - MEDIUM: No background verification clause → employer liability if credentials are false
 
+**MSA (MASTER SERVICE AGREEMENT):**
+- CRITICAL: No aggregate liability cap → unlimited financial exposure for both parties across all SOWs
+- CRITICAL: Unlimited SLA penalty exposure → cascading penalties across multiple SOWs could exceed contract value
+- HIGH: IP ownership clause one-sided → all work product assigned to client without payment confirmation; service provider loses background IP
+- HIGH: No subcontractor controls → prime contractor may subcontract sensitive work without client consent or security obligations
+- HIGH: Data security obligations absent → no defined standard for handling client data across all SOWs; exposure under IT Act 2000 and DPDPA 2023
+- HIGH: Unilateral amendment right → client can change terms without service provider consent; no re-negotiation trigger
+- MEDIUM: No SOW precedence clause → conflict between MSA and individual SOWs unresolved; ambiguity on which controls
+- MEDIUM: No minimum purchase obligation → client makes no guaranteed commitment; service provider bears all capacity risk
+
+**FREELANCER AGREEMENT:**
+- CRITICAL: Work-for-hire language missing or ambiguous → under Copyright Act 1957, copyright in a commissioned work vests in the author unless expressly assigned; client may not own what they paid for
+- HIGH: IP assignment clause absent or incomplete → freelancer retains ownership of deliverables; client has licence at best
+- HIGH: Payment milestone disputes likely → no defined deliverable-to-payment mapping; freelancer can be held indefinitely before payment
+- HIGH: Tax and GST responsibility not allocated → if freelancer is GST-registered, client must pay GST; absence leads to tax disputes and reverse-charge exposure
+- MEDIUM: Revision limits absent → unlimited revision obligation with no basis to charge for extra work
+- MEDIUM: Portfolio usage rights not addressed → freelancer may display client work publicly; client may have confidentiality objections
+- LOW: Non-solicitation of client's clients absent → freelancer may approach client's customers directly after engagement
+
+**SERVICE AGREEMENT:**
+- CRITICAL: Acceptance criteria absent → no definition of "done" per deliverable; client can delay sign-off indefinitely blocking final payment
+- HIGH: Deliverable definition vague → scope disputes at every milestone; change-order process absent magnifies this risk
+- HIGH: Warranty period absent → no post-delivery remedy period; service provider has no defined fix obligation; client has no recourse for defects
+- HIGH: Change request process absent → all verbal scope changes are free; no basis to bill for extra work
+- MEDIUM: Support obligations post-delivery not defined → client expectations unmanaged after handover
+- MEDIUM: Source code / asset handover process missing → client cannot operate deliverable if payment dispute arises
+
+**IP ASSIGNMENT AGREEMENT:**
+- CRITICAL: Future inventions clause overly broad → assignment of inventions not yet conceived may be unenforceable under ICA §23; scope must be limited to the engagement period
+- HIGH: Moral rights waiver absent → under Copyright Act 1957 §57, authors retain moral rights even after assignment; waiver required for unrestricted use
+- HIGH: Copyright transfer language defective → Copyright Act 1957 §19 requires assignment in writing signed by the assignor; oral or implied assignments are void
+- HIGH: Trademark ownership not addressed → if the engagement includes branding or logo design, trademark ownership and filing obligations unallocated
+- MEDIUM: Patent assignment wording insufficient → Patent Act 1970 §68 requires written assignment registered with Patent Office for full legal effect
+- MEDIUM: Consideration for assignment not stated → nominal or undocumented consideration weakens enforceability; state ₹X or "as part of service fees"
+
+**LOAN AGREEMENT:**
+- CRITICAL: Interest rate not specified or calculation method ambiguous → disputes on total repayment amount; usury risk if rate exceeds RBI guidelines for private lending
+- HIGH: Default interest clause absent → no financial penalty for late repayment; Interest Act 1978 applies by default but rate may be inadequate
+- HIGH: Security / collateral enforcement mechanism unclear → lender cannot exercise security without a defined enforcement procedure; SARFAESI Act 2002 may not apply to private loans
+- HIGH: Guarantor liability scope not defined → Indian Contract Act 1872 §§128-140 govern guarantee but parties should specify joint vs several liability
+- MEDIUM: Acceleration clause absent → on default, lender can only demand missed instalments, not the entire outstanding principal
+- MEDIUM: Prepayment terms not addressed → specify if prepayment is allowed and on what notice
+
+**PRIVACY POLICY:**
+- CRITICAL: DPDPA 2023 non-compliance → Digital Personal Data Protection Act 2023 mandates specific consent language, Data Fiduciary obligations, and Data Principal rights; absence exposes penalties up to ₹250 crore
+- HIGH: Data retention period not specified → DPDPA 2023 §8(7) requires erasure when purpose is fulfilled or consent withdrawn; no retention schedule = ongoing liability
+- HIGH: Consent mechanism not described → DPDPA 2023 §6 requires free, specific, informed, unambiguous consent with affirmative action; blanket consent is invalid
+- HIGH: Data Principal rights not enumerated → DPDPA 2023 §§11-13 grant rights to access, correct, erase, and grieve; policy must describe how users exercise these
+- MEDIUM: Cross-border data transfer restrictions not addressed → DPDPA 2023 §16 restricts transfers to countries not notified by Central Government
+
+**TERMS OF SERVICE:**
+- CRITICAL: Limitation of liability clause absent → operator faces unlimited liability for service failures, data loss, or user harm; particularly dangerous for SaaS and platform businesses
+- HIGH: User-generated content (UGC) ownership and licence not defined → platform may face copyright claims; specify non-exclusive licence to host and display UGC
+- HIGH: Account suspension and termination rights not described → operator cannot suspend abusive users without contractual basis
+- MEDIUM: Refund / cancellation policy absent → Consumer Protection Act 2019 and RBI payment guidelines require clear refund terms for prepaid services
+- MEDIUM: Governing law and jurisdiction not specified → specify preferred jurisdiction for dispute resolution
+
+**LEGAL NOTICE:**
+- HIGH: Cause of action not clearly stated → recipient cannot determine legal basis of the claim; weakens enforceability
+- HIGH: Demand not precisely specified → no clear ask (payment amount, specific action, cessation date) renders the notice unactionable
+- HIGH: Cure period not provided → reasonable notice and opportunity to cure expected before legal action; absence weakens subsequent proceedings
+- MEDIUM: Supporting facts / timeline absent → legal notice without factual basis is harder to rely on in subsequent litigation
+- MEDIUM: Service details incomplete → notice should state mode of service (RPAD / email) and confirm delivery
+- LOW: Sender's authority not established → if sent by counsel, vakalatnama reference or authorisation should be mentioned
+
 ## Indian SMB Context
 These are small and medium businesses. They often:
 - Lack in-house legal counsel
@@ -136,7 +228,7 @@ Return ONLY a valid JSON object with this EXACT structure — all four keys are 
   "risk_flags": [
     {
       "severity": "CRITICAL|HIGH|MEDIUM|LOW",
-      "category": "FINANCIAL RISK|LEGAL & COMPLIANCE RISK|OPERATIONAL RISK|COUNTERPARTY RISK|JURISDICTION & ENFORCEMENT RISK",
+      "category": "FINANCIAL RISK|LEGAL & COMPLIANCE RISK|OPERATIONAL RISK|COUNTERPARTY RISK|JURISDICTION & ENFORCEMENT RISK|CONTRACT CONSISTENCY RISK|REGULATORY RISK",
       "clause_reference": "Clause X.Y or Section Name",
       "risk_description": "Plain-English description of the risk",
       "recommendation": "Specific actionable fix with Indian law citation"
@@ -144,14 +236,16 @@ Return ONLY a valid JSON object with this EXACT structure — all four keys are 
   ],
   "risk_summary": "2-3 sentence executive summary of the overall risk profile",
   "critical_count": 0,
-  "high_count": 0
+  "high_count": 0,
+  "risk_score": 100
 }
-If no risks, return: {"risk_flags": [], "risk_summary": "The document is well-drafted with no significant risks.", "critical_count": 0, "high_count": 0}"""
+risk_score is an integer 0-100: 100 - (20×CRITICAL) - (10×HIGH) - (5×MEDIUM) - (2×LOW), minimum 0.
+If no risks, return: {"risk_flags": [], "risk_summary": "The document is well-drafted with no significant risks.", "critical_count": 0, "high_count": 0, "risk_score": 100}"""
 
 
 class RiskFlag(BaseModel):
     severity: str = Field(description="CRITICAL | HIGH | MEDIUM | LOW")
-    category: str = Field(description="FINANCIAL | LEGAL & COMPLIANCE | OPERATIONAL | COUNTERPARTY | JURISDICTION & ENFORCEMENT")
+    category: str = Field(description="FINANCIAL RISK | LEGAL & COMPLIANCE RISK | OPERATIONAL RISK | COUNTERPARTY RISK | JURISDICTION & ENFORCEMENT RISK | CONTRACT CONSISTENCY RISK | REGULATORY RISK")
     clause_reference: str = Field(description="Which clause/section has the risk")
     risk_description: str = Field(description="Plain-English description of the risk")
     recommendation: str = Field(description="Specific actionable fix with Indian law citation where relevant")
@@ -168,6 +262,7 @@ class JokhimOutput(BaseModel):
     )
     critical_count: int = Field(default=0, description="Number of CRITICAL severity flags")
     high_count: int = Field(default=0, description="Number of HIGH severity flags")
+    risk_score: int = Field(default=100, description="Risk score 0-100 (100=no risk, 0=maximum risk)")
 
     @model_validator(mode="after")
     def compute_counts(self) -> "JokhimOutput":
@@ -178,6 +273,16 @@ class JokhimOutput(BaseModel):
             self.critical_count = sum(1 for f in self.risk_flags if f.severity.upper() == "CRITICAL")
         if not self.high_count:
             self.high_count = sum(1 for f in self.risk_flags if f.severity.upper() == "HIGH")
+        medium_count = sum(1 for f in self.risk_flags if f.severity.upper() == "MEDIUM")
+        low_count = sum(1 for f in self.risk_flags if f.severity.upper() == "LOW")
+        self.risk_score = max(
+            0,
+            100
+            - (self.critical_count * 20)
+            - (self.high_count * 10)
+            - (medium_count * 5)
+            - (low_count * 2),
+        )
         return self
 
 
@@ -239,6 +344,7 @@ async def run_jokhim(state: VaakyaState) -> dict:
 
         return {
             "risk_flags": flags,
+            "risk_score": result.risk_score,
         }
     except Exception as exc:
         return {

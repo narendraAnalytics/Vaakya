@@ -22,6 +22,7 @@ class VaakyaState(TypedDict):
     review_summary: str          # Parisheelanam executive summary — shown in HITL panel
     review_issues: Annotated[list[str], operator.add]
     risk_flags: Annotated[list[dict], operator.add]
+    risk_score: int
     negotiation_redlines: Annotated[list[dict], operator.add]
     obligations: Annotated[list[dict], operator.add]
     dispute_summary: str
