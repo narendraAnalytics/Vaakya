@@ -33,12 +33,14 @@ export default async function DashboardPage() {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
     )
-    const { data: rows } = await admin
+    const { data: rows, error: qErr } = await admin
       .from('vault_documents')
       .select('id, document_type, parties, updated_at, esign_status, final_pdf_url')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(20)
+
+    console.log('[dashboard] user.id:', user.id, 'rows:', rows?.length ?? 0, 'err:', qErr?.message)
 
     documents = (rows ?? []).map(row => ({
       id: row.id as string,
