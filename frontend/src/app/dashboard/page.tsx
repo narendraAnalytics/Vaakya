@@ -49,8 +49,8 @@ export default async function DashboardPage() {
       final_pdf_url: (row.final_pdf_url as string) || '',
       risk_flags: [],
     }))
-  } catch {
-    // Supabase unavailable — show empty state
+  } catch (err) {
+    console.error('[dashboard] vault query failed:', err)
   }
 
   return <DashboardClient username={username} documents={documents} />
