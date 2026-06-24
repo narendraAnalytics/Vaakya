@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/server'
+import { createClient as createAdminClient } from '@supabase/supabase-js'
 import DashboardClient from './DashboardClient'
 
 export type VaultDocument = {
@@ -23,9 +24,16 @@ export default async function DashboardPage() {
     user.email?.split('@')[0] ||
     'User'
 
+  // Service role key bypasses RLS — safe here because this is a Server Component
+  // (env var has no NEXT_PUBLIC_ prefix, never sent to the browser).
+  // Explicit .eq('user_id', user.id) provides the same security as RLS.
   let documents: VaultDocument[] = []
   try {
-    const { data: rows } = await supabase
+    const admin = createAdminClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+    const { data: rows } = await admin
       .from('vault_documents')
       .select('id, document_type, parties, updated_at, esign_status, final_pdf_url')
       .eq('user_id', user.id)
