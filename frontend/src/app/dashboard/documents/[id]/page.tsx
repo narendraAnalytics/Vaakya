@@ -723,8 +723,13 @@ export default function DocumentProgressPage() {
                     {pollData?.vault_id && (
                       <button
                         onClick={async () => {
-                          const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault/${pollData.vault_id}`, { headers: { Authorization: `Bearer ${tokenRef.current}` } })
-                          if (res.ok) { const d = await res.json(); if (d.pdf_url) window.open(d.pdf_url, '_blank') }
+                          try {
+                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault/${pollData.vault_id}`, { headers: { Authorization: `Bearer ${tokenRef.current}` } })
+                            if (!res.ok) { alert(`Could not get PDF link (${res.status}). Try again.`); return }
+                            const d = await res.json()
+                            const url = d.pdf_url || d.final_pdf_url
+                            if (url) { window.open(url, '_blank') } else { alert('PDF is still being generated. Please try again in a moment.') }
+                          } catch { alert('Network error — could not download PDF.') }
                         }}
                         style={{ padding: '11px 22px', background: '#FDFCF8', color: '#1A5C35', border: '1.5px solid rgba(26,92,53,0.2)', borderRadius: 100, fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
                       >📥 Download PDF</button>

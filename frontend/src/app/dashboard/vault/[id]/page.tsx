@@ -18,8 +18,8 @@ type VaultDoc = {
 }
 
 function getStatusBadge(status: string) {
-  if (status === 'completed') return { label: '✅ Completed', color: '#1A5C35', bg: '#E0F5E8' }
-  if (status === 'reviewing' || status === 'hitl_pending') return { label: '🔍 Reviewing', color: '#B07010', bg: '#FFF0D8' }
+  if (status === 'completed' || status === 'pending_signature') return { label: '✅ Completed', color: '#1A5C35', bg: '#E0F5E8' }
+  if (status === 'reviewing' || status === 'hitl_pending' || status === 'awaiting_approval') return { label: '🔍 Reviewing', color: '#B07010', bg: '#FFF0D8' }
   if (status === 'risk_flagged') return { label: '⚠️ Risk Flagged', color: '#C03030', bg: '#FFE8E8' }
   return { label: '⏳ Processing', color: '#5A7AB0', bg: '#EAE8F5' }
 }
@@ -71,7 +71,7 @@ export default function VaultDocumentPage() {
   }, [id, router])
 
   async function handleDownloadPdf() {
-    if (!doc?.final_pdf_url) return
+    if (!doc) return
     setDownloading(true)
     try {
       const supabase = createClient()
@@ -80,12 +80,16 @@ export default function VaultDocumentPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault/${doc.id}`, {
         headers: { Authorization: `Bearer ${token}` },
       })
-      if (!res.ok) throw new Error('Failed to get download link')
+      if (!res.ok) throw new Error(`Server error ${res.status}`)
       const json = await res.json()
       const pdfUrl = json.pdf_url || json.final_pdf_url
-      if (pdfUrl) window.open(pdfUrl, '_blank')
-    } catch {
-      alert('Could not download PDF. Please try again.')
+      if (pdfUrl) {
+        window.open(pdfUrl, '_blank')
+      } else {
+        alert('PDF is still being generated. Please try again in a moment.')
+      }
+    } catch (e) {
+      alert(`Could not download PDF: ${e instanceof Error ? e.message : 'Unknown error'}. Please try again.`)
     }
     setDownloading(false)
   }
@@ -180,19 +184,13 @@ export default function VaultDocumentPage() {
 
               {/* Actions */}
               <div>
-                {doc.final_pdf_url ? (
-                  <button
-                    onClick={handleDownloadPdf}
-                    disabled={downloading}
-                    style={{ width: '100%', padding: '14px 20px', background: downloading ? '#A8C4B4' : 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: downloading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
-                  >
-                    {downloading ? '⏳ Getting link…' : '📥 Download PDF'}
-                  </button>
-                ) : (
-                  <div style={{ padding: '14px 20px', background: '#F0FAF3', border: '1.5px solid rgba(26,92,53,0.15)', borderRadius: 14, fontSize: 13.5, fontWeight: 600, color: '#8BAA96', textAlign: 'center' }}>
-                    📄 PDF will be available once the document is processed through the pipeline
-                  </div>
-                )}
+                <button
+                  onClick={handleDownloadPdf}
+                  disabled={downloading}
+                  style={{ width: '100%', padding: '14px 20px', background: downloading ? '#A8C4B4' : 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', border: 'none', borderRadius: 14, fontSize: 15, fontWeight: 700, cursor: downloading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9 }}
+                >
+                  {downloading ? '⏳ Getting link…' : '📥 Download PDF'}
+                </button>
               </div>
             </div>
           </>
