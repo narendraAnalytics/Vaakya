@@ -29,6 +29,7 @@ type StatusResponse = {
   sub_graph: 'new_doc' | 'redline' | 'dispute'
   document_type: string
   review_score: number
+  risk_score: number
   loop_count: number
   hitl_payload: HitlPayload | null
   hitl_approved: boolean
@@ -334,6 +335,8 @@ export default function DocumentProgressPage() {
 
   function scoreColor(s: number) { return s >= 90 ? '#1A5C35' : s >= 75 ? '#B07010' : '#C03030' }
   function scoreBg(s: number)    { return s >= 90 ? '#E0F5E8' : s >= 75 ? '#FFF0D8' : '#FFE8E8' }
+  function riskScoreColor(s: number) { return s >= 80 ? '#1A5C35' : s >= 50 ? '#B07010' : '#C03030' }
+  function riskScoreLabel(s: number) { return s >= 80 ? 'Low Risk' : s >= 50 ? 'Medium Risk' : 'High Risk' }
   function severityColor(sev: string) {
     const s = sev.toLowerCase()
     if (s === 'critical') return { color: '#C03030', bg: '#FFE8E8' }
@@ -723,6 +726,11 @@ export default function DocumentProgressPage() {
                       <span className="risk-chip" style={{ background: '#FFE8E8', color: '#C03030' }}>🚨 {hp.risk_summary.critical} Critical</span>
                       <span className="risk-chip" style={{ background: '#FFF0D8', color: '#B07010' }}>⚠️ {hp.risk_summary.high} High</span>
                       <span className="risk-chip" style={{ background: '#EAE8F5', color: '#5A7AB0' }}>📊 {hp.risk_summary.total} Total</span>
+                      {pollData?.risk_score !== undefined && (
+                        <span className="risk-chip" style={{ background: scoreBg(pollData.risk_score), color: riskScoreColor(pollData.risk_score) }}>
+                          🛡️ Score {pollData.risk_score}/100
+                        </span>
+                      )}
                     </div>
                     {hp.risk_summary.critical > 0 && (
                       <div style={{ marginTop: 12 }}>
@@ -936,6 +944,19 @@ export default function DocumentProgressPage() {
                     </div>
                     <div style={{ height: 7, background: '#E8F5EE', borderRadius: 100, overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${gaugeScore}%`, background: 'linear-gradient(90deg,#1A5C35,#1EA851)', borderRadius: 100, transition: 'width 1.4s ease' }} />
+                    </div>
+                  </div>
+                )}
+                {pollData?.risk_score !== undefined && pollData.risk_score < 100 && (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: '#7B9A8A' }}>Risk Score</span>
+                      <span style={{ fontSize: 13.5, fontWeight: 800, color: riskScoreColor(pollData.risk_score) }}>
+                        {pollData.risk_score} <span style={{ fontSize: 10, fontWeight: 600, color: '#A8C4B4' }}>· {riskScoreLabel(pollData.risk_score)}</span>
+                      </span>
+                    </div>
+                    <div style={{ height: 7, background: '#E8F5EE', borderRadius: 100, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pollData.risk_score}%`, background: `linear-gradient(90deg,${riskScoreColor(pollData.risk_score)},${pollData.risk_score >= 80 ? '#1EA851' : pollData.risk_score >= 50 ? '#E8C840' : '#E05050'})`, borderRadius: 100, transition: 'width 1.4s ease' }} />
                     </div>
                   </div>
                 )}
