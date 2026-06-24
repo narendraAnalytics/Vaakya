@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
 import DashboardClient from './DashboardClient'
 
 export type VaultDocument = {
@@ -24,23 +23,20 @@ export default async function DashboardPage() {
     user.email?.split('@')[0] ||
     'User'
 
-  // Service role key bypasses RLS — safe here because this is a Server Component
-  // (env var has no NEXT_PUBLIC_ prefix, never sent to the browser).
-  // Explicit .eq('user_id', user.id) provides the same security as RLS.
   let documents: VaultDocument[] = []
   try {
-    const admin = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    )
-    const { data: rows, error: qErr } = await admin
+    // Refresh JWT in-memory so RLS sees a valid auth.uid() for this request.
+    // proxy.ts doesn't refresh sessions, so cookies may carry an expired token.
+    await supabase.auth.refreshSession()
+
+    const { data: rows, error: qErr } = await supabase
       .from('vault_documents')
       .select('id, document_type, parties, updated_at, esign_status, final_pdf_url')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(20)
 
-    console.log('[dashboard] user.id:', user.id, 'rows:', rows?.length ?? 0, 'err:', qErr?.message)
+    if (qErr) console.error('[dashboard] vault query error:', qErr.message)
 
     documents = (rows ?? []).map(row => ({
       id: row.id as string,
