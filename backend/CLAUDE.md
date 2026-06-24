@@ -314,6 +314,38 @@ Bucket name: `vaakya-contracts` (private, RLS-enabled).
 17. [ ] `tests/test_nda_pipeline.py` — 10 scenarios
 
 
+## Agent Output Models — Current Field Reference
+
+### Rachana
+Supports 12 document types: NDA, Vendor Agreement, Employment Contract, Service/Freelancer Agreement, Lease Agreement, Partnership Deed, MSA, IP Assignment Agreement, Loan Agreement, Legal Notice, Privacy Policy, Terms of Service.
+Pre-output 7-point internal consistency check: dates, party names, money values, notice periods, term/renewal, liability cap, cross-references.
+
+### Parisheelanam
+`ParisheelanamOutput`: `review_score` (0–100), `review_issues`, `confidence_score` (0.0–1.0), `review_summary`, `low_confidence` (bool), `max_loops_reached` (bool).
+
+### Jokhim
+`RiskFlag`: `severity` (CRITICAL/HIGH/MEDIUM/LOW), `description`, `clause`, `financial_impact`, `recommendation`.
+`JokhimOutput`: `risk_flags`, `risk_score` (0–100), `risk_summary` (total/critical/high/critical_flags), `overall_assessment`.
+
+### Samjoota
+`Redline`: `clause_reference`, `current_text`, `recommendation` (accept/reject/counter), `counter_proposal`, `risk_level`, `reason`, `business_impact` (CRITICAL/HIGH/MEDIUM/LOW), `legal_impact`, `negotiation_priority` (P1/P2/P3), `deal_breaker` (bool), `suggested_redline` (diff: "- old\n+ new"), `fallback_position`, `walkaway_position`.
+`SamjootaOutput`: `negotiation_redlines`, `negotiation_summary`, `accept_count`, `reject_count`, `counter_count`, `negotiation_score` (0–100, auto-computed: 100 − 20×deal-breakers − 10×HIGH − 5×MEDIUM), `deal_breaker_count`, `acceptance_probability` (HIGH/MEDIUM/LOW), `confidence` (0.0–1.0).
+`_build_human_message` injects `risk_flags` from state (shared intelligence with Jokhim).
+
+### Sruthi
+`Obligation`: `party`, `obligation_type` (payment/delivery/notice/reporting/compliance/renewal/non_compete/insurance/confidentiality/employment/sla/security/audit/maintenance/warranty/ip_transfer/governance/other), `action`, `deadline`, `deadline_type` (absolute/relative/recurring/event_triggered), `consequence`, `priority`, `clause_reference`, `deadline_days` (int, -1 if unknown), `deadline_date` (ISO 8601 or ""), `trigger_event`, `reminder_schedule` (list of offset strings e.g. `["30_days_before", "7_days_before"]`), `estimated_penalty`.
+Document-type obligation checklists for all 10 supported types. Runs only when `hitl_approved=True`.
+
+### Vivada
+`VivadaOutput`: `legal_position`, `legal_basis`, `recommended_path` (negotiation/mediation/arbitration/litigation), `recommended_path_reason`, `legal_notice_draft`, `timeline_estimate`, `cost_estimate`, `urgent_actions`, `documents_to_preserve`, `limitation_status` (SAFE/URGENT/EXPIRED/UNKNOWN), `days_remaining` (int), `estimated_damages` ("Principal: ₹X | Interest: ₹Y | Penalties: ₹Z | Total: ₹W"), `settlement_recommendation`, `notice_type` (Cease-and-Desist/Eviction Notice/Breach Notice/etc.), `success_probability` (HIGH/MEDIUM/LOW), `required_evidence` ([{document, importance, reason}]).
+7 dispute playbooks: NDA, Lease, Vendor, Freelancer, Employment, Partnership, MSA/SaaS, Loan.
+`_build_human_message` injects `draft`, `obligations`, `risk_flags` from VaakyaState as contract context.
+
+### Status Endpoint — Full Response Fields
+`GET /document/{id}/status` returns: `document_id`, `status`, `sub_graph`, `document_type`, `review_score`, `confidence_score`, `review_summary`, `loop_count`, `hitl_payload`, `hitl_approved`, `vault_id`, `esign_status`, `risk_score`, `dispute_summary`, `obligations` (full list), `obligations_count`, `negotiation_redlines` (full list), `errors`, `draft_preview`.
+
+---
+
 ## Do Not
 
 - Never use `pip` — always `uv add`

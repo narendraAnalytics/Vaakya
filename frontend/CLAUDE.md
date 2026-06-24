@@ -56,6 +56,33 @@ Used by the login form when the identifier has no `@`.
 | `/dashboard` | `src/app/dashboard/page.tsx` + `DashboardClient.tsx` | Server fetches vault; client renders UI |
 | `/dashboard/documents/[id]` | `src/app/dashboard/documents/[id]/page.tsx` | Client-only; polls status every 3s |
 
+## Document Types (Dashboard Dropdown + Icons)
+16 types supported in `DashboardClient.tsx` `getDocIcon()` and `<select>` dropdown:
+NDA 📄, Vendor Agreement 🤝, Employment Contract 👔, Service/Freelancer Agreement 💼, Lease Agreement 🏠, Partnership Deed 🤝, Consulting Agreement 🧠, MSA 🗂️, IP Assignment 💡, Loan Agreement 💰, Legal Notice ⚖️, Privacy Policy 🔒, Terms of Service 📜, Non-Compete Agreement 🚫, Distribution Agreement 📦, Joint Venture Agreement 🏢.
+
+## Status Response — Extended Fields
+`GET /document/{id}/status` now returns these additional fields beyond the base set:
+- `dispute_summary: string` — Vivada full analysis (Markdown)
+- `obligations: Array<{party, obligation_type, action, deadline, deadline_type, deadline_days, deadline_date, trigger_event, reminder_schedule, estimated_penalty, consequence, priority, clause_reference}>` — Sruthi output
+- `obligations_count: number`
+- `negotiation_redlines: Array<{clause_reference, current_text, recommendation, counter_proposal, risk_level, reason, business_impact, legal_impact, negotiation_priority, deal_breaker, suggested_redline, fallback_position, walkaway_position}>` — Samjoota output
+
+## Agent Progress Page — Result Panels
+Three conditional panels render in the left column after agent completion (`page.tsx`):
+
+**Dispute Analysis** (`sub_graph === 'dispute'` + `dispute_summary` present)
+- Renders full Vivada markdown via `<MarkdownRenderer />`
+- Right panel heading switches to "Dispute Summary"
+
+**Obligations & Deadlines** (`obligations.length > 0`)
+- Priority-colored left border cards (HIGH=red, MEDIUM=amber, LOW=green)
+- Shows: action, deadline phrase + days count, clause reference, estimated_penalty (⚠ red), reminder_schedule chips
+
+**Redline Analysis** (`sub_graph === 'redline'` + `negotiation_redlines.length > 0`)
+- Computed score badge (100 − 20×deal-breakers − 10×HIGH − 5×MEDIUM), deal-breaker count, P1 must-fix count
+- Clause cards sorted P1→P2→P3, left-bordered by business_impact (CRITICAL=red, HIGH=amber, MEDIUM=blue, LOW=green)
+- 🚨 Deal-Breaker badge; diff block with `- old` (red) / `+ new` (green); fallback + walkaway positions
+
 ## Supabase Client Usage
 - **Server components / route handlers:** `import { createClient } from '@/lib/server'` (cookie-based)
 - **Client components:** `import { createClient } from '@/lib/client'` (browser session)

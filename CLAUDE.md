@@ -209,6 +209,10 @@ Arambha (classify)
 - [x] `clause_library/` — 6 doc types, 67 clauses (NDA, Vendor Agreement, Employment, Service, Lease, Partnership Deed)
 - [x] Backend deployed to Render — https://vaakya.onrender.com (health ✅ `db: connected`)
 - [x] Agent prompts hardened — Rachana drafts 5 mandatory clauses (acceptance criteria, revision limits, late payment protection, deliverable warranty, source code handover); Parisheelanam scores them; Jokhim flags when absent
+- [x] **Rachana enhanced** — 6 new document types (MSA, IP Assignment, Loan Agreement, Legal Notice, Privacy Policy, Terms of Service) → 12 total; 7-point pre-output internal consistency check (dates, party names, money values, notice periods, term/renewal, liability cap, cross-references)
+- [x] **Vivada enhanced** — 7 dispute playbooks (NDA, Lease, Vendor, Freelancer, Employment, Partnership, MSA/SaaS, Loan); damages calculation (principal/interest/penalties/consequential); limitation period analyser (SAFE/URGENT/EXPIRED); settlement recommendation with ₹ floor; success probability (HIGH/MEDIUM/LOW); structured evidence matrix [{document, importance, reason}]; contract-aware analysis reads draft/obligations/risk_flags from VaakyaState
+- [x] **Sruthi enhanced** — 10 doc-type obligation checklists; 8 new obligation categories (employment, sla, security, audit, maintenance, warranty, ip_transfer, governance); deadline normalization fields (deadline_days, deadline_date, trigger_event); reminder schedule generation (priority-based offset strings); estimated_penalty field
+- [x] **Samjoota enhanced** — 8 doc-type negotiation playbooks (NDA, Lease, Vendor, Employment, Freelancer, Partnership, MSA/SaaS, Loan); 3-axis clause severity (business_impact/legal_impact/negotiation_priority); deal-breaker detection (6 trigger conditions); negotiation_score formula (100 − 20×deal-breakers − 10×HIGH − 5×MEDIUM); redline diff output (- old / + new); fallback_position + walkaway_position per clause; acceptance_probability + confidence at output level; Jokhim risk_flags injected as shared context
 - [ ] Supabase Storage vault with pgvector metadata
 - [ ] Digio API integration in Sahee (e-signatures)
 - [ ] `tests/test_nda_pipeline.py` (10 scenarios)
@@ -223,6 +227,10 @@ Arambha (classify)
 - [x] Agent pipeline now dynamic per `sub_graph` — `ALL_AGENTS` (8 entries) filtered by `flows` field; Tavily badge via `agent.tavily` + `agent.tavilyLabel`
 - [x] Live activity feed on agent progress page — `prevStatesRef` tracks state transitions between polls; `msgTick` counter rotates agent work messages every 2.5s
 - [x] Agent workflow page redesigned — 2-column command-center layout (vertical graph left, sticky panel right); Cloudinary agent avatars (`avatarUrl` in `ALL_AGENTS`, URLs in `projectworkflow.txt`); animated connector lines + fork/merge pipes; circular SVG score gauge; botanical decorations
+- [x] **Dashboard doc types expanded** — 16 document types with icons (added MSA 🗂️, IP Assignment 💡, Loan 💰, Legal Notice ⚖️, Privacy Policy 🔒, Terms of Service 📜 to dropdown + `getDocIcon()`)
+- [x] **Dispute Analysis panel** — left column, shown when `sub_graph === 'dispute'` and `dispute_summary` present; renders Vivada markdown output via `MarkdownRenderer`; right panel heading adapts to "Dispute Summary"
+- [x] **Obligations & Deadlines panel** — shown post-completion when `obligations.length > 0`; priority-colored cards (red/amber/green left border); shows action, deadline, deadline_days, clause_reference, estimated_penalty warning, reminder_schedule chips; status endpoint now returns full `obligations` array
+- [x] **Redline Analysis panel** — shown when `sub_graph === 'redline'` and `negotiation_redlines.length > 0`; negotiation score badge, deal-breaker count, P1 must-fix count; per-clause cards sorted P1→P2→P3 with `business_impact` color coding, 🚨 deal-breaker badge, diff block (- red / + green), fallback/walkaway positions; status endpoint now returns `negotiation_redlines` array
 
 #### Frontend Auth — Resolved Issues
 - **Signup 500 error**: Supabase had `on_auth_user_created` trigger → `handle_new_user()` tried to INSERT into missing `profiles` table. Fixed by dropping the trigger and creating `public.profiles` (id, username, created_at) with RLS.
