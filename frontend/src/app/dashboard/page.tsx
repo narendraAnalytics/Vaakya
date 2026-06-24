@@ -18,29 +18,31 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
-  const { data: { session } } = await supabase.auth.getSession()
-  const token = session?.access_token
-
   const username: string =
     user.user_metadata?.username ||
     user.email?.split('@')[0] ||
     'User'
 
   let documents: VaultDocument[] = []
-  if (token) {
-    try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault`, {
-        headers: { Authorization: `Bearer ${token}` },
-        cache: 'no-store',
-        signal: AbortSignal.timeout(5000),
-      })
-      if (res.ok) {
-        const json = await res.json()
-        documents = Array.isArray(json) ? json : (json.documents ?? [])
-      }
-    } catch {
-      // Backend unavailable — show empty state
-    }
+  try {
+    const { data: rows } = await supabase
+      .from('vault_documents')
+      .select('id, document_type, parties, updated_at, esign_status, final_pdf_url')
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(20)
+
+    documents = (rows ?? []).map(row => ({
+      id: row.id as string,
+      document_type: (row.document_type as string) || '',
+      parties: (row.parties as Array<{ name: string; role?: string }>) || [],
+      created_at: (row.updated_at as string) || '',
+      status: (row.esign_status as string) || 'processing',
+      final_pdf_url: (row.final_pdf_url as string) || '',
+      risk_flags: [],
+    }))
+  } catch {
+    // Supabase unavailable — show empty state
   }
 
   return <DashboardClient username={username} documents={documents} />

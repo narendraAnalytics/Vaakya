@@ -154,7 +154,6 @@ export default function DashboardClient({ username, documents }: Props) {
   const [genError, setGenError] = useState('')
   const [greeting, setGreeting] = useState('Good morning')
   const [dateStr, setDateStr] = useState('')
-  const [clientDocs, setClientDocs] = useState<VaultDocument[]>(documents)
 
   useEffect(() => {
     const h = new Date().getHours()
@@ -164,44 +163,17 @@ export default function DashboardClient({ username, documents }: Props) {
     }))
   }, [])
 
-  // Client-side fallback: SSR fetch has a 5s timeout that loses to Render cold-start (~30s).
-  // If SSR returned empty, retry from the browser until Render wakes up.
-  useEffect(() => {
-    if (documents.length > 0) return
-    let attempts = 0
-    const tryFetch = async () => {
-      if (attempts >= 10) return
-      attempts++
-      try {
-        const supabase = createClient()
-        const { data: { session } } = await supabase.auth.getSession()
-        if (!session?.access_token) return
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault`, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-          cache: 'no-store',
-        })
-        if (res.ok) {
-          const json = await res.json()
-          const docs: VaultDocument[] = Array.isArray(json) ? json : (json.documents ?? [])
-          if (docs.length > 0) { setClientDocs(docs); return }
-        }
-      } catch { /* network error — retry */ }
-      setTimeout(tryFetch, 3000)
-    }
-    setTimeout(tryFetch, 2000)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   const displayName = username.includes('@') ? username.split('@')[0] : username
   const initial = displayName[0]?.toUpperCase() || '?'
-  const totalDocs = clientDocs.length
+  const totalDocs = documents.length
   const savings = formatSavings(totalDocs * 5000)
-  const riskCount = clientDocs.filter(
+  const riskCount = documents.filter(
     d => d.status === 'risk_flagged' || (d.risk_flags && d.risk_flags.length > 0)
   ).length
-  const recentDocs = clientDocs.slice(0, 5)
+  const recentDocs = documents.slice(0, 5)
 
   // Derive alerts from real documents
-  const alerts = clientDocs.slice(0, 4).map(doc => {
+  const alerts = documents.slice(0, 4).map(doc => {
     if (doc.status === 'risk_flagged' || (doc.risk_flags && doc.risk_flags.length > 0)) {
       return {
         icon: '🚨', iconBg: '#FFE0E0',
