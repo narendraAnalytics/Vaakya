@@ -1,108 +1,84 @@
-page.tsx
-
-import { createClient } from '@/utils/supabase/server'
-import { cookies } from 'next/headers'
-
-export default async function Page() {
-  const cookieStore = await cookies()
-  const supabase = createClient(cookieStore)
-
-  const { data: todos } = await supabase.from('todos').select()
-
-  return (
-    <ul>
-      {todos?.map((todo) => (
-        <li key={todo.id}>{todo.name}</li>
-      ))}
-    </ul>
-  )
-}
-
----------------------------------------- ------------------------------------------------
-utils/supabase/server.ts
-
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-export const createClient = (cookieStore: Awaited<ReturnType<typeof cookies>>) => {
-  return createServerClient(
-    supabaseUrl!,
-    supabaseKey!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          } catch {
-            // The `setAll` method was called from a Server Component.
-            // This can be ignored if you have middleware refreshing
-            // user sessions.
-          }
-        },
-      },
-    },
-  );
-};
-
--------------------------------------------------------- ----------------------------------------
-utils/supabase/client.ts
+VAAKYA — Video Script
+Duration: ~90 seconds | Style: Cinematic product reveal
+─────────────────────────────────────────────────────────────────────────────
 
 
-import { createBrowserClient } from "@supabase/ssr";
+[SCENE 1 — 0:00–0:12] The Problem
+───────────────────────────────────
+Visual: Indian SMB owner stressed at a desk, pile of papers, a contract
+        with red marks crossed out.
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+NARRATOR (V.O.):
+Every year, thousands of Indian businesses sign contracts they don't
+fully understand.
+Contracts that cost them money. Contracts that cost them rights.
+Because good legal help is expensive — and most SMBs can't afford it.
 
-export const createClient = () =>
-  createBrowserClient(
-    supabaseUrl!,
-    supabaseKey!,
-  );
 
-  ---------------------------------------------- -----------------------------------------------------
+[SCENE 2 — 0:12–0:22] The Name
+────────────────────────────────
+Visual: Telugu script  వాక్య  appears on screen, glowing gold.
+        Translation fades in below: "Legal Statement"
 
-utils/supabase/middleware
+NARRATOR (V.O.):
+వాక్య. Vaakya.
+Telugu for "legal statement."
+We built Vaakya to give every Indian business owner a voice
+in every contract.
 
-import { createServerClient } from "@supabase/ssr";
-import { type NextRequest, NextResponse } from "next/server";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+[SCENE 3 — 0:22–0:55] The 8 Agents — Fast montage
+────────────────────────────────────────────────────
+Visual: Dark command-center UI. Eight agent avatars light up one by one.
+        Each name appears on screen as it is spoken.
 
-export const createClient = (request: NextRequest) => {
-  // Create an unmodified response
-  let supabaseResponse = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
-  });
+NARRATOR (V.O.):
+Eight specialized AI agents. Working like a full legal team — in minutes.
 
-  const supabase = createServerClient(
-    supabaseUrl!,
-    supabaseKey!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    },
-  );
+ARAMBHA      reads your request and understands exactly what you need.
+RACHANA      drafts a complete, clause-perfect contract under Indian law.
+PARISHEELANAM reviews it — scoring every clause, flagging every gap.
+JOKHIM       hunts for legal risks before they become your problem.
+SAMJOOTA     negotiates. Redlines. Protects your position.
+SAHEE        delivers the signed document — secure and legally binding.
+SRUTHI       tracks every obligation so you never miss a deadline.
+VIVADA       stands ready if a dispute ever arises.
 
-  return supabaseResponse
-};
+
+[SCENE 4 — 0:55–1:10] The Result
+──────────────────────────────────
+Visual: Clean contract PDF appears on screen.
+        Parties signed. Green "Completed" badge glows.
+
+NARRATOR (V.O.):
+NDA. Vendor Agreement. Employment Contract. Lease. Partnership Deed.
+Any document. Any deal. Under Indian Contract Act, 1872.
+Professional. Enforceable. Yours — in under five minutes.
+
+
+[SCENE 5 — 1:10–1:25] Call to Action
+───────────────────────────────────────
+Visual: Vaakya logo on clean cream background (#FEF9EF).
+        URL fades in. Tagline appears last.
+
+NARRATOR (V.O.):
+Vaakya. Your autonomous legal team.
+Because every business deserves a fair contract.
+
+ON SCREEN:
+  vaakya-tau.vercel.app
+
+TAGLINE:
+  "Give your business a voice."
+
+─────────────────────────────────────────────────────────────────────────────
+PRODUCTION NOTES
+─────────────────────────────────────────────────────────────────────────────
+Tone        : Confident, warm, Indian-rooted. Not corporate-cold.
+Music       : South Indian classical motif opening → builds to modern
+              cinematic swell at agent montage → resolves calm at CTA.
+Language    : English narration. Telugu script and words on screen.
+Palette     : #FEF9EF (cream), #1EA851 (green accent), #0F2D1F (dark text).
+Agent cards : Use Cloudinary avatar images from the Vaakya dashboard.
+Logo        : Vaakya wordmark + subtle leaf/contract icon.
+Length      : 90 seconds. Keep tight — no filler.

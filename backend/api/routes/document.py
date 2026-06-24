@@ -334,6 +334,8 @@ async def get_document_status(
         "sub_graph": values.get("sub_graph", "new_doc"),
         "document_type": values.get("document_type", ""),
         "review_score": values.get("review_score", 0),
+        "confidence_score": values.get("confidence_score", 0.0),
+        "review_summary": values.get("review_summary", ""),
         "loop_count": values.get("loop_count", 0),
         "hitl_payload": hitl_payload,
         "hitl_approved": values.get("hitl_approved", False),
