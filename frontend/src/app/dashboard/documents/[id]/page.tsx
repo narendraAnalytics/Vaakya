@@ -38,6 +38,7 @@ type StatusResponse = {
   obligations_count: number
   errors: string[]
   draft_preview: string
+  dispute_summary?: string
 }
 
 // ── Agent definitions ─────────────────────────────────────────────────────────
@@ -843,6 +844,18 @@ export default function DocumentProgressPage() {
                 <MarkdownRenderer content={pollData.draft_preview} />
               </div>
             )}
+
+            {/* ── Dispute Analysis (dispute sub-graph) ── */}
+            {pollData?.sub_graph === 'dispute' && pollData?.dispute_summary && (
+              <div className="fade-in" style={{ marginTop: 28, background: '#FFFFFF', borderRadius: 18, border: '1.5px solid #D4E8DC', padding: '24px 26px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                  <span style={{ fontSize: 18 }}>⚖️</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#0F2D1F' }}>Dispute Analysis</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#1A5C35', background: '#E0F5E8', borderRadius: 20, padding: '3px 10px' }}>Vivada</span>
+                </div>
+                <MarkdownRenderer content={pollData.dispute_summary} />
+              </div>
+            )}
           </div>
 
           {/* ════ RIGHT: Sticky panel ════ */}
@@ -887,7 +900,7 @@ export default function DocumentProgressPage() {
 
             {/* ── Document Summary ── */}
             <div style={{ background: '#FDFCF8', borderRadius: 20, border: '1px solid rgba(26,92,53,0.09)', boxShadow: '0 4px 22px rgba(26,92,53,0.06)', padding: '18px 20px' }}>
-              <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.3, marginBottom: 16 }}>Document Summary</h3>
+              <h3 style={{ fontSize: 15, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.3, marginBottom: 16 }}>{pollData?.sub_graph === 'dispute' ? 'Dispute Summary' : 'Document Summary'}</h3>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'start' }}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 11 }}>
                   <div>
