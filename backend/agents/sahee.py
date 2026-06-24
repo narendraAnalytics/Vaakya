@@ -81,12 +81,14 @@ async def run_sahee(state: VaakyaState) -> dict:
     document_title = _fallback_title(state)
 
     # ── 1. Generate title + vault summary via LLM ──────────────────────────────
+    vault_summary = ""
     try:
         result: SaheeOutput = await _structured_llm.ainvoke([
             ("system", _SYSTEM_PROMPT),
             ("human", _build_human_message(state)),
         ])
         document_title = result.document_title or document_title
+        vault_summary = result.vault_summary or ""
     except Exception as exc:
         print(f"[WARN] Sahee LLM error (using fallback title): {exc}")
 
@@ -105,6 +107,8 @@ async def run_sahee(state: VaakyaState) -> dict:
         print(f"[WARN] Sahee PDF generation/upload error: {exc}")
         return {
             "vault_id": vault_id,
+            "document_title": document_title,
+            "vault_summary": vault_summary,
             "esign_status": "pending_signature",
             "final_pdf_url": "",
             "errors": [f"Sahee PDF error: {exc}"],
@@ -112,6 +116,8 @@ async def run_sahee(state: VaakyaState) -> dict:
 
     return {
         "vault_id": vault_id,
+        "document_title": document_title,
+        "vault_summary": vault_summary,
         "esign_status": "pending_signature",
         "final_pdf_url": final_pdf_url,
     }
