@@ -21,8 +21,13 @@ def upload_pdf(user_id: str, document_id: str, data: bytes) -> str:
 def get_signed_url(path: str, expires_in: int = 3600) -> str:
     """Return a signed download URL (default 1 hour)."""
     res = get_supabase().storage.from_(_BUCKET).create_signed_url(path, expires_in)
-    # SDK v2 returns 'signedUrl'; v1 returned 'signedURL' — handle both
-    return res.get("signedUrl") or res.get("signedURL") or ""
+    # storage3 >= 0.7 (supabase >= 2.x) returns a CreateSignedURLResponse dataclass
+    # with .signed_url attribute; older versions returned a plain dict.
+    if isinstance(res, str):
+        return res
+    if isinstance(res, dict):
+        return res.get("signedUrl") or res.get("signedURL") or ""
+    return getattr(res, "signed_url", "") or getattr(res, "signedUrl", "") or getattr(res, "signedURL", "") or ""
 
 
 def upload_user_pdf(user_id: str, document_id: str, data: bytes) -> str:
