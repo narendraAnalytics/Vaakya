@@ -9,11 +9,12 @@ type Party = { name: string; role?: string }
 type VaultDoc = {
   id: string
   document_type: string
+  document_title: string
   parties: Party[]
   updated_at: string
   esign_status: string
   final_pdf_url: string
-  risk_flags: unknown[]
+  vault_summary: string
 }
 
 function getStatusBadge(status: string) {
@@ -41,20 +42,25 @@ export default function VaultDocumentPage() {
 
         const { data, error: qErr } = await supabase
           .from('vault_documents')
-          .select('id, document_type, parties, updated_at, esign_status, final_pdf_url, risk_flags')
+          .select('id, document_type, document_title, parties, updated_at, esign_status, final_pdf_url, vault_summary')
           .eq('id', id)
           .eq('user_id', session.user.id)
           .single()
 
-        if (qErr || !data) { setError('Document not found.'); setLoading(false); return }
+        if (qErr || !data) {
+          setError(qErr ? `Query error: ${qErr.message}` : 'Document not found.')
+          setLoading(false)
+          return
+        }
         setDoc({
           id: data.id as string,
           document_type: (data.document_type as string) || 'Document',
+          document_title: (data.document_title as string) || '',
           parties: (data.parties as Party[]) || [],
           updated_at: (data.updated_at as string) || '',
           esign_status: (data.esign_status as string) || 'processing',
           final_pdf_url: (data.final_pdf_url as string) || '',
-          risk_flags: (data.risk_flags as unknown[]) || [],
+          vault_summary: (data.vault_summary as string) || '',
         })
       } catch {
         setError('Failed to load document.')
@@ -127,8 +133,9 @@ export default function VaultDocumentPage() {
                   <div style={{ width: 52, height: 52, background: 'linear-gradient(135deg,#D0EDD8,#B8E0C4)', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, flexShrink: 0, boxShadow: '0 2px 8px rgba(26,92,53,0.1)' }}>📄</div>
                   <div>
                     <h2 style={{ fontSize: 18, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.4, lineHeight: 1.2 }}>
-                      {doc.document_type || 'Untitled Document'}
+                      {doc.document_title || doc.document_type || 'Untitled Document'}
                     </h2>
+                    <div style={{ fontSize: 12, color: '#8BAA96', marginTop: 2 }}>{doc.document_type}</div>
                     <div style={{ fontSize: 12, color: '#8BAA96', marginTop: 3 }}>{dateStr}</div>
                   </div>
                 </div>
@@ -161,17 +168,13 @@ export default function VaultDocumentPage() {
 
               <div style={{ height: 1, background: 'rgba(26,92,53,0.08)' }} />
 
-              {/* Risk flags */}
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: '#8BAA96', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>Risk Assessment</div>
-                {doc.risk_flags.length === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13.5, color: '#1A5C35', fontWeight: 600 }}>
-                    <span>✅</span> No risk flags
-                  </div>
-                ) : (
-                  <div style={{ fontSize: 13.5, color: '#C03030', fontWeight: 600 }}>⚠️ {doc.risk_flags.length} risk flag{doc.risk_flags.length !== 1 ? 's' : ''} detected</div>
-                )}
-              </div>
+              {/* Vault summary */}
+              {doc.vault_summary && (
+                <div>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: '#8BAA96', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 6 }}>Summary</div>
+                  <div style={{ fontSize: 13.5, color: '#2C4A38', lineHeight: 1.6 }}>{doc.vault_summary}</div>
+                </div>
+              )}
 
               <div style={{ height: 1, background: 'rgba(26,92,53,0.08)' }} />
 
