@@ -159,13 +159,24 @@ async def create_document(
     # Persist initial row to Supabase (real auth only — dev bypass uses non-UUID user_id)
     if not settings.DEV_AUTH_BYPASS:
         try:
-            get_supabase().table("documents").insert({
+            sb = get_supabase()
+            sb.table("documents").insert({
                 "id":            document_id,
                 "user_id":       user_id,
                 "document_type": "",
                 "input_mode":    body.input_mode,
                 "raw_input":     body.request,
                 "status":        "processing",
+            }).execute()
+            # Insert placeholder vault row so dashboard shows the document immediately
+            sb.table("vault_documents").insert({
+                "id":            document_id,
+                "document_id":   document_id,
+                "user_id":       user_id,
+                "document_type": "",
+                "parties":       [],
+                "jurisdiction":  "India",
+                "esign_status":  "processing",
             }).execute()
         except Exception as exc:
             print(f"[WARN] Supabase insert failed: {exc}")
@@ -233,13 +244,23 @@ async def upload_document(
         except Exception as exc:
             print(f"[WARN] PDF upload to storage failed: {exc}")
         try:
-            get_supabase().table("documents").insert({
+            sb = get_supabase()
+            sb.table("documents").insert({
                 "id":            document_id,
                 "user_id":       user_id,
                 "document_type": "",
                 "input_mode":    "pdf",
                 "raw_input":     raw_text[:2000],
                 "status":        "processing",
+            }).execute()
+            sb.table("vault_documents").insert({
+                "id":            document_id,
+                "document_id":   document_id,
+                "user_id":       user_id,
+                "document_type": "",
+                "parties":       [],
+                "jurisdiction":  "India",
+                "esign_status":  "processing",
             }).execute()
         except Exception as exc:
             print(f"[WARN] Supabase insert failed: {exc}")

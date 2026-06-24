@@ -19,14 +19,15 @@ router = APIRouter()
 # ── Response models ───────────────────────────────────────────────────────────
 
 class VaultCard(BaseModel):
-    vault_id: str
+    id: str
     document_id: str
     document_type: str
     parties: list[dict]
     jurisdiction: str
-    esign_status: str
-    pdf_url: str        # fresh signed URL (1 hr); "" if PDF not yet uploaded
-    updated_at: str
+    status: str
+    final_pdf_url: str
+    created_at: str
+    risk_flags: list = []
 
 
 class ObligationItem(BaseModel):
@@ -92,14 +93,15 @@ async def list_vault(
 
     return [
         VaultCard(
-            vault_id=row["id"],
+            id=row["id"],
             document_id=row.get("document_id", ""),
             document_type=row.get("document_type", ""),
             parties=row.get("parties") or [],
             jurisdiction=row.get("jurisdiction", "India"),
-            esign_status=row.get("esign_status", ""),
-            pdf_url=_try_get_pdf_url(user_id, row["id"]),
-            updated_at=row.get("updated_at", ""),
+            status=row.get("esign_status", "processing"),
+            final_pdf_url=_try_get_pdf_url(user_id, row["id"]),
+            created_at=row.get("updated_at", ""),
+            risk_flags=[],
         )
         for row in rows
     ]
