@@ -36,6 +36,20 @@ type StatusResponse = {
   vault_id: string
   esign_status: string
   obligations_count: number
+  obligations?: Array<{
+    party: string
+    obligation_type: string
+    action: string
+    deadline: string
+    deadline_type: string
+    deadline_days: number
+    deadline_date: string
+    reminder_schedule: string[]
+    estimated_penalty: string
+    consequence: string
+    priority: string
+    clause_reference: string
+  }>
   errors: string[]
   draft_preview: string
   dispute_summary?: string
@@ -854,6 +868,40 @@ export default function DocumentProgressPage() {
                   <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#1A5C35', background: '#E0F5E8', borderRadius: 20, padding: '3px 10px' }}>Vivada</span>
                 </div>
                 <MarkdownRenderer content={pollData.dispute_summary} />
+              </div>
+            )}
+
+            {/* ── Obligations (shown post-completion when Sruthi extracted obligations) ── */}
+            {pollData?.obligations && pollData.obligations.length > 0 && (
+              <div className="fade-in" style={{ marginTop: 28, background: '#FFFFFF', borderRadius: 18, border: '1.5px solid #D4E8DC', padding: '24px 26px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+                  <span style={{ fontSize: 18 }}>📅</span>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#0F2D1F' }}>Obligations & Deadlines</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color: '#1A5C35', background: '#E0F5E8', borderRadius: 20, padding: '3px 10px' }}>Sruthi · {pollData.obligations.length}</span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {pollData.obligations.map((obl, i) => (
+                    <div key={i} style={{ background: '#F7FBF8', borderRadius: 10, padding: '12px 14px', borderLeft: `3px solid ${obl.priority === 'HIGH' ? '#C03030' : obl.priority === 'MEDIUM' ? '#B07010' : '#1A5C35'}` }}>
+                      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontSize: 12.5, fontWeight: 600, color: '#0F2D1F', lineHeight: 1.4 }}>{obl.action}</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: obl.priority === 'HIGH' ? '#C03030' : obl.priority === 'MEDIUM' ? '#B07010' : '#1A5C35', background: obl.priority === 'HIGH' ? '#FFE8E8' : obl.priority === 'MEDIUM' ? '#FFF0D8' : '#E0F5E8', borderRadius: 6, padding: '2px 7px', whiteSpace: 'nowrap', flexShrink: 0 }}>{obl.priority}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: '#5A7A68', marginBottom: obl.estimated_penalty ? 4 : 0 }}>
+                        <span style={{ fontWeight: 600 }}>📅 {obl.deadline}</span>
+                        {obl.deadline_days > 0 && <span style={{ marginLeft: 6, color: '#8BAA96' }}>({obl.deadline_days}d)</span>}
+                        {obl.clause_reference && <span style={{ marginLeft: 8, color: '#A8C4B4' }}>{obl.clause_reference}</span>}
+                      </div>
+                      {obl.estimated_penalty && <div style={{ fontSize: 10.5, color: '#C03030', fontWeight: 500 }}>⚠ {obl.estimated_penalty}</div>}
+                      {obl.reminder_schedule && obl.reminder_schedule.length > 0 && (
+                        <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                          {obl.reminder_schedule.map((r, j) => (
+                            <span key={j} style={{ fontSize: 9.5, background: '#EAF4EE', color: '#3A6B4A', borderRadius: 4, padding: '1px 6px' }}>{r.replace(/_/g, ' ')}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
           </div>

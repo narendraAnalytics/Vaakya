@@ -345,6 +345,7 @@ async def get_document_status(
         "esign_status": values.get("esign_status", ""),
         "risk_score": values.get("risk_score", 100),
         "dispute_summary": values.get("dispute_summary", ""),
+        "obligations": values.get("obligations", []),
         "obligations_count": len(values.get("obligations", [])),
         "errors": values.get("errors", []),
         "draft_preview": (values.get("draft", "")[:500] + "…") if values.get("draft") else "",
