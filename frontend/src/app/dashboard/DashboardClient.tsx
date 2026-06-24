@@ -190,25 +190,25 @@ export default function DashboardClient({ username, documents }: Props) {
         level: 'High Risk', levelColor: '#C03030',
       }
     }
-    if (doc.status === 'completed') {
+    if (doc.status === 'completed' || doc.status === 'pending_signature') {
       return {
         icon: '✅', iconBg: '#E0F5E8',
-        title: `${doc.document_type} completed`,
+        title: `${doc.document_type || 'Document'} completed`,
         sub: `AI agents finished — ready to review`,
         level: 'Done', levelColor: '#1A5C35',
       }
     }
-    if (doc.status === 'hitl_pending' || doc.status === 'pending_review') {
+    if (doc.status === 'hitl_pending' || doc.status === 'pending_review' || doc.status === 'awaiting_approval') {
       return {
         icon: '🔍', iconBg: '#FFF0D0',
-        title: `${doc.document_type} awaiting approval`,
+        title: `${doc.document_type || 'Document'} awaiting approval`,
         sub: 'HITL checkpoint — your review needed',
         level: 'Action Required', levelColor: '#C07010',
       }
     }
     return {
       icon: '⏳', iconBg: '#EAE8F5',
-      title: `${doc.document_type} processing`,
+      title: `${doc.document_type || 'Document'} processing`,
       sub: 'AI agents working on your document',
       level: 'In Progress', levelColor: '#5A7AB0',
     }
