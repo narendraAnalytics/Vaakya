@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 from api.config import settings
 from api.constants import GROQ_MODEL_PRO
 from graph.state import VaakyaState
+from services.embeddings import search_clauses
 
 _llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0.1)
 
@@ -342,7 +343,7 @@ class RachanaOutput(BaseModel):
 _structured_llm = _llm.with_structured_output(RachanaOutput, method="json_mode")
 
 
-def _build_human_message(state: VaakyaState) -> str:
+def _build_human_message(state: VaakyaState, clauses: list[dict] | None = None) -> str:
     parties_text = json.dumps(state.get("parties", []), indent=2)
     key_terms_text = json.dumps(state.get("key_terms", {}), indent=2)
     review_issues = state.get("review_issues", [])
@@ -369,6 +370,17 @@ Original Draft:
 
 Produce a corrected, complete draft that resolves every issue above."""
     else:
+        clauses_block = ""
+        if clauses:
+            snippets = "\n\n".join(
+                f"[{c.get('clause_name','').upper()}]\n{c.get('clause_text','')}"
+                for c in clauses
+            )
+            clauses_block = f"""
+RELEVANT CLAUSES FROM VAAKYA CLAUSE LIBRARY (use as reference and adapt):
+{snippets}
+
+"""
         return f"""DRAFT NEW DOCUMENT
 
 Document Type: {state.get("document_type", "Unknown")}
@@ -382,15 +394,25 @@ Key Terms:
 
 User's Original Request:
 {state.get("raw_input", "")}
-
+{clauses_block}
 Produce a complete, professional legal document following all drafting standards."""
 
 
 async def run_rachana(state: VaakyaState) -> dict:
     try:
+        # On first draft only: fetch semantically relevant clauses from pgvector
+        clauses: list[dict] = []
+        if state.get("loop_count", 0) == 0:
+            query = f"{state.get('document_type', '')} {state.get('raw_input', '')[:300]}"
+            clauses = await search_clauses(
+                query=query,
+                document_type=state.get("document_type"),
+                top_k=6,
+            )
+
         result: RachanaOutput = await _structured_llm.ainvoke([
             ("system", _SYSTEM_PROMPT),
-            ("human", _build_human_message(state)),
+            ("human", _build_human_message(state, clauses)),
         ])
         return {"draft": result.draft}
     except Exception as exc:
