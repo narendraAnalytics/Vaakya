@@ -21,10 +21,29 @@ type Obligation = {
   consequence: string
 }
 
+type DocChip = { id: string; type: string; count: number }
+
 const PRIORITY_STYLE: Record<string, { color: string; bg: string; border: string }> = {
   HIGH:   { color: '#C03030', bg: '#FFF2F2', border: '#FFB3B3' },
   MEDIUM: { color: '#B07010', bg: '#FFFBF0', border: '#FFD580' },
   LOW:    { color: '#1A5C35', bg: '#F0FAF3', border: '#A3D9B0' },
+}
+
+function getDocIcon(type: string): string {
+  const t = (type || '').toLowerCase()
+  if (t.includes('nda') || t.includes('non-disclosure')) return '📋'
+  if (t.includes('employment')) return '👔'
+  if (t.includes('vendor') || t.includes('supplier')) return '🤝'
+  if (t.includes('partnership')) return '🏢'
+  if (t.includes('lease') || t.includes('rental')) return '🏠'
+  if (t.includes('freelance') || t.includes('service')) return '💼'
+  if (t.includes('loan')) return '💰'
+  if (t.includes('msa') || t.includes('master service')) return '🗂️'
+  if (t.includes('ip assignment')) return '💡'
+  if (t.includes('legal notice')) return '⚖️'
+  if (t.includes('privacy')) return '🔒'
+  if (t.includes('terms')) return '📜'
+  return '📄'
 }
 
 const STYLES = `
@@ -33,6 +52,11 @@ const STYLES = `
   .ob-card:hover { box-shadow: 0 6px 24px rgba(26,92,53,0.11) !important; }
   .back-btn { transition: all 0.18s; text-decoration: none; }
   .back-btn:hover { background: #E0F5E8 !important; color: #1A5C35 !important; }
+  .doc-chip { transition: all 0.15s; cursor: pointer; user-select: none; }
+  .doc-chip:hover { box-shadow: 0 2px 8px rgba(26,92,53,0.15) !important; }
+  .priority-chip { transition: all 0.15s; cursor: pointer; user-select: none; }
+  .view-link { transition: all 0.15s; text-decoration: none; }
+  .view-link:hover { background: #1A5C35 !important; color: #fff !important; }
 `
 
 export default function ObligationsPage() {
@@ -40,6 +64,7 @@ export default function ObligationsPage() {
   const [obligations, setObligations] = useState<Obligation[]>([])
   const [loading, setLoading] = useState(true)
   const [priorityFilter, setPriorityFilter] = useState<string>('All')
+  const [selectedDocId, setSelectedDocId] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -60,9 +85,30 @@ export default function ObligationsPage() {
     load()
   }, [router])
 
-  const filtered = obligations.filter(o => priorityFilter === 'All' || o.priority === priorityFilter)
-  const highCount = obligations.filter(o => o.priority === 'HIGH').length
-  const medCount = obligations.filter(o => o.priority === 'MEDIUM').length
+  // Derive unique documents from obligations (no extra DB call)
+  const docMap = new Map<string, DocChip>()
+  obligations.forEach(o => {
+    if (o.document_id) {
+      if (!docMap.has(o.document_id)) {
+        docMap.set(o.document_id, { id: o.document_id, type: o.document_type || 'Document', count: 0 })
+      }
+      docMap.get(o.document_id)!.count++
+    }
+  })
+  const docs = Array.from(docMap.values())
+  const multiDoc = docs.length > 1
+
+  const filtered = obligations.filter(o =>
+    (selectedDocId === null || o.document_id === selectedDocId) &&
+    (priorityFilter === 'All' || o.priority === priorityFilter)
+  )
+
+  const highCount = filtered.filter(o => o.priority === 'HIGH').length
+  const medCount = filtered.filter(o => o.priority === 'MEDIUM').length
+
+  const activeDocLabel = selectedDocId
+    ? (docMap.get(selectedDocId)?.type ?? 'Document')
+    : `All Documents (${obligations.length})`
 
   return (
     <div style={{ minHeight: '100vh', background: '#FEF9EF', fontFamily: "'Inter', 'Segoe UI', sans-serif" }}>
@@ -95,23 +141,81 @@ export default function ObligationsPage() {
           </div>
         </div>
 
-        {/* Priority filters */}
         {!loading && obligations.length > 0 && (
-          <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-            {['All', 'HIGH', 'MEDIUM', 'LOW'].map(p => (
-              <div
-                key={p}
-                onClick={() => setPriorityFilter(p)}
-                style={{
-                  padding: '7px 14px', borderRadius: 100, fontSize: 12.5, fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
-                  background: priorityFilter === p ? '#1A5C35' : '#E8F3EC',
-                  color: priorityFilter === p ? '#fff' : '#2C4A38',
-                }}
-              >
-                {p === 'All' ? 'All' : `${p === 'HIGH' ? '🔴' : p === 'MEDIUM' ? '🟡' : '🟢'} ${p}`}
+          <>
+            {/* Document selector — only shown when 2+ documents */}
+            {multiDoc && (
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: '#8BAA96', letterSpacing: 0.8, textTransform: 'uppercase', marginBottom: 8 }}>Filter by Document</div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {/* All Documents chip */}
+                  <div
+                    className="doc-chip"
+                    onClick={() => setSelectedDocId(null)}
+                    style={{
+                      padding: '8px 16px', borderRadius: 100, fontSize: 13, fontWeight: 600,
+                      background: selectedDocId === null ? '#1A5C35' : '#fff',
+                      color: selectedDocId === null ? '#fff' : '#2C4A38',
+                      border: `1.5px solid ${selectedDocId === null ? '#1A5C35' : 'rgba(26,92,53,0.18)'}`,
+                      boxShadow: '0 1px 4px rgba(26,92,53,0.07)',
+                    }}
+                  >
+                    All Documents
+                    <span style={{ marginLeft: 6, fontSize: 11, fontWeight: 700, background: selectedDocId === null ? 'rgba(255,255,255,0.25)' : '#E0F5E8', color: selectedDocId === null ? '#fff' : '#1A5C35', padding: '1px 7px', borderRadius: 100 }}>
+                      {obligations.length}
+                    </span>
+                  </div>
+
+                  {/* Per-document chips */}
+                  {docs.map(doc => (
+                    <div
+                      key={doc.id}
+                      className="doc-chip"
+                      onClick={() => setSelectedDocId(doc.id)}
+                      style={{
+                        padding: '8px 16px', borderRadius: 100, fontSize: 13, fontWeight: 600,
+                        background: selectedDocId === doc.id ? '#1A5C35' : '#fff',
+                        color: selectedDocId === doc.id ? '#fff' : '#2C4A38',
+                        border: `1.5px solid ${selectedDocId === doc.id ? '#1A5C35' : 'rgba(26,92,53,0.18)'}`,
+                        boxShadow: '0 1px 4px rgba(26,92,53,0.07)',
+                        display: 'flex', alignItems: 'center', gap: 6,
+                      }}
+                    >
+                      <span>{getDocIcon(doc.type)}</span>
+                      <span style={{ maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{doc.type}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, background: selectedDocId === doc.id ? 'rgba(255,255,255,0.25)' : '#E0F5E8', color: selectedDocId === doc.id ? '#fff' : '#1A5C35', padding: '1px 7px', borderRadius: 100 }}>
+                        {doc.count}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+
+            {/* Priority filters */}
+            <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontSize: 12, color: '#8BAA96', fontWeight: 600, marginRight: 2 }}>Priority:</span>
+              {['All', 'HIGH', 'MEDIUM', 'LOW'].map(p => (
+                <div
+                  key={p}
+                  className="priority-chip"
+                  onClick={() => setPriorityFilter(p)}
+                  style={{
+                    padding: '6px 13px', borderRadius: 100, fontSize: 12.5, fontWeight: 600,
+                    background: priorityFilter === p ? '#1A5C35' : '#E8F3EC',
+                    color: priorityFilter === p ? '#fff' : '#2C4A38',
+                  }}
+                >
+                  {p === 'All' ? 'All' : `${p === 'HIGH' ? '🔴' : p === 'MEDIUM' ? '🟡' : '🟢'} ${p}`}
+                </div>
+              ))}
+
+              {/* Result count */}
+              <span style={{ marginLeft: 'auto', fontSize: 12, color: '#8BAA96', fontWeight: 500 }}>
+                {filtered.length} obligation{filtered.length !== 1 ? 's' : ''} · {activeDocLabel}
+              </span>
+            </div>
+          </>
         )}
 
         {loading ? (
@@ -125,13 +229,17 @@ export default function ObligationsPage() {
               ✏️ Create Document
             </a>
           </div>
+        ) : filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '48px 0', color: '#8BAA96', fontSize: 14 }}>
+            No obligations match this filter.
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.map((ob, i) => {
               const ps = PRIORITY_STYLE[ob.priority] ?? PRIORITY_STYLE.LOW
               return (
                 <div key={`${ob.id}-${i}`} className="ob-card" style={{ background: '#fff', borderRadius: 16, border: `1px solid rgba(26,92,53,0.09)`, borderLeft: `4px solid ${ps.border}`, boxShadow: '0 2px 12px rgba(26,92,53,0.05)', padding: '18px 22px' }}>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontSize: 14.5, fontWeight: 700, color: '#0F2D1F', marginBottom: 4 }}>{ob.action}</div>
                       <div style={{ fontSize: 12, color: '#8BAA96' }}>
@@ -139,9 +247,28 @@ export default function ObligationsPage() {
                         {ob.obligation_type && <span style={{ textTransform: 'capitalize' }}>{ob.obligation_type.replace(/_/g, ' ')} · </span>}
                         {ob.clause_reference && <span style={{ fontStyle: 'italic' }}>{ob.clause_reference}</span>}
                       </div>
+
+                      {/* Document tag — shown in "All Documents" view */}
+                      {selectedDocId === null && multiDoc && ob.document_type && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, background: '#F0FAF3', border: '1px solid rgba(26,92,53,0.12)', borderRadius: 100, padding: '2px 10px', fontSize: 11.5, fontWeight: 600, color: '#2C4A38' }}>
+                          {getDocIcon(ob.document_type)} {ob.document_type}
+                        </div>
+                      )}
                     </div>
-                    <div style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 100, background: ps.bg, color: ps.color, flexShrink: 0 }}>
-                      {ob.priority}
+
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexShrink: 0 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, padding: '4px 11px', borderRadius: 100, background: ps.bg, color: ps.color }}>
+                        {ob.priority}
+                      </div>
+                      {ob.document_id && (
+                        <a
+                          href={`/dashboard/documents/${ob.document_id}`}
+                          className="view-link"
+                          style={{ fontSize: 11.5, fontWeight: 600, padding: '4px 10px', borderRadius: 8, background: '#F5FAF6', color: '#1A5C35', border: '1px solid rgba(26,92,53,0.14)' }}
+                        >
+                          View Doc →
+                        </a>
+                      )}
                     </div>
                   </div>
 
