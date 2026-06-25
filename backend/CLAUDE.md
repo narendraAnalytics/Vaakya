@@ -38,7 +38,7 @@ uv add <package-name>
 | `pypdf` | Fallback PDF parsing |
 | `python-docx` | Intermediate DOCX generation |
 | `reportlab` | Final PDF generation |
-| `sentence-transformers` + `numpy` | BGE embeddings for pgvector |
+| `numpy` | Numeric support (reportlab/pymupdf) |
 | `pgvector` | pgvector Python type support |
 | `psycopg` + `asyncpg` | Async PostgreSQL drivers |
 | `sqlalchemy` + `alembic` | ORM + migrations |
@@ -52,7 +52,8 @@ uv add <package-name>
 ```
 backend/
 ├── agents/
-│   ├── arambha.py          # Intake + classify (llama-3.1-8b-instant)
+│   ├── arambha.py          # Intake + classify — text-based flow ONLY (llama-3.1-8b-instant)
+│   ├── arambha_pdf.py      # Intake — PDF/redline flow ONLY; 16 doc types + document_title; standalone module
 │   ├── rachana.py          # Drafting (llama-3.3-70b-versatile)
 │   ├── parisheelanam.py    # Review + reflexion loop (llama-3.3-70b-versatile)
 │   ├── jokhim.py           # Risk flags (llama-3.3-70b-versatile)
@@ -328,6 +329,10 @@ Pre-output 7-point internal consistency check: dates, party names, money values,
 `JokhimOutput`: `risk_flags`, `risk_score` (0–100), `risk_summary` (total/critical/high/critical_flags), `overall_assessment`.
 
 ### Samjoota
+**PDF/redline flow only** — `redline.py` imports it; `new_doc.py` does not.
+`ChatGroq` initialized with `max_tokens=4096` (prevents output truncation for 10+ clause contracts).
+`_build_human_message` truncates `raw_input` to 6000 chars before sending to Groq.
+System prompt mandates ≥3 redlines for any substantive contract.
 `Redline`: `clause_reference`, `current_text`, `recommendation` (accept/reject/counter), `counter_proposal`, `risk_level`, `reason`, `business_impact` (CRITICAL/HIGH/MEDIUM/LOW), `legal_impact`, `negotiation_priority` (P1/P2/P3), `deal_breaker` (bool), `suggested_redline` (diff: "- old\n+ new"), `fallback_position`, `walkaway_position`.
 `SamjootaOutput`: `negotiation_redlines`, `negotiation_summary`, `accept_count`, `reject_count`, `counter_count`, `negotiation_score` (0–100, auto-computed: 100 − 20×deal-breakers − 10×HIGH − 5×MEDIUM), `deal_breaker_count`, `acceptance_probability` (HIGH/MEDIUM/LOW), `confidence` (0.0–1.0).
 `_build_human_message` injects `risk_flags` from state (shared intelligence with Jokhim).
@@ -342,7 +347,11 @@ Document-type obligation checklists for all 10 supported types. Runs only when `
 `_build_human_message` injects `draft`, `obligations`, `risk_flags` from VaakyaState as contract context.
 
 ### Status Endpoint — Full Response Fields
-`GET /document/{id}/status` returns: `document_id`, `status`, `sub_graph`, `document_type`, `review_score`, `confidence_score`, `review_summary`, `loop_count`, `hitl_payload`, `hitl_approved`, `vault_id`, `esign_status`, `risk_score`, `dispute_summary`, `obligations` (full list), `obligations_count`, `negotiation_redlines` (full list), `errors`, `draft_preview`.
+`GET /document/{id}/status` returns: `document_id`, `status`, `sub_graph`, `document_type`, `jurisdiction`, `review_score`, `confidence_score`, `review_summary`, `loop_count`, `hitl_payload`, `hitl_approved`, `vault_id`, `esign_status`, `risk_score`, `dispute_summary`, `obligations` (full list), `obligations_count`, `negotiation_redlines` (full list), `errors`, `draft_preview`.
+
+`hitl_payload` for redline flow includes: `document_type`, `jurisdiction`, `parties`, `raw_input`, `negotiation_redlines`, `risk_flags`, `negotiation_summary`, `risk_summary`.
+
+**Flow isolation rule**: `arambha.py` and `arambha_pdf.py` are separate modules — never merge them. `new_doc.py` imports `run_arambha`; `redline.py` imports `run_arambha_pdf`. An error in either file cannot crash the other flow.
 
 ---
 

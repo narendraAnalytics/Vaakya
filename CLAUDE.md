@@ -18,7 +18,7 @@ Telugu for "legal statement/clause." Gives every SMB owner a voice in every cont
 | Auth | Supabase Auth | JWT via Supabase SDK |
 | Database | Supabase PostgreSQL + pgvector | State, clause library, vault metadata |
 | Storage | Supabase Storage | PDFs, signed contracts, uploads |
-| Embeddings | `BAAI/bge-small-en-v1.5` | Clause semantic search |
+| Embeddings | `BAAI/bge-small-en-v1.5` | Clause semantic search (disabled on Render — `sentence-transformers` removed from deps to fix deploy timeout; degrades gracefully to `[]`) |
 | PDF Processing | PyMuPDF (fitz) | Text extraction with page labels |
 | Doc Generation | python-docx + ReportLab | Draft and final contract PDFs |
 | E-Signature | Digio API | Phase 2 |
@@ -34,11 +34,12 @@ Telugu for "legal statement/clause." Gives every SMB owner a voice in every cont
 vaakya/
 ├── backend/
 │   ├── agents/
-│   │   ├── arambha.py          # Orchestrator/Intake — llama-3.1-8b-instant
+│   │   ├── arambha.py          # Orchestrator/Intake (text-only) — llama-3.1-8b-instant
+│   │   ├── arambha_pdf.py      # PDF Intake (redline-only) — llama-3.1-8b-instant; 16 doc types + document_title
 │   │   ├── rachana.py          # Drafting — llama-3.3-70b-versatile
 │   │   ├── parisheelanam.py    # Review — llama-3.3-70b-versatile
 │   │   ├── jokhim.py           # Risk — llama-3.3-70b-versatile
-│   │   ├── samjoota.py         # Negotiation — llama-3.3-70b-versatile
+│   │   ├── samjoota.py         # Negotiation — llama-3.3-70b-versatile (max_tokens=4096; PDF truncated to 6000 chars)
 │   │   ├── sahee.py            # Sign & Deliver — (tool-based)
 │   │   ├── sruthi.py           # Obligation Tracker — llama-3.1-8b-instant
 │   │   └── vivada.py           # Dispute — llama-3.3-70b-versatile
@@ -214,6 +215,12 @@ Arambha (classify)
 - [x] **Sruthi enhanced** — 10 doc-type obligation checklists; 8 new obligation categories (employment, sla, security, audit, maintenance, warranty, ip_transfer, governance); deadline normalization fields (deadline_days, deadline_date, trigger_event); reminder schedule generation (priority-based offset strings); estimated_penalty field
 - [x] **Samjoota enhanced** — 8 doc-type negotiation playbooks (NDA, Lease, Vendor, Employment, Freelancer, Partnership, MSA/SaaS, Loan); 3-axis clause severity (business_impact/legal_impact/negotiation_priority); deal-breaker detection (6 trigger conditions); negotiation_score formula (100 − 20×deal-breakers − 10×HIGH − 5×MEDIUM); redline diff output (- old / + new); fallback_position + walkaway_position per clause; acceptance_probability + confidence at output level; Jokhim risk_flags injected as shared context
 - [x] Supabase Storage vault with pgvector metadata — `clause_library` table has `embedding vector(384)` column, HNSW index (`clause_library_embedding_idx`), `match_clauses` RPC, 67 clauses seeded via `scripts/seed_clauses.py`
+- [x] **Render deploy timeout fixed** — removed `sentence-transformers` (+ torch/scipy/transformers) from `pyproject.toml`; was inflating artifact to ~2-3 GB causing 12-min startup. `services/embeddings.py` degrades gracefully (`search_clauses` returns `[]`). Deploy now completes in ~2 min.
+- [x] **PDF flow isolated** — `agents/arambha_pdf.py` is a completely standalone module (no shared code with `arambha.py`). Text-based and PDF flows cannot interfere. `redline.py` imports `run_arambha_pdf`; `new_doc.py` imports `run_arambha`.
+- [x] **PDF intake hardened** — `arambha_pdf.py`: 16 document types + `document_title` extraction; `field_validator` constrains `document_type` to allowed set (unknown → "Other").
+- [x] **Samjoota redline output fixed** — `max_tokens=4096` on ChatGroq; PDF text truncated to 6000 chars in `_build_human_message`; system prompt mandates ≥3 redlines for any substantive contract.
+- [x] **HITL payload for redline flow** — `redline.py` `hitl_review` now includes `jurisdiction` in interrupt payload; status endpoint exposes `jurisdiction`; frontend Document Summary reads actual jurisdiction value.
+- [x] **HITL panel shows Samjoota analysis** — agent progress page shows "🤖 Samjoota Redline Analysis" (via `buildRedlineMarkdown`) instead of raw uploaded PDF text during HITL approval step.
 - [ ] Digio API integration in Sahee (e-signatures)
 - [ ] `tests/test_nda_pipeline.py` (10 scenarios)
 
@@ -257,6 +264,12 @@ Arambha (classify)
 - **Agent pipeline hard-coded for `new_doc`**: Frontend `AGENTS` array showed only 6 agents. Fixed: replaced with `ALL_AGENTS` (8 agents with `flows: string[]` and `tavily: bool` metadata), filtered at render time via `ALL_AGENTS.filter(a => a.flows.includes(subGraph))`.
 - **Raw Markdown in agent responses**: LLM draft output contains `**bold**`, `## headings`, `- lists` — displayed as raw symbols before fix. Fixed: created `frontend/src/components/MarkdownRenderer.tsx` (react-markdown + remark-gfm + rehype-sanitize, inline JSX styles matching Vaakya palette). Use `<MarkdownRenderer content={...} />` for all LLM text output.
 - **Dashboard "permission denied for table vault_documents" / all tables returning 0 rows**: Supabase tables were created without granting DML privileges to the `authenticated` and `service_role` roles. PostgreSQL requires explicit `GRANT SELECT/INSERT/UPDATE/DELETE` even when RLS policies exist — missing grants cause "permission denied" at the table level before RLS even runs. The `postgres` superuser (used by Supabase MCP) could still read/write, masking the issue. Fixed: ran `GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.<table> TO authenticated, service_role` for all 6 Vaakya tables (`documents`, `vault_documents`, `disputes`, `obligations`, `clause_library`, `profiles`). **Always run this grant after creating any new table.** Frontend SSR client also calls `supabase.auth.refreshSession()` before vault queries to get a fresh JWT in-memory (proxy.ts does not refresh sessions, so SSR cookies may carry an expired access token that makes `auth.uid()` return null in RLS).
+- **Render deploy timeout (sentence-transformers)**: `sentence-transformers` pulled in `torch==2.12.1`, `scipy`, `transformers` — ~2-3 GB artifact. Deploy phase took 12+ minutes, exceeding Render's timeout → SIGTERM → "Timed Out". Fixed: removed `sentence-transformers` from `pyproject.toml`; `services/embeddings.py` already wraps `search_clauses` in `try/except → return []` so clause search degrades gracefully with no code change.
+- **PDF HITL panel showed raw PDF text**: The "Uploaded Document" preview showed the raw extracted PDF text instead of Samjoota's analysis. Fixed: replaced with "🤖 Samjoota Redline Analysis" section that renders `buildRedlineMarkdown(hp.negotiation_redlines)` via `<MarkdownRenderer>`. Gated on `subGraph === 'redline'` — text-based HITL untouched.
+- **Samjoota returned empty `negotiation_redlines`**: Full PDF text (10,000+ chars) + 200-line system prompt → Groq output truncated → Pydantic defaulted to `[]`. Fixed: `max_tokens=4096` on `ChatGroq`; PDF truncated to 6000 chars in `_build_human_message`; prompt mandates ≥3 redlines.
+- **Document type "Legal Document" in PDF flow**: `ArambhaPdfOutput.document_type` had no validator — LLM hallucinated "Legal Document" (not in 16 types). Frontend fallback `|| 'Legal Document'` then showed it. Fixed: `field_validator` on `document_type` in `arambha_pdf.py` maps any unrecognized string to "Other".
+- **Jurisdiction "—" in Document Summary**: `hitl_review` in `redline.py` didn't include `jurisdiction` in the interrupt payload; status endpoint didn't return it; frontend read `hitl_payload.parties[0]` as presence check and hardcoded "India" / "—". Fixed: added `jurisdiction` to HITL payload, status response, and frontend reads `hitl_payload.jurisdiction ?? pollData.jurisdiction`.
+- **Text-based flow broken after PDF changes**: Module-level `_pdf_structured_llm = _llm.with_structured_output(...)` in `arambha.py` ran at import time on Render — if it failed, entire module crashed → both flows returned 500. Fixed: moved ALL PDF code to separate `agents/arambha_pdf.py` (zero shared code with `arambha.py`); `redline.py` imports `run_arambha_pdf`; `new_doc.py` imports `run_arambha`.
 - **PDF download stuck / popup blocked (three compounding issues)**:
   1. **Private bucket requires service role key**: `createSignedUrl` on a private Supabase Storage bucket requires the service role key — the browser anon key cannot sign URLs even with storage RLS SELECT policies. Solution: Next.js API route `frontend/src/app/api/download/[vaultId]/route.ts` on Vercel (always warm, no Render cold-start) uses `SUPABASE_SERVICE_ROLE_KEY` server-side. Add this env var to Vercel dashboard (not `NEXT_PUBLIC_` — server-only).
   2. **`getSession()` unreliable server-side**: In Next.js API routes and server components, `supabase.auth.getSession()` reads cookies without verifying with Supabase Auth — returns `null` on Vercel production. Always use `supabase.auth.getUser()` instead (contacts Auth server to verify token). This also silences Supabase's "insecure" console warning.
