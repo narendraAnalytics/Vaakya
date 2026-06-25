@@ -424,7 +424,18 @@ export default function DocumentProgressPage() {
     : { label: 'Low', color: '#1A5C35', dot: '#1EA851' }
     : null
 
-  const gaugeScore    = pollData?.review_score ?? 0
+  const negScore = (() => {
+    const reds = pollData?.negotiation_redlines
+    if (!reds?.length) return 0
+    let s = 100
+    for (const r of reds) {
+      if (r.deal_breaker) s -= 20
+      else if (r.business_impact === 'CRITICAL' || r.business_impact === 'HIGH') s -= 10
+      else if (r.business_impact === 'MEDIUM') s -= 5
+    }
+    return Math.max(0, s)
+  })()
+  const gaugeScore    = subGraph === 'redline' ? negScore : (pollData?.review_score ?? 0)
   const gaugeOffset   = Math.round(207 * (1 - gaugeScore / 100))
   const estCompletion = (() => {
     if (pageStatus === 'completed')         return 'Complete!'
@@ -1163,7 +1174,7 @@ export default function DocumentProgressPage() {
                 </div>
                 {/* Score gauge */}
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                  <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6, textAlign: 'center', marginBottom: 4 }}>Review Score</div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6, textAlign: 'center', marginBottom: 4 }}>{subGraph === 'redline' ? 'Negotiation Score' : 'Review Score'}</div>
                   <div style={{ position: 'relative', width: 80, height: 80 }}>
                     <svg width="80" height="80" viewBox="0 0 80 80">
                       <circle cx="40" cy="40" r="33" fill="none" stroke="#E0F5E8" strokeWidth="7.5" />
@@ -1193,7 +1204,7 @@ export default function DocumentProgressPage() {
                 {gaugeScore > 0 && (
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <span style={{ fontSize: 11.5, fontWeight: 600, color: '#7B9A8A' }}>Quality Score</span>
+                      <span style={{ fontSize: 11.5, fontWeight: 600, color: '#7B9A8A' }}>{subGraph === 'redline' ? 'Negotiation Score' : 'Quality Score'}</span>
                       <span style={{ fontSize: 13.5, fontWeight: 800, color: '#0F2D1F' }}>{gaugeScore}%</span>
                     </div>
                     <div style={{ height: 7, background: '#E8F5EE', borderRadius: 100, overflow: 'hidden' }}>
