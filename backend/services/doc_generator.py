@@ -33,13 +33,15 @@ from graph.state import VaakyaState
 
 # ── Colours ────────────────────────────────────────────────────────────────────
 
-_C_BRAND  = HexColor("#1a1a2e")   # dark navy header
-_C_ACCENT = HexColor("#e94560")   # red accent rule
-_C_HIGH   = HexColor("#c0392b")
-_C_MEDIUM = HexColor("#e67e22")
-_C_LOW    = HexColor("#7f8c8d")
-_C_LIGHT  = HexColor("#f8f9fa")   # table row background
-_C_WHITE  = colors.white
+_C_BRAND    = HexColor("#1a1a2e")   # dark navy header
+_C_ACCENT   = HexColor("#e94560")   # red accent rule
+_C_CRITICAL = HexColor("#7b0000")
+_C_HIGH     = HexColor("#c0392b")
+_C_MEDIUM   = HexColor("#e67e22")
+_C_LOW      = HexColor("#7f8c8d")
+_C_GREEN    = HexColor("#1a6b1a")
+_C_LIGHT    = HexColor("#f8f9fa")   # table row background
+_C_WHITE    = colors.white
 
 _MARGIN = 2.0 * cm
 
@@ -146,6 +148,46 @@ _S_REASON = ParagraphStyle(
     textColor=_C_LOW,
     leftIndent=12,
     spaceAfter=8,
+)
+_S_DIFF_OLD = ParagraphStyle(
+    "DiffOld",
+    fontName="Courier",
+    fontSize=8,
+    textColor=_C_HIGH,
+    leading=12,
+    leftIndent=12,
+    spaceAfter=1,
+)
+_S_DIFF_NEW = ParagraphStyle(
+    "DiffNew",
+    fontName="Courier",
+    fontSize=8,
+    textColor=_C_GREEN,
+    leading=12,
+    leftIndent=12,
+    spaceAfter=4,
+)
+_S_POSITION = ParagraphStyle(
+    "Position",
+    fontName="Helvetica",
+    fontSize=8,
+    textColor=HexColor("#444444"),
+    leftIndent=12,
+    spaceAfter=3,
+)
+_S_SCORE_LABEL = ParagraphStyle(
+    "ScoreLabel",
+    fontName="Helvetica-Bold",
+    fontSize=9,
+    textColor=_C_LOW,
+    spaceAfter=2,
+)
+_S_SCORE_VALUE = ParagraphStyle(
+    "ScoreValue",
+    fontName="Helvetica-Bold",
+    fontSize=22,
+    textColor=_C_BRAND,
+    spaceAfter=2,
 )
 
 # ── Heading line detection ─────────────────────────────────────────────────────
@@ -399,56 +441,168 @@ def _risk_badge_inline(risk_level: str) -> str:
     return f'<font color="{colour}"><b>[{risk_level.upper()}]</b></font>'
 
 
+def _negotiation_score_from_redlines(redlines: list[dict]) -> int:
+    score = 100
+    for r in redlines:
+        if r.get("deal_breaker"):
+            score -= 20
+        elif r.get("business_impact", "").upper() in ("CRITICAL", "HIGH"):
+            score -= 10
+        elif r.get("business_impact", "").upper() == "MEDIUM":
+            score -= 5
+    return max(0, score)
+
+
 def _build_redline_pdf(state: VaakyaState, document_title: str) -> list:
     parties    = state.get("parties", [])
     redlines   = state.get("negotiation_redlines", [])
+    risk_flags = state.get("risk_flags", [])
     doc_type   = state.get("document_type", "Agreement")
+    jurisdiction = state.get("jurisdiction", "India")
     date_str   = datetime.now(timezone.utc).strftime("%d %b %Y")
 
     title = document_title or f"Redline Report — {doc_type}"
 
+    def _s(t: str) -> str:
+        return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
     flowables: list = []
     flowables += _header_table(title, "VAAKYA REDLINE REPORT", date_str)
+    flowables.append(Paragraph(
+        f"Jurisdiction: {jurisdiction}  |  Governing Law: Indian Contract Act, 1872",
+        _S_SMALL,
+    ))
+    flowables.append(Spacer(1, 8))
     flowables += _parties_block(parties)
 
     if not redlines:
         flowables.append(Paragraph("No redlines were flagged for this document.", _S_BODY))
+        flowables += _risk_section(risk_flags)
         return flowables
 
-    for rd in redlines:
-        clause_ref     = str(rd.get("clause_reference", "Unknown Clause"))
-        current_text   = str(rd.get("current_text", ""))
-        recommendation = str(rd.get("recommendation", "counter")).lower()
-        counter        = str(rd.get("counter_proposal", ""))
-        risk_level     = str(rd.get("risk_level", "LOW")).upper()
-        reason         = str(rd.get("reason", ""))
+    # ── Negotiation score summary box ──────────────────────────────────────────
+    neg_score     = _negotiation_score_from_redlines(redlines)
+    deal_breakers = sum(1 for r in redlines if r.get("deal_breaker"))
+    p1_count      = sum(1 for r in redlines if r.get("negotiation_priority") == "P1")
+    p2_count      = sum(1 for r in redlines if r.get("negotiation_priority") == "P2")
+    p3_count      = sum(1 for r in redlines if r.get("negotiation_priority") == "P3")
 
-        # Safe XML encoding
-        def _s(t: str) -> str:
-            return t.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    score_hex = "#c0392b" if neg_score < 50 else "#e67e22" if neg_score < 75 else "#1a6b1a"
+    summary_data = [
+        [
+            Paragraph("<b>NEGOTIATION SCORE</b>", _S_SCORE_LABEL),
+            Paragraph("<b>DEAL-BREAKERS</b>", _S_SCORE_LABEL),
+            Paragraph("<b>P1 MUST-FIX</b>", _S_SCORE_LABEL),
+            Paragraph("<b>TOTAL CLAUSES</b>", _S_SCORE_LABEL),
+        ],
+        [
+            Paragraph(f'<font color="{score_hex}">{neg_score}/100</font>', _S_SCORE_VALUE),
+            Paragraph(f'<font color="#c0392b">{deal_breakers}</font>', _S_SCORE_VALUE),
+            Paragraph(f'<font color="#e67e22">{p1_count}</font>', _S_SCORE_VALUE),
+            Paragraph(str(len(redlines)), _S_SCORE_VALUE),
+        ],
+    ]
+    summary_tbl = Table(summary_data, colWidths=["25%", "25%", "25%", "25%"])
+    summary_tbl.setStyle(TableStyle([
+        ("BACKGROUND",    (0, 0), (-1, -1), _C_LIGHT),
+        ("BOX",           (0, 0), (-1, -1), 1, HexColor("#dddddd")),
+        ("TOPPADDING",    (0, 0), (-1, -1), 8),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 8),
+        ("LEFTPADDING",   (0, 0), (-1, -1), 12),
+        ("ALIGN",         (0, 0), (-1, -1), "CENTER"),
+    ]))
+    flowables.append(summary_tbl)
+    flowables.append(Spacer(1, 16))
 
+    # Priority key
+    flowables.append(Paragraph(
+        f"<b>Priority Key:</b>  P1 = Must fix before signing ({p1_count})  |  "
+        f"P2 = Strongly recommended ({p2_count})  |  P3 = Best practice ({p3_count})",
+        _S_SMALL,
+    ))
+    flowables.append(HRFlowable(width="100%", thickness=1.5, color=_C_ACCENT, spaceAfter=12))
+
+    # ── Per-clause redlines ────────────────────────────────────────────────────
+    priority_order = {"P1": 0, "P2": 1, "P3": 2}
+    sorted_redlines = sorted(redlines, key=lambda r: priority_order.get(r.get("negotiation_priority", "P3"), 2))
+
+    for rd in sorted_redlines:
+        clause_ref       = str(rd.get("clause_reference", "Unknown Clause"))
+        current_text     = str(rd.get("current_text", ""))
+        recommendation   = str(rd.get("recommendation", "counter")).lower()
+        counter          = str(rd.get("counter_proposal", ""))
+        risk_level       = str(rd.get("risk_level", rd.get("business_impact", "LOW"))).upper()
+        business_impact  = str(rd.get("business_impact", "MEDIUM")).upper()
+        legal_impact     = str(rd.get("legal_impact", "MEDIUM")).upper()
+        priority         = str(rd.get("negotiation_priority", "P3"))
+        deal_breaker     = bool(rd.get("deal_breaker", False))
+        reason           = str(rd.get("reason", ""))
+        suggested        = str(rd.get("suggested_redline", ""))
+        fallback         = str(rd.get("fallback_position", ""))
+        walkaway         = str(rd.get("walkaway_position", ""))
+
+        # Clause heading row
+        db_tag = ' <font color="#c0392b"><b>🚨 DEAL-BREAKER</b></font>' if deal_breaker else ""
+        priority_colour = {"P1": "#c0392b", "P2": "#e67e22", "P3": "#7f8c8d"}.get(priority, "#7f8c8d")
         flowables.append(Paragraph(
-            f"{_s(clause_ref)}  {_risk_badge_inline(risk_level)}",
+            f'<font color="{priority_colour}"><b>[{priority}]</b></font>  '
+            f"{_s(clause_ref)}  {_risk_badge_inline(risk_level)}{db_tag}",
             _S_CLAUSE_REF,
         ))
 
+        # Impact badges
+        bi_colour = {"CRITICAL": "#7b0000", "HIGH": "#c0392b", "MEDIUM": "#e67e22", "LOW": "#7f8c8d"}.get(business_impact, "#7f8c8d")
+        flowables.append(Paragraph(
+            f'Business Impact: <font color="{bi_colour}"><b>{business_impact}</b></font>  |  '
+            f"Legal Impact: <b>{legal_impact}</b>  |  Recommendation: <b>{recommendation.upper()}</b>",
+            _S_SMALL,
+        ))
+        flowables.append(Spacer(1, 4))
+
+        # Current text
         if current_text:
-            flowables.append(Paragraph("<b>CURRENT:</b>", _S_LABEL))
-            flowables.append(Paragraph(_s(current_text), _S_CURRENT))
+            flowables.append(Paragraph("<b>CURRENT TEXT:</b>", _S_LABEL))
+            flowables.append(Paragraph(_s(current_text[:300] + ("…" if len(current_text) > 300 else "")), _S_CURRENT))
 
-        flowables.append(Paragraph("<b>PROPOSED:</b>", _S_LABEL))
+        # Proposed change
         if recommendation == "accept":
-            flowables.append(Paragraph("ACCEPT — no change required.", _S_PROPOSED))
+            flowables.append(Paragraph("<font color='#1a6b1a'><b>✓ ACCEPT — no change required.</b></font>", _S_PROPOSED))
         elif recommendation == "reject":
-            flowables.append(Paragraph("REJECT — delete this clause.", _S_PROPOSED))
-        else:
-            flowables.append(Paragraph(_s(counter) if counter else "See reason below.", _S_PROPOSED))
+            flowables.append(Paragraph("<font color='#c0392b'><b>✗ REJECT — delete this clause.</b></font>", _S_PROPOSED))
+        elif counter:
+            flowables.append(Paragraph("<b>PROPOSED COUNTER:</b>", _S_LABEL))
+            flowables.append(Paragraph(_s(counter[:400] + ("…" if len(counter) > 400 else "")), _S_PROPOSED))
 
+        # Redline diff
+        if suggested:
+            flowables.append(Paragraph("<b>REDLINE DIFF:</b>", _S_LABEL))
+            for diff_line in suggested.splitlines():
+                if diff_line.startswith("- "):
+                    flowables.append(Paragraph(_s(diff_line), _S_DIFF_OLD))
+                elif diff_line.startswith("+ "):
+                    flowables.append(Paragraph(_s(diff_line), _S_DIFF_NEW))
+                elif diff_line.strip():
+                    flowables.append(Paragraph(_s(diff_line), _S_RISK_TEXT))
+
+        # Reason
         if reason:
             flowables.append(Paragraph(f"<i>{_s(reason)}</i>", _S_REASON))
 
-        flowables.append(HRFlowable(width="100%", thickness=0.5, color=HexColor("#dddddd"), spaceAfter=6))
+        # Fallback / walkaway
+        if fallback or walkaway:
+            flowables.append(Paragraph("<b>NEGOTIATION POSITIONS:</b>", _S_LABEL))
+            if fallback:
+                flowables.append(Paragraph(f"Fallback: {_s(fallback)}", _S_POSITION))
+            if walkaway:
+                flowables.append(Paragraph(
+                    f'<font color="#c0392b">Walk-Away Limit: {_s(walkaway)}</font>',
+                    _S_POSITION,
+                ))
 
+        flowables.append(HRFlowable(width="100%", thickness=0.5, color=HexColor("#dddddd"), spaceAfter=8))
+
+    # ── Risk flags appendix ───────────────────────────────────────────────────
+    flowables += _risk_section(risk_flags)
     return flowables
 
 
