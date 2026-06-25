@@ -19,7 +19,7 @@ full document context before fan-in at hitl_review.
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
-from agents.arambha import run_arambha_pdf
+from agents.arambha_pdf import run_arambha_pdf
 from agents.jokhim import run_jokhim
 from agents.sahee import run_sahee
 from agents.samjoota import run_samjoota
