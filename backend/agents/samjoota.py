@@ -14,6 +14,7 @@ from typing import Any
 from api.config import settings
 from api.constants import GROQ_MODEL_PRO
 from graph.state import VaakyaState
+from services.pdf_chunker import batch_text, clean_text, pack_batches, split_sections
 
 _llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0, max_tokens=4096)
 
@@ -263,7 +264,8 @@ class SamjootaOutput(BaseModel):
 _structured_llm = _llm.with_structured_output(SamjootaOutput, method="json_mode")
 
 
-def _build_human_message(state: VaakyaState) -> str:
+def _context_prefix(state: VaakyaState) -> str:
+    """Shared header block injected into every human message (single-call or batch)."""
     parties = state.get("parties", [])
     parties_text = ""
     if parties:
@@ -271,40 +273,116 @@ def _build_human_message(state: VaakyaState) -> str:
             f"  - {p.get('name', 'Unknown')} ({p.get('role', 'party')})"
             for p in parties
         )
-
     risk_section = ""
     if state.get("risk_flags"):
         risk_section = (
             f"\n\n## JOKHIM RISK FLAGS (already identified)\n"
             f"{json.dumps(state['risk_flags'][:10], indent=2)}"
         )
+    return (
+        f"Document Type: {state.get('document_type', 'Unknown')}\n"
+        f"Jurisdiction: {state.get('jurisdiction', 'India')}"
+        f"{parties_text}{risk_section}"
+    )
 
+
+def _build_human_message(state: VaakyaState) -> str:
+    """Single-call path for short documents (≤ 5500 chars)."""
     pdf_text = state.get("raw_input", state.get("draft", ""))
-    if len(pdf_text) > 6000:
-        pdf_text = pdf_text[:6000] + "\n[... document truncated — analyse clauses visible above ...]"
+    return (
+        f"{_context_prefix(state)}\n\n"
+        f"Counter-Party Contract (uploaded by the instructing party for review):\n"
+        f"{pdf_text}\n\n"
+        f"Review every clause. Return your redline analysis and negotiation strategy."
+    )
 
-    return f"""Document Type: {state.get("document_type", "Unknown")}
-Jurisdiction: {state.get("jurisdiction", "India")}
-{parties_text}{risk_section}
 
-Counter-Party Contract (uploaded by the instructing party for review):
-{pdf_text}
+def _build_human_message_for_batch(state: VaakyaState, contract_text: str) -> str:
+    """Batch-call path — contract_text is one bin-packed batch of sections."""
+    return (
+        f"{_context_prefix(state)}\n\n"
+        f"Counter-Party Contract — Section Batch (uploaded by the instructing party for review):\n"
+        f"{contract_text}\n\n"
+        f"Review every clause in this batch. Return your redline analysis and negotiation strategy."
+    )
 
-Review every clause. Return your redline analysis and negotiation strategy."""
+
+def _merge_samjoota_outputs(outputs: list[SamjootaOutput]) -> dict:
+    """Merge per-batch SamjootaOutputs into one combined result."""
+    if not outputs:
+        return {"negotiation_redlines": [], "errors": ["Samjoota: all batches failed"]}
+
+    priority_order = {"P1": 0, "P2": 1, "P3": 2}
+    all_redlines: list[Redline] = []
+    seen_refs: set[str] = set()
+
+    # Collect redlines in priority order so P1 items win deduplication on repeated refs
+    sorted_redlines = sorted(
+        (r for o in outputs for r in o.negotiation_redlines),
+        key=lambda r: priority_order.get(r.negotiation_priority, 1),
+    )
+    for r in sorted_redlines:
+        if r.clause_reference not in seen_refs:
+            all_redlines.append(r)
+            seen_refs.add(r.clause_reference)
+
+    summaries = [o.negotiation_summary for o in outputs if o.negotiation_summary]
+    merged_summary = " | ".join(summaries[:2]) if summaries else ""
+
+    prob_order = {"LOW": 0, "MEDIUM": 1, "HIGH": 2}
+    min_prob = min(outputs, key=lambda o: prob_order.get(o.acceptance_probability, 1)).acceptance_probability
+    min_conf = min(o.confidence for o in outputs)
+
+    # Build a SamjootaOutput so model_validator recomputes deal_breaker_count + negotiation_score
+    merged = SamjootaOutput(
+        negotiation_redlines=all_redlines,
+        negotiation_summary=merged_summary,
+        accept_count=sum(o.accept_count for o in outputs),
+        reject_count=sum(o.reject_count for o in outputs),
+        counter_count=sum(o.counter_count for o in outputs),
+        acceptance_probability=min_prob,
+        confidence=min_conf,
+    )
+    return {"negotiation_redlines": [r.model_dump() for r in merged.negotiation_redlines]}
+
+
+async def _run_chunked(state: VaakyaState) -> dict:
+    """Chunked path for large PDFs — processes section batches sequentially and merges."""
+    raw = state.get("raw_input", state.get("draft", ""))
+    cleaned = clean_text(raw)
+    sections = split_sections(cleaned)
+    batches = pack_batches(sections, max_chars=5500)
+
+    outputs: list[SamjootaOutput] = []
+    for batch in batches:
+        try:
+            result: SamjootaOutput = await _structured_llm.ainvoke([
+                ("system", _SYSTEM_PROMPT),
+                ("human", _build_human_message_for_batch(state, batch_text(batch))),
+            ])
+            outputs.append(result)
+        except Exception:
+            # Partial failures are tolerated — remaining batches still processed
+            pass
+
+    return _merge_samjoota_outputs(outputs)
 
 
 async def run_samjoota(state: VaakyaState) -> dict:
+    raw = state.get("raw_input", state.get("draft", ""))
+
+    if len(raw) > 5500:
+        try:
+            return await _run_chunked(state)
+        except Exception as exc:
+            return {"negotiation_redlines": [], "errors": [f"Samjoota chunked error: {exc}"]}
+
+    # Short doc — original single-call path, behaviour unchanged
     try:
         result: SamjootaOutput = await _structured_llm.ainvoke([
             ("system", _SYSTEM_PROMPT),
             ("human", _build_human_message(state)),
         ])
-
-        return {
-            "negotiation_redlines": [r.model_dump() for r in result.negotiation_redlines],
-        }
+        return {"negotiation_redlines": [r.model_dump() for r in result.negotiation_redlines]}
     except Exception as exc:
-        return {
-            "negotiation_redlines": [],
-            "errors": [f"Samjoota error: {exc}"],
-        }
+        return {"negotiation_redlines": [], "errors": [f"Samjoota error: {exc}"]}

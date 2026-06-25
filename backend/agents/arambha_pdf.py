@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, field_validator
 from api.config import settings
 from api.constants import GROQ_MODEL_FLASH
 from graph.state import VaakyaState
+from services.pdf_chunker import clean_text
 
 _PDF_SYSTEM_PROMPT = """You are Arambha, the intake agent for Vaakya — an Indian legal document system.
 
@@ -94,8 +95,14 @@ async def run_arambha_pdf(state: VaakyaState) -> dict:
     llm = ChatGroq(model=GROQ_MODEL_FLASH, api_key=settings.GROQ_API_KEY, temperature=0)
     structured_llm = llm.with_structured_output(ArambhaPdfOutput, method="json_mode")
 
+    # Clean and trim for classification — raw_input in state is left untouched
+    # so downstream agents (samjoota, jokhim) still receive the full extracted text.
+    classification_text = clean_text(state["raw_input"])
+    if len(classification_text) > 8000:
+        classification_text = classification_text[:8000]
+
     human_message = f"""Uploaded PDF text:
-{state["raw_input"]}
+{classification_text}
 """
     try:
         result: ArambhaPdfOutput = await structured_llm.ainvoke([

@@ -13,6 +13,7 @@ from api.config import settings
 from api.constants import GROQ_MODEL_PRO
 from graph.state import VaakyaState
 from services.legal_search import format_refs_block, needs_legal_research, search_indian_law
+from services.pdf_chunker import batch_text, clean_text, pack_batches, split_sections
 
 _llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0)
 
@@ -327,11 +328,110 @@ Conduct a thorough risk analysis from the perspective of the instructing party.
 Identify all risks and return your structured assessment."""
 
 
+def _build_human_message_for_pdf_batch(state: VaakyaState, contract_text: str, refs_block: str) -> str:
+    """Human message for one section batch in the redline chunked path."""
+    parties = state.get("parties", [])
+    parties_text = ""
+    if parties:
+        parties_text = "\nParties:\n" + "\n".join(
+            f"  - {p.get('name', 'Unknown')} ({p.get('role', 'party')})"
+            for p in parties
+        )
+    key_terms = state.get("key_terms", {})
+    terms_text = ""
+    if key_terms:
+        terms_text = "\nKey Commercial Terms:\n" + "\n".join(
+            f"  - {k}: {v}" for k, v in key_terms.items()
+        )
+    return (
+        f"Document Type: {state.get('document_type', 'Unknown')}\n"
+        f"Jurisdiction: {state.get('jurisdiction', 'India')}"
+        f"{parties_text}{terms_text}{refs_block}\n\n"
+        f"Contract Section Batch (uploaded PDF):\n"
+        f"{contract_text}\n\n"
+        f"Conduct a thorough risk analysis of this section batch from the perspective of the instructing party."
+    )
+
+
+def _merge_jokhim_outputs(outputs: list[JokhimOutput]) -> dict:
+    """Merge per-batch JokhimOutputs — deduplicate flags by clause_reference + category."""
+    if not outputs:
+        return {"risk_flags": [], "errors": ["Jokhim: all batches failed"]}
+
+    all_flags: list[dict] = []
+    seen: set[str] = set()
+    severity_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+
+    sorted_flags = sorted(
+        (f for o in outputs for f in o.risk_flags),
+        key=lambda f: severity_order.get(f.severity.upper(), 2),
+    )
+    for flag in sorted_flags:
+        key = f"{flag.clause_reference}|{flag.category}"
+        if key not in seen:
+            all_flags.append(flag.model_dump())
+            seen.add(key)
+
+    summaries = [o.risk_summary for o in outputs if o.risk_summary]
+    merged_summary = " | ".join(summaries[:2]) if summaries else ""
+
+    # Rebuild counts from merged flags
+    critical = sum(1 for f in all_flags if f["severity"].upper() == "CRITICAL")
+    high = sum(1 for f in all_flags if f["severity"].upper() == "HIGH")
+    medium = sum(1 for f in all_flags if f["severity"].upper() == "MEDIUM")
+    low = sum(1 for f in all_flags if f["severity"].upper() == "LOW")
+    risk_score = max(0, 100 - critical * 20 - high * 10 - medium * 5 - low * 2)
+
+    return {
+        "risk_flags": all_flags,
+        "risk_score": risk_score,
+    }
+
+
+async def _run_jokhim_chunked(state: VaakyaState) -> dict:
+    """Chunked path for large PDFs in the redline flow."""
+    doc_type = state.get("document_type", "Unknown")
+    if needs_legal_research(doc_type):
+        query = (
+            f"Indian law {doc_type} risk clauses DPDPA 2023 MSMED Act "
+            f"Arbitration Conciliation Act 1996 Indian Contract Act 1872"
+        )
+        legal_refs = search_indian_law(query)
+    else:
+        legal_refs = []
+    refs_block = format_refs_block(legal_refs)
+
+    raw = state.get("raw_input", "")
+    cleaned = clean_text(raw)
+    sections = split_sections(cleaned)
+    batches = pack_batches(sections, max_chars=5500)
+
+    outputs: list[JokhimOutput] = []
+    for batch in batches:
+        try:
+            result: JokhimOutput = await _structured_llm.ainvoke([
+                ("system", _SYSTEM_PROMPT),
+                ("human", _build_human_message_for_pdf_batch(state, batch_text(batch), refs_block)),
+            ])
+            outputs.append(result)
+        except Exception:
+            pass
+
+    return _merge_jokhim_outputs(outputs)
+
+
 async def run_jokhim(state: VaakyaState) -> dict:
     # Skip on redraft loops — risk flags don't change between Rachana iterations.
     # Returning {} leaves the existing risk_flags (Annotated[list, operator.add]) intact.
     if state.get("risk_flags") and state.get("loop_count", 0) > 0:
         return {}
+
+    # Chunked path: large PDFs in the redline flow
+    if state.get("sub_graph") == "redline" and len(state.get("raw_input", "")) > 5500:
+        try:
+            return await _run_jokhim_chunked(state)
+        except Exception as exc:
+            return {"risk_flags": [], "errors": [f"Jokhim chunked error: {exc}"]}
 
     try:
         result: JokhimOutput = await _structured_llm.ainvoke([
