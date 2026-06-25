@@ -71,7 +71,7 @@ Parties: {parties_text}
 {f"Key Terms: {terms_text}" if terms_text else ""}
 
 Contract (first 800 chars for context):
-{state.get("draft", "")[:800]}
+{(state.get("draft") or state.get("raw_input", ""))[:800]}
 
 Generate the formal document title and vault summary."""
 
