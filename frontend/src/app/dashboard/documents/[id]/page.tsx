@@ -709,18 +709,12 @@ export default function DocumentProgressPage() {
                   <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
                     <a href="/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '11px 22px', background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#F0FFF6', borderRadius: 100, textDecoration: 'none', fontSize: 13.5, fontWeight: 700, boxShadow: '0 3px 14px rgba(26,92,53,0.28)' }}>← Dashboard</a>
                     {pollData?.vault_id && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vault/${pollData.vault_id}`, { headers: { Authorization: `Bearer ${tokenRef.current}` } })
-                            if (!res.ok) { alert(`Could not get PDF link (${res.status}). Try again.`); return }
-                            const d = await res.json()
-                            const url = d.pdf_url || d.final_pdf_url
-                            if (url) { window.open(url, '_blank') } else { alert('PDF is still being generated. Please try again in a moment.') }
-                          } catch { alert('Network error — could not download PDF.') }
-                        }}
-                        style={{ padding: '11px 22px', background: '#FDFCF8', color: '#1A5C35', border: '1.5px solid rgba(26,92,53,0.2)', borderRadius: 100, fontFamily: 'inherit', fontSize: 13.5, fontWeight: 600, cursor: 'pointer' }}
-                      >📥 Download PDF</button>
+                      <a
+                        href={`/api/download/${pollData.vault_id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ padding: '11px 22px', background: '#FDFCF8', color: '#1A5C35', border: '1.5px solid rgba(26,92,53,0.2)', borderRadius: 100, fontSize: 13.5, fontWeight: 600, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6 }}
+                      >📥 Download PDF</a>
                     )}
                   </div>
                 </div>
