@@ -47,6 +47,7 @@ async def hitl_review(state: VaakyaState) -> dict:
     payload = {
         "document_type": state.get("document_type", ""),
         "parties": state.get("parties", []),
+        "raw_input": state.get("raw_input", ""),
         "negotiation_redlines": redlines,
         "risk_flags": risk_flags,
         "negotiation_summary": {

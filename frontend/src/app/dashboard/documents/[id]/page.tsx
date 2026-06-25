@@ -845,6 +845,20 @@ export default function DocumentProgressPage() {
                   </div>
                 )}
 
+                {/* Uploaded document preview — redline only */}
+                {subGraph === 'redline' && (hp as any).raw_input && (
+                  <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>📄 Uploaded Document</div>
+                    <div
+                      aria-label="Uploaded document preview"
+                      role="region"
+                      style={{ width: '100%', maxHeight: 420, overflowY: 'auto', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, padding: '16px 18px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,92,53,0.18) transparent' }}
+                    >
+                      <MarkdownRenderer content={(hp as any).raw_input} />
+                    </div>
+                  </div>
+                )}
+
                 {/* Approve / Revise */}
                 {approveError && <div style={{ fontSize: 12.5, color: '#C03030', background: '#FFE8E8', borderRadius: 10, padding: '10px 14px', fontWeight: 500 }}>⚠️ {approveError}</div>}
                 {!showRevision ? (
