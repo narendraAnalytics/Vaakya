@@ -725,48 +725,64 @@ export default function DocumentProgressPage() {
             {pageStatus === 'awaiting_approval' && hp && (
               <div className="fade-in" style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 28 }}>
                 <div className="hitl-cols" style={{ display: 'flex', gap: 16 }}>
-                  {/* Review score */}
-                  <div style={{ flex: 1, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Review Score</div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                      <div style={{ fontSize: 40, fontWeight: 800, color: scoreColor(hp.review_score), lineHeight: 1 }}>{hp.review_score}</div>
-                      <div style={{ flex: 1 }}>
-                        <div style={{ height: 8, background: '#EAF5EE', borderRadius: 100, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${hp.review_score}%`, background: `linear-gradient(90deg,${scoreColor(hp.review_score)},#1EA851)`, borderRadius: 100, transition: 'width 0.6s ease' }} />
-                        </div>
-                        <div style={{ fontSize: 11, color: '#7B9A8A', marginTop: 5 }}>
-                          {hp.review_score >= 90 ? 'Excellent' : hp.review_score >= 75 ? 'Good — meets threshold' : 'Below threshold — revision recommended'}
+                  {/* Review score — new_doc only */}
+                  {subGraph !== 'redline' && (
+                    <div style={{ flex: 1, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Review Score</div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                        <div style={{ fontSize: 40, fontWeight: 800, color: scoreColor(hp.review_score ?? 0), lineHeight: 1 }}>{hp.review_score ?? 0}</div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ height: 8, background: '#EAF5EE', borderRadius: 100, overflow: 'hidden' }}>
+                            <div style={{ height: '100%', width: `${hp.review_score ?? 0}%`, background: `linear-gradient(90deg,${scoreColor(hp.review_score ?? 0)},#1EA851)`, borderRadius: 100, transition: 'width 0.6s ease' }} />
+                          </div>
+                          <div style={{ fontSize: 11, color: '#7B9A8A', marginTop: 5 }}>
+                            {(hp.review_score ?? 0) >= 90 ? 'Excellent' : (hp.review_score ?? 0) >= 75 ? 'Good — meets threshold' : 'Below threshold — revision recommended'}
+                          </div>
                         </div>
                       </div>
+                      {hp.low_confidence && <div style={{ marginTop: 12, fontSize: 12, color: '#B07010', background: '#FFF0D8', borderRadius: 8, padding: '8px 12px', fontWeight: 500 }}>⚠️ Low confidence ({Math.round((hp.confidence_score ?? 0) * 100)}%) — manual review advised</div>}
+                      {hp.max_loops_reached && <div style={{ marginTop: 8, fontSize: 12, color: '#C03030', background: '#FFE8E8', borderRadius: 8, padding: '8px 12px', fontWeight: 500 }}>⚠️ Max revision loops reached — score below 75</div>}
                     </div>
-                    {hp.low_confidence && <div style={{ marginTop: 12, fontSize: 12, color: '#B07010', background: '#FFF0D8', borderRadius: 8, padding: '8px 12px', fontWeight: 500 }}>⚠️ Low confidence ({Math.round(hp.confidence_score * 100)}%) — manual review advised</div>}
-                    {hp.max_loops_reached && <div style={{ marginTop: 8, fontSize: 12, color: '#C03030', background: '#FFE8E8', borderRadius: 8, padding: '8px 12px', fontWeight: 500 }}>⚠️ Max revision loops reached — score below 75</div>}
-                  </div>
+                  )}
+
+                  {/* Negotiation summary — redline only */}
+                  {subGraph === 'redline' && (hp as any).negotiation_summary && (
+                    <div style={{ flex: 1, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Negotiation Summary</div>
+                      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                        <span className="risk-chip" style={{ background: '#EAE8F5', color: '#5A7AB0' }}>📋 {(hp as any).negotiation_summary.total_clauses_flagged} Clauses Flagged</span>
+                        <span className="risk-chip" style={{ background: '#FFE8E8', color: '#C03030' }}>❌ {(hp as any).negotiation_summary.reject_count} Reject</span>
+                        <span className="risk-chip" style={{ background: '#FFF0D8', color: '#B07010' }}>↔️ {(hp as any).negotiation_summary.counter_count} Counter</span>
+                      </div>
+                      <div style={{ marginTop: 12, fontSize: 12, color: '#5A7A68' }}>Full redline analysis shown below. Review clause-by-clause before approving.</div>
+                    </div>
+                  )}
+
                   {/* Risk summary */}
                   <div style={{ flex: 1, background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Risk Summary</div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      <span className="risk-chip" style={{ background: '#FFE8E8', color: '#C03030' }}>🚨 {hp.risk_summary.critical} Critical</span>
-                      <span className="risk-chip" style={{ background: '#FFF0D8', color: '#B07010' }}>⚠️ {hp.risk_summary.high} High</span>
-                      <span className="risk-chip" style={{ background: '#EAE8F5', color: '#5A7AB0' }}>📊 {hp.risk_summary.total} Total</span>
+                      <span className="risk-chip" style={{ background: '#FFE8E8', color: '#C03030' }}>🚨 {hp.risk_summary?.critical ?? 0} Critical</span>
+                      <span className="risk-chip" style={{ background: '#FFF0D8', color: '#B07010' }}>⚠️ {hp.risk_summary?.high ?? 0} High</span>
+                      <span className="risk-chip" style={{ background: '#EAE8F5', color: '#5A7AB0' }}>📊 {hp.risk_summary?.total ?? 0} Total</span>
                       {pollData?.risk_score !== undefined && (
                         <span className="risk-chip" style={{ background: scoreBg(pollData.risk_score), color: riskScoreColor(pollData.risk_score) }}>
                           🛡️ Score {pollData.risk_score}/100
                         </span>
                       )}
                     </div>
-                    {hp.risk_summary.critical > 0 && (
+                    {(hp.risk_summary?.critical ?? 0) > 0 && (
                       <div style={{ marginTop: 12 }}>
                         <div style={{ fontSize: 11.5, fontWeight: 700, color: '#C03030', marginBottom: 6 }}>Critical flags:</div>
-                        {hp.risk_summary.critical_flags.map((f, i) => (
+                        {(hp.risk_summary?.critical_flags ?? []).map((f, i) => (
                           <div key={i} style={{ fontSize: 12, color: '#4A2828', background: '#FFF4F4', borderRadius: 8, padding: '7px 11px', marginBottom: 5, lineHeight: 1.5 }}>{f.description}</div>
                         ))}
                       </div>
                     )}
-                    {hp.review_issues.length > 0 && (
+                    {(hp.review_issues ?? []).length > 0 && (
                       <div style={{ marginTop: 12 }}>
                         <div style={{ fontSize: 11.5, fontWeight: 700, color: '#5A7A68', marginBottom: 6 }}>Review issues:</div>
-                        {hp.review_issues.slice(0, 3).map((issue, i) => (
+                        {(hp.review_issues ?? []).slice(0, 3).map((issue, i) => (
                           <div key={i} style={{ fontSize: 12, color: '#4A6858', background: '#F5FAF6', borderRadius: 8, padding: '6px 10px', marginBottom: 4, lineHeight: 1.5 }}>• {issue}</div>
                         ))}
                       </div>
@@ -775,11 +791,11 @@ export default function DocumentProgressPage() {
                 </div>
 
                 {/* Parties */}
-                {hp.parties.length > 0 && (
+                {(hp.parties ?? []).length > 0 && (
                   <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '18px 22px' }}>
                     <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>Parties</div>
                     <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                      {hp.parties.map((p, i) => (
+                      {(hp.parties ?? []).map((p, i) => (
                         <div key={i} style={{ background: '#EAF5EE', borderRadius: 12, padding: '8px 14px' }}>
                           <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>{p.name}</div>
                           <div style={{ fontSize: 11, color: '#7B9A8A', marginTop: 2 }}>{p.role}</div>
@@ -790,15 +806,15 @@ export default function DocumentProgressPage() {
                 )}
 
                 {/* Risk flags collapsible */}
-                {hp.risk_flags.length > 0 && (
+                {(hp.risk_flags ?? []).length > 0 && (
                   <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', overflow: 'hidden' }}>
                     <button onClick={() => setExpandedRisks(r => !r)} style={{ width: '100%', padding: '16px 22px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left' }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>🛡️ All Risk Flags ({hp.risk_flags.length})</span>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F' }}>🛡️ All Risk Flags ({(hp.risk_flags ?? []).length})</span>
                       <span style={{ fontSize: 14, color: '#5A7A68' }}>{expandedRisks ? '▲' : '▼'}</span>
                     </button>
                     {expandedRisks && (
                       <div style={{ padding: '0 22px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                        {hp.risk_flags.map((f, i) => {
+                        {(hp.risk_flags ?? []).map((f, i) => {
                           const sc = severityColor(f.severity)
                           return (
                             <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '10px 12px', background: '#F9FCF9', borderRadius: 10 }}>
@@ -815,17 +831,19 @@ export default function DocumentProgressPage() {
                   </div>
                 )}
 
-                {/* Draft preview */}
-                <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
-                  <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Draft Preview</div>
-                  <div
-                    aria-label="Document draft preview"
-                    role="region"
-                    style={{ width: '100%', maxHeight: 420, overflowY: 'auto', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, padding: '16px 18px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,92,53,0.18) transparent' }}
-                  >
-                    <MarkdownRenderer content={hp.draft} />
+                {/* Draft preview — new_doc only */}
+                {subGraph !== 'redline' && (
+                  <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>Draft Preview</div>
+                    <div
+                      aria-label="Document draft preview"
+                      role="region"
+                      style={{ width: '100%', maxHeight: 420, overflowY: 'auto', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, padding: '16px 18px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,92,53,0.18) transparent' }}
+                    >
+                      <MarkdownRenderer content={hp.draft ?? ''} />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Approve / Revise */}
                 {approveError && <div style={{ fontSize: 12.5, color: '#C03030', background: '#FFE8E8', borderRadius: 10, padding: '10px 14px', fontWeight: 500 }}>⚠️ {approveError}</div>}
