@@ -137,16 +137,17 @@ class ArambhaPdfOutput(ArambhaOutput):
     document_title: str = Field(default="", description="Formal title of the document (≤80 chars)")
 
 
-_pdf_structured_llm = _llm.with_structured_output(ArambhaPdfOutput, method="json_mode")
-
-
 async def run_arambha_pdf(state: VaakyaState) -> dict:
     """PDF-specific Arambha: 16 document types + document_title extraction."""
+    # Instantiated here (not at module level) so any failure is isolated from text-based flow
+    llm_pdf = ChatGroq(model=GROQ_MODEL_FLASH, api_key=settings.GROQ_API_KEY, temperature=0)
+    pdf_structured_llm = llm_pdf.with_structured_output(ArambhaPdfOutput, method="json_mode")
+
     human_message = f"""Uploaded PDF text:
 {state["raw_input"]}
 """
     try:
-        result: ArambhaPdfOutput = await _pdf_structured_llm.ainvoke([
+        result: ArambhaPdfOutput = await pdf_structured_llm.ainvoke([
             ("system", _PDF_SYSTEM_PROMPT),
             ("human", human_message),
         ])
