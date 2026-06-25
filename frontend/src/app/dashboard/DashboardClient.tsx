@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/client'
 import type { VaultDocument } from './page'
@@ -160,6 +160,11 @@ export default function DashboardClient({ username, documents }: Props) {
   const [docText, setDocText] = useState('')
   const [docTextEmpty, setDocTextEmpty] = useState(false)
   const [genError, setGenError] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadFile, setUploadFile] = useState<File | null>(null)
+  const [uploading, setUploading] = useState(false)
+  const [uploadError, setUploadError] = useState('')
+  const [dragOver, setDragOver] = useState(false)
   const [greeting, setGreeting] = useState('Good morning')
   const [dateStr, setDateStr] = useState('')
 
@@ -213,6 +218,35 @@ export default function DashboardClient({ username, documents }: Props) {
       level: 'In Progress', levelColor: '#5A7AB0',
     }
   })
+
+  async function handleUpload() {
+    if (uploading || !uploadFile) return
+    setUploading(true)
+    setUploadError('')
+    try {
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const form = new FormData()
+      form.append('file', uploadFile)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/document/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        setUploadError(err?.detail || 'Upload failed. Please try again.')
+        setUploading(false)
+        return
+      }
+      const { document_id } = await res.json()
+      router.push(`/dashboard/documents/${document_id}`)
+    } catch {
+      setUploadError('Network error. Check your connection and try again.')
+      setUploading(false)
+    }
+  }
 
   async function handleGenerate() {
     if (generating) return
@@ -473,19 +507,100 @@ export default function DashboardClient({ username, documents }: Props) {
 
               {/* Upload */}
               {tab === 'upload' && (
-                <div className="upload-zone" style={{ border: '2px dashed rgba(26,92,53,0.22)', borderRadius: 18, padding: '44px 24px', textAlign: 'center', background: '#F5FAF6', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, flex: 1 }}>
-                  <div style={{ width: 70, height: 70, background: 'linear-gradient(135deg,#E0F5E8,#C8E8D0)', borderRadius: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, boxShadow: '0 4px 16px rgba(26,92,53,0.12)' }}>📎</div>
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: '#0F2D1F', marginBottom: 5 }}>Drop your document here</div>
-                    <div style={{ fontSize: 13, color: '#7B9A8A' }}>or click to browse your files</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, flex: 1 }}>
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf"
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                      const f = e.target.files?.[0] ?? null
+                      setUploadFile(f)
+                      setUploadError('')
+                      e.target.value = ''
+                    }}
+                  />
+
+                  {/* Drop zone */}
+                  <div
+                    className="upload-zone"
+                    onClick={() => !uploadFile && fileInputRef.current?.click()}
+                    onDragOver={e => { e.preventDefault(); setDragOver(true) }}
+                    onDragLeave={() => setDragOver(false)}
+                    onDrop={e => {
+                      e.preventDefault(); setDragOver(false)
+                      const f = e.dataTransfer.files[0]
+                      if (f?.type === 'application/pdf') { setUploadFile(f); setUploadError('') }
+                      else setUploadError('Only PDF files are supported.')
+                    }}
+                    style={{ border: `2px dashed ${dragOver ? '#1EA851' : 'rgba(26,92,53,0.22)'}`, borderRadius: 18, padding: uploadFile ? '20px 24px' : '36px 24px', textAlign: 'center', background: dragOver ? '#EDFAF2' : '#F5FAF6', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, cursor: uploadFile ? 'default' : 'pointer', transition: 'all 0.18s' }}
+                  >
+                    {!uploadFile ? (
+                      <>
+                        <div style={{ width: 64, height: 64, background: 'linear-gradient(135deg,#E0F5E8,#C8E8D0)', borderRadius: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, boxShadow: '0 4px 14px rgba(26,92,53,0.12)' }}>📎</div>
+                        <div>
+                          <div style={{ fontSize: 15, fontWeight: 700, color: '#0F2D1F', marginBottom: 4 }}>Drop your PDF here</div>
+                          <div style={{ fontSize: 13, color: '#7B9A8A' }}>or click to browse</div>
+                        </div>
+                        <div
+                          onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 20px', background: '#E0F5E8', borderRadius: 100, fontSize: 13.5, fontWeight: 600, color: '#1A5C35', border: '1.5px solid rgba(30,168,81,0.25)', cursor: 'pointer' }}
+                        >
+                          Browse Files
+                        </div>
+                        <div style={{ fontSize: 11.5, color: '#A5BFB4' }}>PDF only · Max 10 MB</div>
+                      </>
+                    ) : (
+                      /* File selected state */
+                      <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, background: '#E8F7EE', border: '1.5px solid rgba(26,92,53,0.18)', borderRadius: 12, padding: '12px 16px' }}>
+                        <span style={{ fontSize: 28 }}>📄</span>
+                        <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+                          <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F2D1F', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{uploadFile.name}</div>
+                          <div style={{ fontSize: 12, color: '#6A9A7A', marginTop: 2 }}>{(uploadFile.size / 1024).toFixed(0)} KB · PDF</div>
+                        </div>
+                        <button
+                          onClick={e => { e.stopPropagation(); setUploadFile(null); setUploadError('') }}
+                          style={{ width: 28, height: 28, borderRadius: '50%', border: '1px solid rgba(26,92,53,0.2)', background: '#fff', color: '#5A7A68', fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                        >×</button>
+                      </div>
+                    )}
                   </div>
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 22px', background: '#E0F5E8', borderRadius: 100, fontSize: 13.5, fontWeight: 600, color: '#1A5C35', border: '1.5px solid rgba(30,168,81,0.25)', cursor: 'pointer' }}>Browse Files</div>
-                  <div style={{ fontSize: 11.5, color: '#A5BFB4' }}>PDF, DOCX, DOC · Max 10 MB</div>
+
+                  {/* Feature tags */}
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
                     {['✅ Instant AI Review', '🛡️ Risk Detection', '✏️ Smart Redlining'].map(tag => (
                       <span key={tag} style={{ fontSize: 11.5, fontWeight: 600, color: '#1A5C35', background: '#E0F5E8', padding: '4px 12px', borderRadius: 100 }}>{tag}</span>
                     ))}
                   </div>
+
+                  {/* Error */}
+                  {uploadError && (
+                    <div style={{ fontSize: 12.5, color: '#C03030', background: '#FFE8E8', border: '1px solid rgba(192,48,48,0.2)', borderRadius: 10, padding: '10px 14px', fontWeight: 500 }}>⚠️ {uploadError}</div>
+                  )}
+
+                  {/* Upload button — only when file selected */}
+                  {uploadFile && (
+                    <button
+                      className="gen-btn"
+                      onClick={handleUpload}
+                      disabled={uploading}
+                      style={{ width: '100%', padding: '15px 24px', background: uploading ? 'rgba(26,92,53,0.5)' : 'linear-gradient(135deg,#1A5C35 0%,#1EA851 100%)', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, borderRadius: 14, letterSpacing: -0.1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: uploading ? 'not-allowed' : 'pointer', border: 'none' }}
+                    >
+                      {uploading ? (
+                        <>
+                          <span style={{ display: 'inline-block', width: 17, height: 17, border: '2.5px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
+                          <span>Uploading…</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>📤</span>
+                          <span>Upload & Analyze with AI</span>
+                          <svg width="17" height="17" viewBox="0 0 17 17" fill="none"><path d="M2.5 8.5H14.5M10.5 4.5L14.5 8.5L10.5 12.5" stroke="rgba(255,255,255,0.8)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                        </>
+                      )}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
