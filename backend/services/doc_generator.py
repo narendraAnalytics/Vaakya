@@ -476,7 +476,20 @@ def _build_redline_pdf(state: VaakyaState, document_title: str) -> list:
     flowables += _parties_block(parties)
 
     if not redlines:
-        flowables.append(Paragraph("No redlines were flagged for this document.", _S_BODY))
+        if risk_flags:
+            critical = sum(1 for f in risk_flags if str(f.get("severity", "")).upper() == "CRITICAL")
+            high     = sum(1 for f in risk_flags if str(f.get("severity", "")).upper() == "HIGH")
+            flowables.append(Paragraph(
+                f"Clause-level redline analysis was not produced for this document. "
+                f"Jokhim identified <b>{len(risk_flags)} risk issue(s)</b> "
+                f"({critical} Critical, {high} High) — see the Risk Summary below.",
+                _S_BODY,
+            ))
+        else:
+            flowables.append(Paragraph(
+                "No risk issues or redlines were identified for this document.",
+                _S_BODY,
+            ))
         flowables += _risk_section(risk_flags)
         return flowables
 
