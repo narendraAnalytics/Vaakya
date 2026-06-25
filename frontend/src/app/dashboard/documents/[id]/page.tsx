@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import MarkdownRenderer from '@/components/MarkdownRenderer'
 import { useParams, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/client'
+import { ALL_AGENTS } from '@/lib/agents'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -70,20 +71,7 @@ type StatusResponse = {
   }>
 }
 
-// ── Agent definitions ─────────────────────────────────────────────────────────
-
-const ALL_AGENTS = [
-  { key: 'arambha',       name: 'Arambha',       telugu: 'ఆరంభ',     icon: '🎯', role: 'Intake & Classify',   flows: ['new_doc','redline','dispute'], tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782233709/AI_orchestrator_f4ofoe.png' },
-  { key: 'rachana',       name: 'Rachana',        telugu: 'రచన',       icon: '✏️', role: 'Draft Generation',   flows: ['new_doc'],                    tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782233709/rachanalegaldrafter_cnujab.png' },
-  { key: 'parisheelanam', name: 'Parisheelanam',  telugu: 'పరిశీలనం', icon: '🔍', role: 'Review & Score',     flows: ['new_doc'],                    tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782233734/Parisheelanamlegalreviewer_cu79iv.png' },
-  { key: 'jokhim',        name: 'Jokhim',         telugu: 'జోఖిమ్',   icon: '🛡️', role: 'Risk Flagging',      flows: ['new_doc','redline'],           tavily: true,  tavilyLabel: 'Tavily (conditional)', avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782233729/jokhimriskguardianagent_wix8mv.png' },
-  { key: 'samjoota',      name: 'Samjoota',       telugu: 'సమ్జూత',   icon: '🤝', role: 'Negotiation',        flows: ['redline'],                    tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782234527/SamjootaNegotiationExpert_hyafxv.png' },
-  { key: 'vivada',        name: 'Vivada',         telugu: 'వివాద',     icon: '⚖️', role: 'Dispute Resolution', flows: ['dispute'],                    tavily: true,  tavilyLabel: 'Tavily (always)',      avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782235257/vivadadisputeresolver_w5ecmr.png' },
-  { key: 'sahee',         name: 'Sahee',          telugu: 'సహీ',       icon: '✍️', role: 'Sign & Deliver',     flows: ['new_doc','redline','dispute'], tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782234843/SaheeSignatureSpecialist_k1hszo.png' },
-  { key: 'sruthi',        name: 'Sruthi',         telugu: 'శ్రుతి',   icon: '📅', role: 'Obligation Tracker', flows: ['new_doc'],                    tavily: false, tavilyLabel: '',                     avatarUrl: 'https://res.cloudinary.com/dkqbzwicr/image/upload/v1782235128/sruthiobligationtracer_ogrpjb.png' },
-]
-
-// ── State inference (unchanged) ───────────────────────────────────────────────
+// ── State inference ───────────────────────────────────────────────────────────
 
 function inferAgentStates(d: StatusResponse): Record<string, 'done' | 'active' | 'waiting'> {
   const sg = d.sub_graph ?? 'new_doc'

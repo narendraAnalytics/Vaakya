@@ -280,12 +280,12 @@ export default function DashboardClient({ username, documents }: Props) {
             <div className="sidebar-section-lbl" style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', letterSpacing: 1.1, padding: '6px 10px 3px', textTransform: 'uppercase' }}>Workspace</div>
 
             {[
-              { icon: '🏠', label: 'Dashboard', active: true, badge: null },
-              { icon: '📄', label: 'Documents', active: false, badge: totalDocs > 0 ? String(totalDocs) : null, badgeStyle: { background: '#E0F5E8', color: '#1A5C35' } },
-              { icon: '🤖', label: 'AI Agents', active: false, badge: '8', badgeStyle: { background: '#E8F5D0', color: '#4D8A10' } },
-              { icon: '🔒', label: 'Legal Vault', active: false, badge: null },
+              { icon: '🏠', label: 'Dashboard', active: true, badge: null, route: '/dashboard' },
+              { icon: '📄', label: 'Documents', active: false, badge: totalDocs > 0 ? String(totalDocs) : null, badgeStyle: { background: '#E0F5E8', color: '#1A5C35' }, route: '/dashboard/documents' },
+              { icon: '🤖', label: 'AI Agents', active: false, badge: '8', badgeStyle: { background: '#E8F5D0', color: '#4D8A10' }, route: '/dashboard/agents' },
+              { icon: '🔒', label: 'Legal Vault', active: false, badge: null, route: '/dashboard/vault' },
             ].map(item => (
-              <div key={item.label} className={`nav-item${item.active ? ' nav-active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 13px', borderRadius: 12 }}>
+              <div key={item.label} className={`nav-item${item.active ? ' nav-active' : ''}`} onClick={() => router.push(item.route)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 13px', borderRadius: 12 }}>
                 <span style={{ fontSize: 17, flexShrink: 0 }}>{item.icon}</span>
                 <span className="sidebar-lbl" style={{ fontSize: 13.5, fontWeight: item.active ? 600 : 500, color: item.active ? '#fff' : '#2C4A38', flex: 1 }}>{item.label}</span>
                 {item.badge && (
@@ -297,11 +297,11 @@ export default function DashboardClient({ username, documents }: Props) {
             <div className="sidebar-section-lbl" style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', letterSpacing: 1.1, padding: '12px 10px 3px', textTransform: 'uppercase' }}>Legal Ops</div>
 
             {[
-              { icon: '📅', label: 'Obligations', badge: null },
-              { icon: '⚖️', label: 'Disputes', badge: null },
-              { icon: '📊', label: 'Analytics', badge: null },
+              { icon: '📅', label: 'Obligations', route: '/dashboard/obligations' },
+              { icon: '⚖️', label: 'Disputes', route: '/dashboard/disputes' },
+              { icon: '📊', label: 'Analytics', route: '/dashboard/analytics' },
             ].map(item => (
-              <div key={item.label} className="nav-item" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 13px', borderRadius: 12 }}>
+              <div key={item.label} className="nav-item" onClick={() => router.push(item.route)} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 13px', borderRadius: 12 }}>
                 <span style={{ fontSize: 17, flexShrink: 0 }}>{item.icon}</span>
                 <span className="sidebar-lbl" style={{ fontSize: 13.5, fontWeight: 500, color: '#2C4A38' }}>{item.label}</span>
               </div>
@@ -310,7 +310,7 @@ export default function DashboardClient({ username, documents }: Props) {
 
           {/* Bottom */}
           <div style={{ padding: '10px 10px 14px', borderTop: '1px solid rgba(26,92,53,0.08)', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <div className="nav-item" style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 13px', borderRadius: 12 }}>
+            <div className="nav-item" onClick={() => router.push('/dashboard/settings')} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '9px 13px', borderRadius: 12 }}>
               <span style={{ fontSize: 17, flexShrink: 0 }}>⚙️</span>
               <span className="sidebar-lbl" style={{ fontSize: 13.5, fontWeight: 500, color: '#2C4A38' }}>Settings</span>
             </div>
