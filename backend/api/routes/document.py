@@ -380,6 +380,7 @@ async def get_document_status(
         "obligations": values.get("obligations", []),
         "obligations_count": len(values.get("obligations", [])),
         "negotiation_redlines": values.get("negotiation_redlines", []),
+        "risk_flags": values.get("risk_flags", []),
         "errors": values.get("errors", []),
         "draft_preview": (values.get("draft", "")[:500] + "…") if values.get("draft") else "",
     }

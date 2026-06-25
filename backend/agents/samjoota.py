@@ -16,7 +16,7 @@ from api.constants import GROQ_MODEL_PRO
 from graph.state import VaakyaState
 from services.pdf_chunker import batch_text, clean_text, pack_batches, split_sections
 
-_llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0, max_tokens=4096)
+_llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0, max_tokens=8192)
 
 # ── System prompt ──────────────────────────────────────────────────────────────
 
@@ -307,6 +307,21 @@ def _build_human_message_for_batch(state: VaakyaState, contract_text: str) -> st
     )
 
 
+def _build_retry_message(state: VaakyaState) -> str:
+    """Retry prompt used when first invocation returned zero redlines."""
+    raw = state.get("raw_input", state.get("draft", ""))
+    doc_type = state.get("document_type", "contract")
+    return (
+        f"{_context_prefix(state)}\n\n"
+        f"Your previous analysis returned no redlines. Re-analyze this {doc_type} carefully.\n\n"
+        f"You MUST identify at least 5 specific clauses covering: "
+        f"liability limits, payment terms, IP ownership, termination rights, and confidentiality scope.\n"
+        f"Provide concrete counter-proposals with actual replacement text for each. Do NOT return an empty list.\n\n"
+        f"Counter-Party Contract:\n{raw}\n\n"
+        f"Return a complete redline analysis now."
+    )
+
+
 def _merge_samjoota_outputs(outputs: list[SamjootaOutput]) -> dict:
     """Merge per-batch SamjootaOutputs into one combined result."""
     if not outputs:
@@ -354,6 +369,7 @@ async def _run_chunked(state: VaakyaState) -> dict:
     batches = pack_batches(sections, max_chars=5500)
 
     outputs: list[SamjootaOutput] = []
+    batch_errors: list[str] = []
     for batch in batches:
         try:
             result: SamjootaOutput = await _structured_llm.ainvoke([
@@ -361,11 +377,25 @@ async def _run_chunked(state: VaakyaState) -> dict:
                 ("human", _build_human_message_for_batch(state, batch_text(batch))),
             ])
             outputs.append(result)
-        except Exception:
-            # Partial failures are tolerated — remaining batches still processed
-            pass
+        except Exception as exc:
+            batch_errors.append(str(exc))
 
-    return _merge_samjoota_outputs(outputs)
+    merged = _merge_samjoota_outputs(outputs)
+
+    # If all batches produced empty redlines, retry with a nudge prompt
+    if not merged.get("negotiation_redlines"):
+        try:
+            retry_result: SamjootaOutput = await _structured_llm.ainvoke([
+                ("system", _SYSTEM_PROMPT),
+                ("human", _build_retry_message(state)),
+            ])
+            merged = {"negotiation_redlines": [r.model_dump() for r in retry_result.negotiation_redlines]}
+        except Exception as exc:
+            batch_errors.append(f"Retry error: {exc}")
+
+    if batch_errors:
+        merged["errors"] = batch_errors
+    return merged
 
 
 async def run_samjoota(state: VaakyaState) -> dict:
@@ -377,12 +407,17 @@ async def run_samjoota(state: VaakyaState) -> dict:
         except Exception as exc:
             return {"negotiation_redlines": [], "errors": [f"Samjoota chunked error: {exc}"]}
 
-    # Short doc — original single-call path, behaviour unchanged
+    # Short doc — single-call path with one retry on empty output
     try:
         result: SamjootaOutput = await _structured_llm.ainvoke([
             ("system", _SYSTEM_PROMPT),
             ("human", _build_human_message(state)),
         ])
+        if not result.negotiation_redlines and len(raw) > 500:
+            result = await _structured_llm.ainvoke([
+                ("system", _SYSTEM_PROMPT),
+                ("human", _build_retry_message(state)),
+            ])
         return {"negotiation_redlines": [r.model_dump() for r in result.negotiation_redlines]}
     except Exception as exc:
         return {"negotiation_redlines": [], "errors": [f"Samjoota error: {exc}"]}

@@ -69,6 +69,7 @@ type StatusResponse = {
   errors: string[]
   draft_preview: string
   dispute_summary?: string
+  risk_flags?: RiskFlag[]
   negotiation_redlines?: Array<{
     clause_reference: string
     current_text: string
@@ -245,6 +246,19 @@ function buildRedlineMarkdown(redlines: RedlineItem[]): string {
   }).join('\n\n---\n\n')
 }
 
+function buildRiskFlagsMarkdown(flags: RiskFlag[]): string {
+  if (!flags?.length) return ''
+  return flags.map((f, i) => {
+    const parts = [
+      `### ${i + 1}. ${(f as any).clause || (f as any).clause_reference || 'General'} — ${f.severity}`,
+      f.description || (f as any).risk_description || '',
+      (f as any).financial_impact ? `**Financial Impact:** ${(f as any).financial_impact}` : '',
+      (f as any).recommendation ? `**Fix:** ${(f as any).recommendation}` : '',
+    ]
+    return parts.filter(Boolean).join('\n')
+  }).join('\n\n---\n\n')
+}
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function DocumentProgressPage() {
@@ -353,7 +367,7 @@ export default function DocumentProgressPage() {
   const agentStates = pollData ? inferAgentStates(pollData) : null
   const subGraph    = pollData?.sub_graph ?? 'new_doc'
   const AGENTS      = ALL_AGENTS.filter(a => a.flows.includes(subGraph))
-  const docType     = pollData?.document_type || 'Legal Document'
+  const docType     = pollData?.document_type || 'Other'
   const hp          = pollData?.hitl_payload
 
   const hitlState: 'pending' | 'done' | 'waiting' =
@@ -891,7 +905,14 @@ export default function DocumentProgressPage() {
                     >
                       {hp.negotiation_redlines && hp.negotiation_redlines.length > 0
                         ? <MarkdownRenderer content={buildRedlineMarkdown(hp.negotiation_redlines)} />
-                        : <div style={{ color: '#9ca3af', fontSize: 13, fontStyle: 'italic' }}>No redline analysis available yet.</div>
+                        : hp.risk_flags && hp.risk_flags.length > 0
+                          ? <>
+                              <div style={{ color: '#f59e0b', fontSize: 13, marginBottom: 8, fontWeight: 500 }}>
+                                ⚠️ Redline analysis processing — Jokhim identified {hp.risk_flags.length} risk flags:
+                              </div>
+                              <MarkdownRenderer content={buildRiskFlagsMarkdown(hp.risk_flags)} />
+                            </>
+                          : <div style={{ color: '#9ca3af', fontSize: 13, fontStyle: 'italic' }}>No redline analysis available yet.</div>
                       }
                     </div>
                   </div>
@@ -1054,6 +1075,26 @@ export default function DocumentProgressPage() {
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* ── Risk Flags panel — post-completion ── */}
+            {pollData?.risk_flags && pollData.risk_flags.length > 0 && (
+              <div style={{ background: '#fff', border: '1px solid #e5e7eb', borderRadius: 12, padding: 24, marginBottom: 24 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  🛡️ Risk Analysis
+                  {pollData.risk_flags.filter((f: RiskFlag) => f.severity === 'CRITICAL').length > 0 && (
+                    <span style={{ fontSize: 12, background: '#fef3c7', color: '#92400e', borderRadius: 12, padding: '2px 8px' }}>
+                      {pollData.risk_flags.filter((f: RiskFlag) => f.severity === 'CRITICAL').length} Critical
+                    </span>
+                  )}
+                  {pollData.risk_flags.filter((f: RiskFlag) => f.severity === 'HIGH').length > 0 && (
+                    <span style={{ fontSize: 12, background: '#fee2e2', color: '#991b1b', borderRadius: 12, padding: '2px 8px' }}>
+                      {pollData.risk_flags.filter((f: RiskFlag) => f.severity === 'HIGH').length} High
+                    </span>
+                  )}
+                </div>
+                <MarkdownRenderer content={buildRiskFlagsMarkdown(pollData.risk_flags)} />
               </div>
             )}
           </div>
