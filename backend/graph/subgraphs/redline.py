@@ -19,7 +19,7 @@ full document context before fan-in at hitl_review.
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
-from agents.arambha import run_arambha
+from agents.arambha import run_arambha_pdf
 from agents.jokhim import run_jokhim
 from agents.sahee import run_sahee
 from agents.samjoota import run_samjoota
@@ -40,7 +40,7 @@ async def arambha_extract(state: VaakyaState) -> dict:
     Overrides sub_graph back to 'redline' so Arambha's classification cannot
     accidentally reroute execution.
     """
-    result = await run_arambha(state)
+    result = await run_arambha_pdf(state)
     result["sub_graph"] = "redline"
     return result
 

@@ -10,6 +10,19 @@ import { ALL_AGENTS } from '@/lib/agents'
 
 type RiskFlag = { severity: string; description: string; clause?: string }
 
+type RedlineItem = {
+  clause_reference: string
+  current_text: string
+  recommendation: string
+  counter_proposal: string
+  risk_level: string
+  business_impact: string
+  deal_breaker: boolean
+  suggested_redline: string
+  fallback_position?: string
+  walkaway_position?: string
+}
+
 type HitlPayload = {
   draft: string
   review_score: number
@@ -22,6 +35,7 @@ type HitlPayload = {
   max_loops_reached: boolean
   risk_flags: RiskFlag[]
   risk_summary: { total: number; critical: number; high: number; critical_flags: RiskFlag[] }
+  negotiation_redlines?: RedlineItem[]
 }
 
 type StatusResponse = {
@@ -209,6 +223,26 @@ const STYLES = `
   @media (max-width:1060px) { .mgrid { grid-template-columns:1fr 360px !important; } }
   @media (max-width:820px)  { .mgrid { grid-template-columns:1fr !important; } .right-panel { position:static !important; } .hitl-cols { flex-direction:column !important; } }
 `
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function buildRedlineMarkdown(redlines: RedlineItem[]): string {
+  if (!redlines?.length) return ''
+  return redlines.map((r, i) => {
+    const db = r.deal_breaker ? ' 🚨 **DEAL-BREAKER**' : ''
+    const parts = [
+      `### ${i + 1}. ${r.clause_reference}${db}`,
+      `**Risk Level:** ${r.risk_level} | **Business Impact:** ${r.business_impact}`,
+      `**Recommendation:** ${r.recommendation}`,
+    ]
+    if (r.current_text) parts.push(`\n**Current Text:**\n\`\`\`\n${r.current_text}\n\`\`\``)
+    if (r.counter_proposal) parts.push(`\n**Proposed Change:**\n\`\`\`\n${r.counter_proposal}\n\`\`\``)
+    if (r.suggested_redline) parts.push(`\n**Redline:**\n${r.suggested_redline}`)
+    if (r.fallback_position) parts.push(`\n**Fallback:** ${r.fallback_position}`)
+    if (r.walkaway_position) parts.push(`\n**Walk-Away:** ${r.walkaway_position}`)
+    return parts.join('\n')
+  }).join('\n\n---\n\n')
+}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -845,16 +879,19 @@ export default function DocumentProgressPage() {
                   </div>
                 )}
 
-                {/* Uploaded document preview — redline only */}
-                {subGraph === 'redline' && (hp as any).raw_input && (
+                {/* Agent analysis preview — redline only */}
+                {subGraph === 'redline' && (
                   <div style={{ background: '#FDFCF8', borderRadius: 18, border: '1px solid rgba(26,92,53,0.09)', padding: '20px 22px' }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>📄 Uploaded Document</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#5A7A68', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 }}>🤖 Samjoota Redline Analysis</div>
                     <div
-                      aria-label="Uploaded document preview"
+                      aria-label="Samjoota redline analysis preview"
                       role="region"
                       style={{ width: '100%', maxHeight: 420, overflowY: 'auto', background: '#F5FAF6', border: '1.5px solid rgba(26,92,53,0.1)', borderRadius: 12, padding: '16px 18px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(26,92,53,0.18) transparent' }}
                     >
-                      <MarkdownRenderer content={(hp as any).raw_input} />
+                      {hp.negotiation_redlines && hp.negotiation_redlines.length > 0
+                        ? <MarkdownRenderer content={buildRedlineMarkdown(hp.negotiation_redlines)} />
+                        : <div style={{ color: '#9ca3af', fontSize: 13, fontStyle: 'italic' }}>No redline analysis available yet.</div>
+                      }
                     </div>
                   </div>
                 )}

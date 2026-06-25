@@ -99,3 +99,72 @@ Input mode: {state.get("input_mode", "text")}
             "sub_graph": "new_doc",
             "errors": [f"Arambha error: {exc}"],
         }
+
+
+# ── PDF-specific variant (used by redline sub-graph only) ─────────────────────
+
+_PDF_SYSTEM_PROMPT = """You are Arambha, the intake agent for Vaakya — an Indian legal document system.
+
+You are analyzing the full text of an uploaded PDF contract. Extract structured information from it.
+
+Rules:
+- jurisdiction defaults to "India" unless stated otherwise in the document
+- Cite the Indian Contract Act 1872 as the governing law by default
+- document_type must be one of: NDA, Vendor Agreement, Employment Agreement,
+  Service Agreement, Lease Agreement, Partnership Deed, MOU, MSA,
+  IP Assignment Agreement, Loan Agreement, Legal Notice, Privacy Policy,
+  Terms of Service, Non-Compete Agreement, Distribution Agreement,
+  Joint Venture Agreement, Other
+- document_title: extract the formal title exactly as it appears in the document heading
+  (e.g. "NON-DISCLOSURE AGREEMENT between Acme Corp and TechStar Pvt Ltd").
+  If no title heading is present, generate a concise one: "<document_type> between <party1> and <party2>".
+  Keep it under 80 characters.
+- sub_graph is always "redline" for uploaded PDFs
+
+Return ONLY a valid JSON object with these exact keys:
+{
+  "document_type": "<string>",
+  "document_title": "<string>",
+  "parties": [{"name": "<string>", "role": "<string>"}, ...],
+  "jurisdiction": "<string>",
+  "key_terms": {"duration": "<string>", "governing_law": "<string>"},
+  "sub_graph": "redline"
+}
+parties MUST be a JSON array of objects, NOT a string. No extra text outside the JSON."""
+
+
+class ArambhaPdfOutput(ArambhaOutput):
+    document_title: str = Field(default="", description="Formal title of the document (≤80 chars)")
+
+
+_pdf_structured_llm = _llm.with_structured_output(ArambhaPdfOutput, method="json_mode")
+
+
+async def run_arambha_pdf(state: VaakyaState) -> dict:
+    """PDF-specific Arambha: 16 document types + document_title extraction."""
+    human_message = f"""Uploaded PDF text:
+{state["raw_input"]}
+"""
+    try:
+        result: ArambhaPdfOutput = await _pdf_structured_llm.ainvoke([
+            ("system", _PDF_SYSTEM_PROMPT),
+            ("human", human_message),
+        ])
+        return {
+            "document_type":  result.document_type,
+            "document_title": result.document_title,
+            "parties":        [p.model_dump() for p in result.parties],
+            "jurisdiction":   result.jurisdiction,
+            "key_terms":      result.key_terms,
+            "sub_graph":      result.sub_graph,
+        }
+    except Exception as exc:
+        return {
+            "document_type":  "Unknown",
+            "document_title": "",
+            "parties":        [],
+            "jurisdiction":   "India",
+            "key_terms":      {},
+            "sub_graph":      "redline",
+            "errors":         [f"Arambha PDF error: {exc}"],
+        }
