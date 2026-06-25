@@ -9,11 +9,11 @@ Usage:
 
 import asyncio
 from functools import lru_cache
-from sentence_transformers import SentenceTransformer
 
 
 @lru_cache(maxsize=1)
-def get_model() -> SentenceTransformer:
+def get_model():
+    from sentence_transformers import SentenceTransformer  # lazy — defers torch load to first use
     return SentenceTransformer("BAAI/bge-small-en-v1.5")
 
 

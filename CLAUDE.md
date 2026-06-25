@@ -213,12 +213,12 @@ Arambha (classify)
 - [x] **Vivada enhanced** — 7 dispute playbooks (NDA, Lease, Vendor, Freelancer, Employment, Partnership, MSA/SaaS, Loan); damages calculation (principal/interest/penalties/consequential); limitation period analyser (SAFE/URGENT/EXPIRED); settlement recommendation with ₹ floor; success probability (HIGH/MEDIUM/LOW); structured evidence matrix [{document, importance, reason}]; contract-aware analysis reads draft/obligations/risk_flags from VaakyaState
 - [x] **Sruthi enhanced** — 10 doc-type obligation checklists; 8 new obligation categories (employment, sla, security, audit, maintenance, warranty, ip_transfer, governance); deadline normalization fields (deadline_days, deadline_date, trigger_event); reminder schedule generation (priority-based offset strings); estimated_penalty field
 - [x] **Samjoota enhanced** — 8 doc-type negotiation playbooks (NDA, Lease, Vendor, Employment, Freelancer, Partnership, MSA/SaaS, Loan); 3-axis clause severity (business_impact/legal_impact/negotiation_priority); deal-breaker detection (6 trigger conditions); negotiation_score formula (100 − 20×deal-breakers − 10×HIGH − 5×MEDIUM); redline diff output (- old / + new); fallback_position + walkaway_position per clause; acceptance_probability + confidence at output level; Jokhim risk_flags injected as shared context
-- [ ] Supabase Storage vault with pgvector metadata
+- [x] Supabase Storage vault with pgvector metadata — `clause_library` table has `embedding vector(384)` column, HNSW index (`clause_library_embedding_idx`), `match_clauses` RPC, 67 clauses seeded via `scripts/seed_clauses.py`
 - [ ] Digio API integration in Sahee (e-signatures)
 - [ ] `tests/test_nda_pipeline.py` (10 scenarios)
 
 ### Phase 3 — Negotiation, Disputes & Frontend
-- [ ] pgvector semantic clause search (`services/embeddings.py`)
+- [x] pgvector semantic clause search (`services/embeddings.py`) — `search_clauses()` calls `match_clauses` RPC with BGE-small embeddings; Rachana fetches top-6 relevant clauses on first draft (`loop_count == 0`) and injects as `RELEVANT CLAUSES` context block
 - [ ] WhatsApp Business API alerts in Sruthi
 - [x] Next.js 16 frontend — landing page + auth + onboarding (deployed: https://vaakya-tau.vercel.app)
 - [x] Dashboard page (`frontend/src/app/dashboard/`) — server component fetches vault, client component renders full UI
@@ -231,6 +231,15 @@ Arambha (classify)
 - [x] **Dispute Analysis panel** — left column, shown when `sub_graph === 'dispute'` and `dispute_summary` present; renders Vivada markdown output via `MarkdownRenderer`; right panel heading adapts to "Dispute Summary"
 - [x] **Obligations & Deadlines panel** — shown post-completion when `obligations.length > 0`; priority-colored cards (red/amber/green left border); shows action, deadline, deadline_days, clause_reference, estimated_penalty warning, reminder_schedule chips; status endpoint now returns full `obligations` array
 - [x] **Redline Analysis panel** — shown when `sub_graph === 'redline'` and `negotiation_redlines.length > 0`; negotiation score badge, deal-breaker count, P1 must-fix count; per-clause cards sorted P1→P2→P3 with `business_impact` color coding, 🚨 deal-breaker badge, diff block (- red / + green), fallback/walkaway positions; status endpoint now returns `negotiation_redlines` array
+- [x] **Sidebar navigation wired** — all 7 nav items route to dedicated standalone pages (back-to-dashboard header, no shared sidebar refactor needed): Documents, AI Agents, Legal Vault, Obligations, Disputes, Analytics, Settings
+- [x] **`frontend/src/lib/agents.ts`** — shared `Agent` type + `ALL_AGENTS` array (8 agents) with `key, name, telugu, icon, role, llm, description, flows, tavily, tavilyLabel, avatarUrl`; imported by both agent workflow page and agents page
+- [x] **AI Agents page** (`frontend/src/app/dashboard/agents/page.tsx`) — grid of 8 agent cards with Cloudinary avatars, Telugu names, role chips, Tavily badges, LLM model badges (70B purple / 8B green / Tool-based amber), flow tags
+- [x] **Documents page** (`frontend/src/app/dashboard/documents/page.tsx`) — vault_documents list with search + status filter chips, doc icons, parties, date, status badge, link to agent progress page
+- [x] **Legal Vault page** (`frontend/src/app/dashboard/vault/page.tsx`) — completed/signed docs only, security strip, PDF download via `<a href="/api/download/{id}">` pattern
+- [x] **Obligations page** (`frontend/src/app/dashboard/obligations/page.tsx`) — priority filter + document selector (shown only when 2+ docs exist); doc list derived from obligation rows (no extra DB call); count badges; "View Doc →" links; `selectedDocId` filter
+- [x] **Disputes page** (`frontend/src/app/dashboard/disputes/page.tsx`) — Vivada agent showcase with avatar + 6 capability cards; "Start Dispute Analysis" CTA; dispute history list
+- [x] **Analytics page** (`frontend/src/app/dashboard/analytics/page.tsx`) — 6 KPI cards (Total, Completed, In Review, Risk Flagged, Processing, Est. Savings); completion rate bar; document type breakdown bars (CSS only)
+- [x] **Settings page** (`frontend/src/app/dashboard/settings/page.tsx`) — profile card, workspace settings, Vaakya tech stack info, Sign Out button
 
 #### Frontend Auth — Resolved Issues
 - **Signup 500 error**: Supabase had `on_auth_user_created` trigger → `handle_new_user()` tried to INSERT into missing `profiles` table. Fixed by dropping the trigger and creating `public.profiles` (id, username, created_at) with RLS.
