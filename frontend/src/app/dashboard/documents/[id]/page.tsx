@@ -43,6 +43,7 @@ type StatusResponse = {
   status: string
   sub_graph: 'new_doc' | 'redline' | 'dispute'
   document_type: string
+  jurisdiction?: string
   review_score: number
   risk_score: number
   loop_count: number
@@ -1108,7 +1109,7 @@ export default function DocumentProgressPage() {
                   </div>
                   <div>
                     <div style={{ fontSize: 10, fontWeight: 700, color: '#A8C4B4', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 3 }}>Jurisdiction</div>
-                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F2D1F' }}>{pollData?.hitl_payload?.parties?.[0] ? 'India' : '—'}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 700, color: '#0F2D1F' }}>{(pollData?.hitl_payload as any)?.jurisdiction ?? pollData?.jurisdiction ?? '—'}</div>
                   </div>
                   {hp?.parties && hp.parties.length > 0 && (
                     <div>

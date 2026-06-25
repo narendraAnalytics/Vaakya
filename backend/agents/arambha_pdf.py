@@ -50,6 +50,15 @@ class _Party(BaseModel):
     role: str
 
 
+_ALLOWED_DOC_TYPES = {
+    "NDA", "Vendor Agreement", "Employment Agreement", "Service Agreement",
+    "Lease Agreement", "Partnership Deed", "MOU", "MSA",
+    "IP Assignment Agreement", "Loan Agreement", "Legal Notice", "Privacy Policy",
+    "Terms of Service", "Non-Compete Agreement", "Distribution Agreement",
+    "Joint Venture Agreement", "Other",
+}
+
+
 class ArambhaPdfOutput(BaseModel):
     document_type: str = Field(default="Other")
     document_title: str = Field(default="")
@@ -57,6 +66,13 @@ class ArambhaPdfOutput(BaseModel):
     jurisdiction: str = Field(default="India")
     key_terms: dict = Field(default_factory=dict)
     sub_graph: Literal["redline"] = Field(default="redline")
+
+    @field_validator("document_type", mode="before")
+    @classmethod
+    def constrain_doc_type(cls, v: Any) -> str:
+        if isinstance(v, str) and v in _ALLOWED_DOC_TYPES:
+            return v
+        return "Other"
 
     @field_validator("parties", mode="before")
     @classmethod

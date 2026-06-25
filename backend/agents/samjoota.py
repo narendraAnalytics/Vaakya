@@ -15,7 +15,7 @@ from api.config import settings
 from api.constants import GROQ_MODEL_PRO
 from graph.state import VaakyaState
 
-_llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0)
+_llm = ChatGroq(model=GROQ_MODEL_PRO, api_key=settings.GROQ_API_KEY, temperature=0, max_tokens=4096)
 
 # ── System prompt ──────────────────────────────────────────────────────────────
 
@@ -194,7 +194,11 @@ suggested_redline (diff format), fallback_position, walkaway_position.
 
 At output level: negotiation_redlines, negotiation_summary, accept_count, reject_count,
 counter_count, negotiation_score (int 0-100), deal_breaker_count (int),
-acceptance_probability (HIGH/MEDIUM/LOW), confidence (float 0.0-1.0)."""
+acceptance_probability (HIGH/MEDIUM/LOW), confidence (float 0.0-1.0).
+
+IMPORTANT: You MUST output at least 3 redline entries for any substantive contract.
+Never return an empty negotiation_redlines list unless the uploaded text contains no legal clauses.
+If you find no issues, still flag the top 3 clauses that could be improved for the SMB's benefit."""
 
 
 class Redline(BaseModel):
@@ -275,12 +279,16 @@ def _build_human_message(state: VaakyaState) -> str:
             f"{json.dumps(state['risk_flags'][:10], indent=2)}"
         )
 
+    pdf_text = state.get("raw_input", state.get("draft", ""))
+    if len(pdf_text) > 6000:
+        pdf_text = pdf_text[:6000] + "\n[... document truncated — analyse clauses visible above ...]"
+
     return f"""Document Type: {state.get("document_type", "Unknown")}
 Jurisdiction: {state.get("jurisdiction", "India")}
 {parties_text}{risk_section}
 
 Counter-Party Contract (uploaded by the instructing party for review):
-{state.get("raw_input", state.get("draft", ""))}
+{pdf_text}
 
 Review every clause. Return your redline analysis and negotiation strategy."""
 
