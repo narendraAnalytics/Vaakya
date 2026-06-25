@@ -473,10 +473,10 @@ def generate_contract_pdf(state: VaakyaState, document_title: str = "") -> bytes
         author="Vaakya — Autonomous Legal Document Factory",
     )
 
-    if state.get("draft"):
-        flowables = _build_contract_pdf(state, document_title)
-    else:
+    if state.get("sub_graph") == "redline":
         flowables = _build_redline_pdf(state, document_title)
+    else:
+        flowables = _build_contract_pdf(state, document_title)
 
     doc.build(flowables, onFirstPage=_footer, onLaterPages=_footer)
     return buf.getvalue()

@@ -89,6 +89,16 @@ async def _persist_state(graph, document_id: str, config: dict) -> None:
             "updated_at":    now,
         }).eq("id", document_id).execute()
 
+        # Update placeholder vault_documents row with extracted metadata so the
+        # dashboard shows document_type/parties even before the document completes.
+        # (placeholder row uses document_id as its id; real vault row uses vault_id)
+        sb.table("vault_documents").update({
+            "document_type": v.get("document_type", ""),
+            "parties":       v.get("parties", []),
+            "jurisdiction":  v.get("jurisdiction", "India"),
+            "updated_at":    now,
+        }).eq("id", document_id).execute()
+
         # Write vault_documents row when document is completed with a vault_id
         if doc_status == "completed" and v.get("vault_id"):
             vault_id = v["vault_id"]
