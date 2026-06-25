@@ -1,23 +1,25 @@
 """
 redline sub-graph — counter-party contract review flow:
 
-  START → samjoota ─┐
-        → jokhim   ─┴→ hitl_review
-                              │
-                    ┌─────────┴──────────┐
-                 approved             rejected
-                    │                    │
-                  sahee                 END
-                    │
-                   END
+  START → arambha_extract ─┬→ samjoota ─┐
+                            └→ jokhim   ─┴→ hitl_review
+                                                  │
+                                        ┌─────────┴──────────┐
+                                     approved             rejected
+                                        │                    │
+                                      sahee                 END
+                                        │
+                                       END
 
-Samjoota (negotiation) and Jokhim (risk) are independent — they fan-out in parallel
-from START, then fan-in at hitl_review. LangGraph waits for both before proceeding.
+arambha_extract runs first to classify document_type + extract parties from the
+uploaded PDF text (raw_input). Samjoota and Jokhim then fan-out in parallel with
+full document context before fan-in at hitl_review.
 """
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 
+from agents.arambha import run_arambha
 from agents.jokhim import run_jokhim
 from agents.sahee import run_sahee
 from agents.samjoota import run_samjoota
@@ -28,6 +30,19 @@ from graph.state import VaakyaState
 
 def _after_hitl(state: VaakyaState) -> str:
     return "sahee" if state.get("hitl_approved") else END
+
+
+# ── Arambha wrapper ───────────────────────────────────────────────────────────
+
+async def arambha_extract(state: VaakyaState) -> dict:
+    """
+    Extracts document_type, parties, jurisdiction, key_terms from raw_input.
+    Overrides sub_graph back to 'redline' so Arambha's classification cannot
+    accidentally reroute execution.
+    """
+    result = await run_arambha(state)
+    result["sub_graph"] = "redline"
+    return result
 
 
 # ── HITL node ─────────────────────────────────────────────────────────────────
@@ -71,14 +86,17 @@ async def hitl_review(state: VaakyaState) -> dict:
 def build_redline_graph() -> StateGraph:
     builder = StateGraph(VaakyaState)
 
-    builder.add_node("samjoota",    run_samjoota)
-    builder.add_node("jokhim",      run_jokhim)
-    builder.add_node("hitl_review", hitl_review)
-    builder.add_node("sahee",       run_sahee)
+    builder.add_node("arambha_extract", arambha_extract)
+    builder.add_node("samjoota",        run_samjoota)
+    builder.add_node("jokhim",          run_jokhim)
+    builder.add_node("hitl_review",     hitl_review)
+    builder.add_node("sahee",           run_sahee)
 
-    # Parallel fan-out: Samjoota and Jokhim start simultaneously
-    builder.add_edge(START, "samjoota")
-    builder.add_edge(START, "jokhim")
+    # Arambha first, then parallel fan-out
+    builder.add_edge(START,             "arambha_extract")
+    builder.add_edge("arambha_extract", "samjoota")
+    builder.add_edge("arambha_extract", "jokhim")
+
     # Fan-in: hitl_review waits for both branches to complete
     builder.add_edge("samjoota", "hitl_review")
     builder.add_edge("jokhim",   "hitl_review")

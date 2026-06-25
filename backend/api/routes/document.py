@@ -146,8 +146,11 @@ async def _run_graph(
     try:
         async for _ in graph.astream(initial_state, config=config, stream_mode="updates"):
             pass
-    except Exception:
-        pass
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).error(
+            "[_run_graph] graph crashed for %s: %s", document_id, exc, exc_info=True
+        )
     # Persist whatever state we reached (processing → awaiting_approval or error)
     await _persist_state(graph, document_id, config)
 
@@ -245,6 +248,12 @@ async def upload_document(
         raw_text = extract_text(pdf_bytes)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
+
+    if len(raw_text.strip()) < 200:
+        raise HTTPException(
+            status_code=422,
+            detail="Could not extract readable text from this PDF. Please upload a text-based PDF (not a scanned or image-only document).",
+        )
 
     document_id = str(uuid.uuid4())
     graph = request.app.state.graph
