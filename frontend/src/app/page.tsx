@@ -117,10 +117,15 @@ export default function LandingPage() {
                 className="nav-links-row"
                 style={{ display: 'flex', alignItems: 'center', gap: 36, flex: 1 }}
               >
-                {['Features', 'How It Works', 'Documents', 'Pricing'].map((item) => (
+                {[
+                  { label: 'Features', href: username ? '/features' : '/auth/login' },
+                  { label: 'How It Works', href: '#' },
+                  { label: 'Documents', href: '#' },
+                  { label: 'Pricing', href: '#' },
+                ].map((item) => (
                   <a
-                    key={item}
-                    href="#"
+                    key={item.label}
+                    href={item.href}
                     className="nav-link"
                     style={{
                       fontSize: 14.5,
@@ -129,7 +134,7 @@ export default function LandingPage() {
                       textDecoration: 'none',
                     }}
                   >
-                    {item}
+                    {item.label}
                   </a>
                 ))}
                 <a
