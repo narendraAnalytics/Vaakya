@@ -461,7 +461,7 @@ export default function LandingPage() {
         <section
           style={{
             background: 'linear-gradient(to bottom, #EEF0EB, #E6E8E2)',
-            padding: '52px 48px',
+            padding: '28px 48px',
             borderTop: '1px solid rgba(26,92,53,0.08)',
           }}
         >
