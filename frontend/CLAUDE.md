@@ -53,6 +53,7 @@ Used by the login form when the identifier has no `@`.
 ## Frontend Pages
 | Route | File | Notes |
 |-------|------|-------|
+| `/features` | `src/app/features/page.tsx` | Public page; nav link routes here if logged in, `/auth/login` if not |
 | `/dashboard` | `src/app/dashboard/page.tsx` + `DashboardClient.tsx` | Server fetches vault; client renders UI |
 | `/dashboard/documents/[id]` | `src/app/dashboard/documents/[id]/page.tsx` | Client-only; polls status every 3s |
 
@@ -106,7 +107,9 @@ Tavily badges are driven by `agent.tavily` / `agent.tavilyLabel` — do not add 
 
 Reference design: `frontend/samplecode/Vaakya Agent Workflow.dc.html` — canonical visual spec for the workflow page.
 
-`projectworkflow.txt` (repo root) is the user's design notes file — do not commit it.
+`frontend/samplecode/*.dc.html` — HTML design comps. Implement by translating HTML → JSX 1:1: inline JSX styles, same palette/fonts, zero design deviations. Never add Tailwind or change colors.
+
+`projectworkflow.txt` and `vaakya_doc.txt` (repo root) are the user's design notes files — do not commit either.
 
 ## Markdown Rendering
 LLM agent responses contain raw Markdown. Always render via `<MarkdownRenderer content={...} />` (`src/components/MarkdownRenderer.tsx`) — never display in `<textarea readOnly>` or `pre-wrap` div. Uses `react-markdown` + `remark-gfm` + `rehype-sanitize`. Component uses inline JSX styles matching Vaakya palette; `pre` renderer returns `<>{children}</>` to avoid double-wrapping.
@@ -125,6 +128,7 @@ All styles are **inline JSX** (not Tailwind utilities). Palette: `#FEF9EF` bg, `
 
 ## Git Commits (PowerShell)
 Use `@'...'@` single-quoted heredoc — bash `cat <<'EOF'` syntax causes parse errors in PowerShell 5.1.
+When using the **Bash tool** (not PowerShell tool), use plain `git commit -m "..."` double-quoted strings — `@'...'@` is PowerShell-only and corrupts the subject line.
 
 ## Known Issues Resolved
 
