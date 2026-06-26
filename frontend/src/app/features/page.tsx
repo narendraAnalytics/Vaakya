@@ -117,17 +117,36 @@ export default function FeaturesPage() {
                 One <em style={{ fontFamily: "'Playfair Display', serif", fontStyle: 'italic', fontWeight: 700, background: 'linear-gradient(135deg,#F0543C 0%,#F43F6E 55%,#F59F0B 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>Intelligent</em> Platform.
               </h1>
 
-              {/* RIGHT: Gavel illustration */}
-              <div className="hero-decos" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', animation: 'softFloat2 9s ease-in-out infinite', opacity: .9 }}>
-                <div style={{ position: 'relative', width: 165, height: 188 }}>
-                  <div style={{ position: 'absolute', top: 12, left: 12, width: 142, height: 142, borderRadius: '50%', border: '2px dashed rgba(240,84,60,.2)' }} />
-                  <div style={{ position: 'absolute', top: 22, left: 22, width: 122, height: 122, borderRadius: '50%', border: '1.5px solid rgba(245,159,11,.18)' }} />
-                  <div style={{ position: 'absolute', top: 50, left: 50, width: 82, height: 82, borderRadius: '50%', background: 'rgba(245,159,11,.08)' }} />
-                  <div style={{ position: 'absolute', top: 16, right: 10, width: 78, height: 28, background: 'linear-gradient(135deg,#FDDC9E,#F59F0B)', borderRadius: 8, transform: 'rotate(-38deg)', boxShadow: '0 4px 14px rgba(245,159,11,.38)' }} />
-                  <div style={{ position: 'absolute', top: 68, left: 14, width: 11, height: 88, background: 'linear-gradient(180deg,#F59F0B,#D97706)', borderRadius: 6, transform: 'rotate(-38deg)', transformOrigin: 'top center', boxShadow: '0 4px 12px rgba(245,159,11,.25)' }} />
-                  <div style={{ position: 'absolute', bottom: 18, right: 16, width: 26, height: 26, borderRadius: '50%', background: 'rgba(240,84,60,.14)' }} />
-                  <div style={{ position: 'absolute', bottom: 10, right: 48, width: 15, height: 15, borderRadius: '50%', background: 'rgba(245,159,11,.22)' }} />
-                  <div style={{ position: 'absolute', top: 10, left: 10, width: 18, height: 18, borderRadius: '50%', background: 'rgba(244,63,110,.18)' }} />
+              {/* RIGHT: Hammer image */}
+              <div className="hero-decos" style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', animation: 'softFloat2 9s ease-in-out infinite', opacity: .95 }}>
+                <div style={{ position: 'relative', width: 210, height: 210 }}>
+                  {/* Outer dashed ring */}
+                  <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', border: '2px dashed rgba(240,84,60,.22)' }} />
+                  {/* Inner ring */}
+                  <div style={{ position: 'absolute', top: 14, left: 14, right: 14, bottom: 14, borderRadius: '50%', border: '1.5px solid rgba(245,159,11,.2)' }} />
+                  {/* Soft glow behind image */}
+                  <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 150, height: 150, borderRadius: '50%', background: 'radial-gradient(circle, rgba(245,159,11,.12) 0%, transparent 70%)' }} />
+                  {/* Actual hammer image — radial mask fades edges into background */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="https://res.cloudinary.com/dkqbzwicr/image/upload/v1782455595/hammerImage_xmwh0f.png"
+                    alt=""
+                    style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: '50%',
+                      transform: 'translate(-50%,-50%)',
+                      width: 155,
+                      height: 155,
+                      objectFit: 'contain',
+                      maskImage: 'radial-gradient(circle at center, black 52%, transparent 80%)',
+                      WebkitMaskImage: 'radial-gradient(circle at center, black 52%, transparent 80%)',
+                    }}
+                  />
+                  {/* Floating accent dots */}
+                  <div style={{ position: 'absolute', bottom: 16, right: 8, width: 22, height: 22, borderRadius: '50%', background: 'rgba(240,84,60,.16)' }} />
+                  <div style={{ position: 'absolute', bottom: 8, right: 38, width: 13, height: 13, borderRadius: '50%', background: 'rgba(245,159,11,.24)' }} />
+                  <div style={{ position: 'absolute', top: 8, left: 8, width: 16, height: 16, borderRadius: '50%', background: 'rgba(244,63,110,.2)' }} />
                 </div>
               </div>
             </div>

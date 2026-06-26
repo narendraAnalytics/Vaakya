@@ -24,11 +24,12 @@ export default function LandingPage() {
   return (
     <>
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html, body {
           font-family: var(--font-plus-jakarta), 'Plus Jakarta Sans', sans-serif;
-          background: #FEF9EF;
-          color: #0F2D1F;
+          background: #F5F3EE;
+          color: #1A4A30;
           overflow-x: hidden;
         }
         .nav-link { transition: color 0.18s; }
@@ -64,10 +65,10 @@ export default function LandingPage() {
         }
       `}</style>
 
-      <main style={{ background: '#FEF9EF' }}>
+      <main style={{ background: '#F5F3EE' }}>
 
         {/* ═══════════ HERO SECTION — navbar lives inside, merged ═══════════ */}
-        <section style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden', background: '#FEF9EF' }}>
+        <section style={{ position: 'relative', minHeight: '100vh', overflow: 'hidden', background: '#F5F3EE' }}>
 
           {/* ── Transparent Navbar — absolute, overlays hero, no background ── */}
           <header style={{ position: 'absolute', top: 0, left: 0, right: 0, zIndex: 50 }}>
@@ -102,13 +103,17 @@ export default function LandingPage() {
                 />
                 <span
                   style={{
-                    fontSize: 22,
-                    fontWeight: 800,
-                    color: '#0F2D1F',
-                    letterSpacing: '-0.5px',
+                    fontSize: 26,
+                    fontWeight: 700,
+                    fontFamily: "'Caveat', cursive",
+                    letterSpacing: '0.5px',
+                    background: 'linear-gradient(135deg, #1A5C35 0%, #2E8B57 45%, #C47900 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
                   }}
                 >
-                  VAAKYA
+                  Vaakya
                 </span>
               </a>
 
@@ -163,7 +168,7 @@ export default function LandingPage() {
                   <>
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: 8,
-                      background: '#E0F5E8', border: '1px solid rgba(26,92,53,0.18)',
+                      background: '#D4ECD8', border: '1px solid rgba(26,92,53,0.18)',
                       borderRadius: 100, padding: '7px 16px',
                     }}>
                       <div style={{ width: 24, height: 24, borderRadius: '50%', background: '#1A5C35', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#F0FFF6', flexShrink: 0 }}>
@@ -199,10 +204,10 @@ export default function LandingPage() {
 
           {/* ── Background organic shapes ── */}
           <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }}>
-            <div style={{ position: 'absolute', top: -150, right: -180, width: 900, height: 900, background: 'radial-gradient(ellipse at 58% 38%, #C8E8CC 0%, #D8EED8 25%, #EBF7E5 50%, transparent 72%)', borderRadius: '50%', opacity: 0.95 }} />
-            <div style={{ position: 'absolute', top: '10%', right: '8%', width: 540, height: 540, background: 'radial-gradient(ellipse at 50% 50%, #DAEFD6 0%, transparent 65%)', opacity: 0.55 }} />
-            <div style={{ position: 'absolute', bottom: -80, left: -60, width: 420, height: 420, background: 'radial-gradient(ellipse at 30% 72%, #B8DFC0 0%, #CCEBD0 28%, transparent 62%)', borderRadius: '50%', opacity: 0.7 }} />
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, #FEF9EF 35%, rgba(234,248,230,0.5) 100%)' }} />
+            <div style={{ position: 'absolute', top: -150, right: -180, width: 900, height: 900, background: 'radial-gradient(ellipse at 58% 38%, #C2D8CA 0%, #CCDDD4 25%, #E0EDE6 50%, transparent 72%)', borderRadius: '50%', opacity: 0.95 }} />
+            <div style={{ position: 'absolute', top: '10%', right: '8%', width: 540, height: 540, background: 'radial-gradient(ellipse at 50% 50%, #CCDDD4 0%, transparent 65%)', opacity: 0.55 }} />
+            <div style={{ position: 'absolute', bottom: -80, left: -60, width: 420, height: 420, background: 'radial-gradient(ellipse at 30% 72%, #AACAB6 0%, #BCDAC8 28%, transparent 62%)', borderRadius: '50%', opacity: 0.7 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, #F5F3EE 35%, rgba(220,234,226,0.5) 100%)' }} />
             <div style={{ position: 'absolute', top: '7%', right: '20%', width: 220, height: 180, backgroundImage: 'radial-gradient(circle, #3D8055 1.4px, transparent 1.4px)', backgroundSize: '22px 22px', opacity: 0.09 }} />
             <div style={{ position: 'absolute', top: '45%', right: '5%', width: 160, height: 140, backgroundImage: 'radial-gradient(circle, #3D8055 1.2px, transparent 1.2px)', backgroundSize: '18px 18px', opacity: 0.07 }} />
           </div>
@@ -239,7 +244,7 @@ export default function LandingPage() {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 9,
-                  background: '#E0F5E8',
+                  background: '#D4ECD8',
                   border: '1px solid rgba(30,168,81,0.22)',
                   borderRadius: 100,
                   padding: '7px 18px',
@@ -265,12 +270,12 @@ export default function LandingPage() {
                   fontWeight: 800,
                   lineHeight: 1.08,
                   letterSpacing: '-2.5px',
-                  color: '#0F2D1F',
+                  color: '#1A5C35',
                 }}
               >
                 Legal Documents.<br />
-                <span style={{ color: '#1EA851' }}>Zero Lawyers.</span><br />
-                100% Peace of Mind.
+                <span style={{ color: '#C47900' }}>Zero Lawyers.</span><br />
+                <span style={{ color: '#1EA851' }}>100% Peace of Mind.</span>
               </h1>
 
               {/* Subtext */}
@@ -289,7 +294,7 @@ export default function LandingPage() {
               {/* Mini stats row */}
               <div className="hero-stats-row" style={{ display: 'flex', alignItems: 'center', gap: 22 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, background: 'linear-gradient(140deg, #E0F5E8, #C8E8D0)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 2px 8px rgba(26,92,53,0.12)' }}>₹</div>
+                  <div style={{ width: 44, height: 44, background: 'linear-gradient(140deg, #D4ECD8, #BDDAC6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 2px 8px rgba(26,92,53,0.12)' }}>₹</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: '#0F2D1F', lineHeight: 1.2 }}>Up to 95% Cheaper</span>
                     <span style={{ fontSize: 11.5, color: '#7B9A8A' }}>than Lawyers</span>
@@ -297,7 +302,7 @@ export default function LandingPage() {
                 </div>
                 <div className="stat-divider" style={{ width: 1, height: 38, background: 'linear-gradient(to bottom, transparent, #C8DDD2, transparent)' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, background: 'linear-gradient(140deg, #E0F5E8, #C8E8D0)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 2px 8px rgba(26,92,53,0.12)' }}>⚡</div>
+                  <div style={{ width: 44, height: 44, background: 'linear-gradient(140deg, #D4ECD8, #BDDAC6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 2px 8px rgba(26,92,53,0.12)' }}>⚡</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: '#0F2D1F', lineHeight: 1.2 }}>Documents Ready</span>
                     <span style={{ fontSize: 11.5, color: '#7B9A8A' }}>in Under 4 Minutes</span>
@@ -305,7 +310,7 @@ export default function LandingPage() {
                 </div>
                 <div className="stat-divider" style={{ width: 1, height: 38, background: 'linear-gradient(to bottom, transparent, #C8DDD2, transparent)' }} />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <div style={{ width: 44, height: 44, background: 'linear-gradient(140deg, #E0F5E8, #C8E8D0)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 2px 8px rgba(26,92,53,0.12)' }}>🛡️</div>
+                  <div style={{ width: 44, height: 44, background: 'linear-gradient(140deg, #D4ECD8, #BDDAC6)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0, boxShadow: '0 2px 8px rgba(26,92,53,0.12)' }}>🛡️</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <span style={{ fontSize: 12.5, fontWeight: 700, color: '#0F2D1F', lineHeight: 1.2 }}>94% Risk Detection</span>
                     <span style={{ fontSize: 11.5, color: '#7B9A8A' }}>Powered by AI</span>
@@ -356,7 +361,7 @@ export default function LandingPage() {
                     style={{
                       width: 38,
                       height: 38,
-                      background: '#E0F5E8',
+                      background: '#D4ECD8',
                       border: '1.5px solid rgba(30,168,81,0.28)',
                       borderRadius: '50%',
                       display: 'inline-flex',
@@ -413,11 +418,11 @@ export default function LandingPage() {
               </video>
 
               {/* Left edge: heaviest fade */}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #FEF9EF 0%, rgba(254,249,239,0.88) 12%, rgba(254,249,239,0.5) 28%, rgba(254,249,239,0.15) 48%, transparent 65%)', pointerEvents: 'none', zIndex: 3 }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, #F5F3EE 0%, rgba(245,243,238,0.88) 12%, rgba(245,243,238,0.5) 28%, rgba(245,243,238,0.15) 48%, transparent 65%)', pointerEvents: 'none', zIndex: 3 }} />
               {/* Top edge */}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #FEF9EF 0%, rgba(254,249,239,0.7) 10%, rgba(254,249,239,0.2) 24%, transparent 40%)', pointerEvents: 'none', zIndex: 3 }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, #F5F3EE 0%, rgba(245,243,238,0.7) 10%, rgba(245,243,238,0.2) 24%, transparent 40%)', pointerEvents: 'none', zIndex: 3 }} />
               {/* Bottom edge */}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #FEF9EF 0%, rgba(254,249,239,0.7) 8%, rgba(254,249,239,0.15) 22%, transparent 38%)', pointerEvents: 'none', zIndex: 3 }} />
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #F5F3EE 0%, rgba(245,243,238,0.7) 8%, rgba(245,243,238,0.15) 22%, transparent 38%)', pointerEvents: 'none', zIndex: 3 }} />
               {/* Right edge (soft) */}
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to left, rgba(240,250,244,0.4) 0%, transparent 28%)', pointerEvents: 'none', zIndex: 3 }} />
               {/* Warm tint */}
@@ -436,15 +441,15 @@ export default function LandingPage() {
                   zIndex: 5,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 600, color: '#1A5C35', background: 'rgba(254,249,239,0.88)', padding: '7px 15px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.14)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(26,92,53,0.08)', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 600, color: '#1A5C35', background: 'rgba(245,243,238,0.88)', padding: '7px 15px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.14)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(26,92,53,0.08)', whiteSpace: 'nowrap' }}>
                   🇮🇳 <span>Built for Indian Laws</span>
                 </div>
                 <div className="trust-divider" style={{ width: 1, height: 18, background: 'rgba(26,92,53,0.18)' }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 600, color: '#1A5C35', background: 'rgba(254,249,239,0.88)', padding: '7px 15px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.14)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(26,92,53,0.08)', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 600, color: '#1A5C35', background: 'rgba(245,243,238,0.88)', padding: '7px 15px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.14)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(26,92,53,0.08)', whiteSpace: 'nowrap' }}>
                   🔒 <span>Secure &amp; Encrypted</span>
                 </div>
                 <div className="trust-divider" style={{ width: 1, height: 18, background: 'rgba(26,92,53,0.18)' }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 600, color: '#1A5C35', background: 'rgba(254,249,239,0.88)', padding: '7px 15px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.14)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(26,92,53,0.08)', whiteSpace: 'nowrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontSize: 12, fontWeight: 600, color: '#1A5C35', background: 'rgba(245,243,238,0.88)', padding: '7px 15px', borderRadius: 100, border: '1px solid rgba(26,92,53,0.14)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', boxShadow: '0 2px 8px rgba(26,92,53,0.08)', whiteSpace: 'nowrap' }}>
                   🛡️ <span>Private &amp; Confidential</span>
                 </div>
               </div>
@@ -455,7 +460,7 @@ export default function LandingPage() {
         {/* ═══════════ STATS BAR ═══════════ */}
         <section
           style={{
-            background: 'linear-gradient(to bottom, #F4FAF0, #EEF7EA)',
+            background: 'linear-gradient(to bottom, #EEF0EB, #E6E8E2)',
             padding: '52px 48px',
             borderTop: '1px solid rgba(26,92,53,0.08)',
           }}
@@ -472,9 +477,9 @@ export default function LandingPage() {
             }}
           >
             <div className="stat-item" style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
-              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #D8EED8, #C0E2C8)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>👥</div>
+              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #CCDDD4, #B4CCC0)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>👥</div>
               <div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: '#0F2D1F', letterSpacing: '-1.2px', lineHeight: 1 }}>2,500+</div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: '#1A4A30', letterSpacing: '-1.2px', lineHeight: 1 }}>2,500+</div>
                 <div style={{ fontSize: 12.5, fontWeight: 500, color: '#7B9A8A', marginTop: 4 }}>SMBs Trust Vaakya</div>
               </div>
             </div>
@@ -482,9 +487,9 @@ export default function LandingPage() {
             <div className="stat-vdiv" style={{ width: 1, height: 52, background: 'linear-gradient(to bottom, transparent, #B8D4C0, transparent)', flexShrink: 0 }} />
 
             <div className="stat-item" style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
-              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #D8EED8, #C0E2C8)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>📄</div>
+              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #CCDDD4, #B4CCC0)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>📄</div>
               <div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: '#0F2D1F', letterSpacing: '-1.2px', lineHeight: 1 }}>25,000+</div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: '#1A4A30', letterSpacing: '-1.2px', lineHeight: 1 }}>25,000+</div>
                 <div style={{ fontSize: 12.5, fontWeight: 500, color: '#7B9A8A', marginTop: 4 }}>Documents Created</div>
               </div>
             </div>
@@ -492,9 +497,9 @@ export default function LandingPage() {
             <div className="stat-vdiv" style={{ width: 1, height: 52, background: 'linear-gradient(to bottom, transparent, #B8D4C0, transparent)', flexShrink: 0 }} />
 
             <div className="stat-item" style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
-              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #D8EED8, #C0E2C8)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>💰</div>
+              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #CCDDD4, #B4CCC0)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>💰</div>
               <div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: '#0F2D1F', letterSpacing: '-1.2px', lineHeight: 1 }}>₹12Cr+</div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: '#1A4A30', letterSpacing: '-1.2px', lineHeight: 1 }}>₹12Cr+</div>
                 <div style={{ fontSize: 12.5, fontWeight: 500, color: '#7B9A8A', marginTop: 4 }}>Saved for SMBs</div>
               </div>
             </div>
@@ -502,9 +507,9 @@ export default function LandingPage() {
             <div className="stat-vdiv" style={{ width: 1, height: 52, background: 'linear-gradient(to bottom, transparent, #B8D4C0, transparent)', flexShrink: 0 }} />
 
             <div className="stat-item" style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
-              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #D8EED8, #C0E2C8)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>⚡</div>
+              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #CCDDD4, #B4CCC0)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>⚡</div>
               <div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: '#0F2D1F', letterSpacing: '-1.2px', lineHeight: 1 }}>94%</div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: '#1A4A30', letterSpacing: '-1.2px', lineHeight: 1 }}>94%</div>
                 <div style={{ fontSize: 12.5, fontWeight: 500, color: '#7B9A8A', marginTop: 4 }}>Risk Detection Accuracy</div>
               </div>
             </div>
@@ -512,9 +517,9 @@ export default function LandingPage() {
             <div className="stat-vdiv" style={{ width: 1, height: 52, background: 'linear-gradient(to bottom, transparent, #B8D4C0, transparent)', flexShrink: 0 }} />
 
             <div className="stat-item" style={{ display: 'flex', alignItems: 'center', gap: 18, flex: 1 }}>
-              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #D8EED8, #C0E2C8)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>⏱</div>
+              <div style={{ width: 56, height: 56, background: 'linear-gradient(140deg, #CCDDD4, #B4CCC0)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28, flexShrink: 0, boxShadow: '0 3px 12px rgba(26,92,53,0.12)' }}>⏱</div>
               <div>
-                <div style={{ fontSize: 30, fontWeight: 800, color: '#0F2D1F', letterSpacing: '-1.2px', lineHeight: 1 }}>4 Min</div>
+                <div style={{ fontSize: 30, fontWeight: 800, color: '#1A4A30', letterSpacing: '-1.2px', lineHeight: 1 }}>4 Min</div>
                 <div style={{ fontSize: 12.5, fontWeight: 500, color: '#7B9A8A', marginTop: 4 }}>Avg. Document Time</div>
               </div>
             </div>
