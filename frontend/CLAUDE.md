@@ -54,6 +54,7 @@ Used by the login form when the identifier has no `@`.
 | Route | File | Notes |
 |-------|------|-------|
 | `/features` | `src/app/features/page.tsx` | Public page; nav link routes here if logged in, `/auth/login` if not |
+| `/how-it-works` | `src/app/how-it-works/page.tsx` | Public page (auth-gated via nav); nav link routes here if logged in, `/auth/login` if not. 1:1 translation of design comp — hero, 3-workflow tabs, agent strip, capability cards, CTA banner. Cloudinary hero image at `howitworks_uofngv.png`. |
 | `/dashboard` | `src/app/dashboard/page.tsx` + `DashboardClient.tsx` | Server fetches vault; client renders UI |
 | `/dashboard/documents/[id]` | `src/app/dashboard/documents/[id]/page.tsx` | Client-only; polls status every 3s |
 
