@@ -126,7 +126,7 @@ export default function LandingPage() {
                   { label: 'Features', href: username ? '/features' : '/auth/login' },
                   { label: 'How It Works', href: username ? '/how-it-works' : '/auth/login' },
                   { label: 'Documents', href: username ? '/dashboard/documents' : '/auth/login' },
-                  { label: 'Pricing', href: '#' },
+                  { label: 'Pricing', href: username ? '/pricing' : '/auth/login' },
                 ].map((item) => (
                   <a
                     key={item.label}
