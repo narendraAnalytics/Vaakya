@@ -179,6 +179,15 @@ export default function DashboardClient({ username, documents }: Props) {
   const displayName = username.includes('@') ? username.split('@')[0] : username
   const initial = displayName[0]?.toUpperCase() || '?'
   const totalDocs = documents.length
+  const FREE_PLAN_LIMIT = 2
+  const now = new Date()
+  const monthlyDocCount = documents.filter(d => {
+    if (!d.created_at) return false
+    const c = new Date(d.created_at)
+    return c.getFullYear() === now.getFullYear() && c.getMonth() === now.getMonth()
+  }).length
+  const docsRemaining = Math.max(0, FREE_PLAN_LIMIT - monthlyDocCount)
+  const limitReached = monthlyDocCount >= FREE_PLAN_LIMIT
   const savings = formatSavings(totalDocs * 5000)
   const riskCount = documents.filter(
     d => d.status === 'risk_flagged' || (d.risk_flags && d.risk_flags.length > 0)
@@ -250,6 +259,7 @@ export default function DashboardClient({ username, documents }: Props) {
 
   async function handleGenerate() {
     if (generating) return
+    if (limitReached) return
     if (!docText.trim()) { setDocTextEmpty(true); return }
     setDocTextEmpty(false)
     setGenerating(true)
@@ -420,10 +430,14 @@ export default function DashboardClient({ username, documents }: Props) {
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
                 <span style={{ fontSize: 14, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.3 }}>You&apos;re on the Free Plan</span>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#C07010', background: 'rgba(192,112,16,0.12)', border: '1px solid rgba(192,112,16,0.22)', borderRadius: 100, padding: '2px 10px', letterSpacing: 0.2 }}>2 docs / month</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: limitReached ? '#C03030' : '#C07010', background: limitReached ? 'rgba(192,48,48,0.1)' : 'rgba(192,112,16,0.12)', border: `1px solid ${limitReached ? 'rgba(192,48,48,0.25)' : 'rgba(192,112,16,0.22)'}`, borderRadius: 100, padding: '2px 10px', letterSpacing: 0.2 }}>{monthlyDocCount}/2 used this month</span>
               </div>
               <p style={{ fontSize: 12.5, color: '#7B9A8A', margin: 0, lineHeight: 1.5 }}>
-                2 documents per month included. Upgrade anytime to unlock unlimited documents, e-signatures, and priority processing.
+                {limitReached
+                  ? 'You\'ve used all 2 documents this month. Your limit resets on the 1st. Upgrade to Pro for unlimited access.'
+                  : docsRemaining === 1
+                    ? '1 document remaining this month. Upgrade to Pro for unlimited documents, e-signatures, and priority processing.'
+                    : '2 documents per month included. Upgrade anytime to unlock unlimited documents, e-signatures, and priority processing.'}
               </p>
             </div>
             {/* CTA */}
@@ -465,6 +479,30 @@ export default function DashboardClient({ username, documents }: Props) {
                   <span>📎</span><span>Upload PDF / DOCX</span>
                 </div>
               </div>
+
+              {/* ── Limit-reached overlay ── */}
+              {limitReached && (
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, background: 'rgba(192,112,16,0.08)', border: '1.5px solid rgba(192,112,16,0.28)', borderRadius: 14, padding: '16px 18px' }}>
+                  <div style={{ fontSize: 22, lineHeight: 1, flexShrink: 0, marginTop: 1 }}>⛔</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, color: '#7A3A00', marginBottom: 4 }}>Monthly limit reached — {monthlyDocCount}/{FREE_PLAN_LIMIT} documents used</div>
+                    <div style={{ fontSize: 12.5, color: '#9A6020', lineHeight: 1.55, marginBottom: 12 }}>
+                      You&apos;ve created {monthlyDocCount} document{monthlyDocCount !== 1 ? 's' : ''} this month. Your free plan resets on the 1st of next month. Upgrade to Pro for unlimited documents, priority AI processing, and e-signatures.
+                    </div>
+                    <a href="#" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', fontSize: 12.5, fontWeight: 700, padding: '8px 18px', borderRadius: 100, textDecoration: 'none', boxShadow: '0 2px 10px rgba(26,92,53,0.25)', letterSpacing: 0.1 }}>
+                      Upgrade to Pro →
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* ── 1-remaining warning ── */}
+              {docsRemaining === 1 && !limitReached && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'rgba(192,112,16,0.07)', border: '1px solid rgba(192,112,16,0.22)', borderRadius: 10, padding: '10px 14px' }}>
+                  <span style={{ fontSize: 15, flexShrink: 0 }}>⚠️</span>
+                  <span style={{ fontSize: 12.5, color: '#9A6020', fontWeight: 600 }}>1 document remaining this month on your Free Plan.</span>
+                </div>
+              )}
 
               {/* By Text */}
               {tab === 'text' && (
@@ -513,7 +551,7 @@ export default function DashboardClient({ username, documents }: Props) {
                   </div>
 
                   {genError && <div style={{ fontSize: 12.5, color: '#C03030', background: '#FFE8E8', border: '1px solid rgba(192,48,48,0.2)', borderRadius: 10, padding: '10px 14px', fontWeight: 500 }}>⚠️ {genError}</div>}
-                  <button className="gen-btn" onClick={handleGenerate} style={{ width: '100%', padding: '15px 24px', background: 'linear-gradient(135deg,#1A5C35 0%,#1EA851 100%)', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, borderRadius: 14, letterSpacing: -0.1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                  <button className="gen-btn" onClick={handleGenerate} disabled={generating || limitReached} style={{ width: '100%', padding: '15px 24px', background: 'linear-gradient(135deg,#1A5C35 0%,#1EA851 100%)', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, borderRadius: 14, letterSpacing: -0.1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: limitReached ? 0.45 : 1, cursor: limitReached ? 'not-allowed' : 'pointer' }}>
                     {generating ? (
                       <>
                         <span style={{ display: 'inline-block', width: 17, height: 17, border: '2.5px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.75s linear infinite' }} />
@@ -609,8 +647,8 @@ export default function DashboardClient({ username, documents }: Props) {
                     <button
                       className="gen-btn"
                       onClick={handleUpload}
-                      disabled={uploading}
-                      style={{ width: '100%', padding: '15px 24px', background: uploading ? 'rgba(26,92,53,0.5)' : 'linear-gradient(135deg,#1A5C35 0%,#1EA851 100%)', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, borderRadius: 14, letterSpacing: -0.1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: uploading ? 'not-allowed' : 'pointer', border: 'none' }}
+                      disabled={uploading || limitReached}
+                      style={{ width: '100%', padding: '15px 24px', background: (uploading || limitReached) ? 'rgba(26,92,53,0.5)' : 'linear-gradient(135deg,#1A5C35 0%,#1EA851 100%)', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, borderRadius: 14, letterSpacing: -0.1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, cursor: (uploading || limitReached) ? 'not-allowed' : 'pointer', border: 'none', opacity: limitReached ? 0.45 : 1 }}
                     >
                       {uploading ? (
                         <>

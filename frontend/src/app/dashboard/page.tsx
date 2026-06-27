@@ -31,7 +31,7 @@ export default async function DashboardPage() {
 
     const { data: rows, error: qErr } = await supabase
       .from('vault_documents')
-      .select('id, document_type, parties, updated_at, esign_status, final_pdf_url')
+      .select('id, document_type, parties, created_at, updated_at, esign_status, final_pdf_url')
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false })
       .limit(20)
@@ -42,7 +42,7 @@ export default async function DashboardPage() {
       id: row.id as string,
       document_type: (row.document_type as string) || '',
       parties: (row.parties as Array<{ name: string; role?: string }>) || [],
-      created_at: (row.updated_at as string) || '',
+      created_at: (row.created_at as string) || (row.updated_at as string) || '',
       status: (row.esign_status as string) || 'processing',
       final_pdf_url: (row.final_pdf_url as string) || '',
       risk_flags: [],
