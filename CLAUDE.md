@@ -247,6 +247,8 @@ Arambha (classify)
 - [x] **Disputes page** (`frontend/src/app/dashboard/disputes/page.tsx`) — Vivada agent showcase with avatar + 6 capability cards; "Start Dispute Analysis" CTA; dispute history list
 - [x] **Analytics page** (`frontend/src/app/dashboard/analytics/page.tsx`) — 6 KPI cards (Total, Completed, In Review, Risk Flagged, Processing, Est. Savings); completion rate bar; document type breakdown bars (CSS only)
 - [x] **Settings page** (`frontend/src/app/dashboard/settings/page.tsx`) — profile card, workspace settings, Vaakya tech stack info, Sign Out button
+- [x] **Landing page** — "Resources" nav link removed from navbar (`frontend/src/app/page.tsx`) — do not re-add
+- [x] **Free Plan enforcement** — 2-doc/month limit enforced in dashboard UI: `monthlyDocCount` computed from real `created_at` (now fetched in `page.tsx`); Free Plan banner with dynamic `X/2 used` chip; limit-reached overlay + 1-remaining warning inside workspace card; Generate/Upload buttons disabled; drop zone click/drop/Browse Files all blocked when `limitReached` (`DashboardClient.tsx`)
 
 #### Frontend Auth — Resolved Issues
 - **Signup 500 error**: Supabase had `on_auth_user_created` trigger → `handle_new_user()` tried to INSERT into missing `profiles` table. Fixed by dropping the trigger and creating `public.profiles` (id, username, created_at) with RLS.

@@ -51,6 +51,8 @@ SECURITY DEFINER function. Joins `profiles` → `auth.users` to return email for
 Used by the login form when the identifier has no `@`.
 
 ## Frontend Pages
+Landing page navbar (`src/app/page.tsx`) contains: Features, How It Works, Pricing. **"Resources" link was removed** — do not re-add it.
+
 | Route | File | Notes |
 |-------|------|-------|
 | `/features` | `src/app/features/page.tsx` | Public page; nav link routes here if logged in, `/auth/login` if not |
@@ -131,6 +133,45 @@ All styles are **inline JSX** (not Tailwind utilities). Palette: `#FEF9EF` bg, `
 ## Git Commits (PowerShell)
 Use `@'...'@` single-quoted heredoc — bash `cat <<'EOF'` syntax causes parse errors in PowerShell 5.1.
 When using the **Bash tool** (not PowerShell tool), use plain `git commit -m "..."` double-quoted strings — `@'...'@` is PowerShell-only and corrupts the subject line.
+
+## Free Plan Enforcement
+
+Free-tier users are limited to **2 documents per month** (text-based and PDF upload both count). Enforcement is frontend-only; the backend API has no gating yet.
+
+### How it works (`DashboardClient.tsx`)
+
+```ts
+const FREE_PLAN_LIMIT = 2
+const now = new Date()
+const monthlyDocCount = documents.filter(d => {
+  if (!d.created_at) return false
+  const c = new Date(d.created_at)
+  return c.getFullYear() === now.getFullYear() && c.getMonth() === now.getMonth()
+}).length
+const docsRemaining = Math.max(0, FREE_PLAN_LIMIT - monthlyDocCount)
+const limitReached = monthlyDocCount >= FREE_PLAN_LIMIT
+```
+
+`page.tsx` selects `created_at` from `vault_documents` (the real insertion timestamp — previously only `updated_at` was fetched and mislabelled as `created_at`).
+
+### UI elements driven by `limitReached`
+
+| Element | Behaviour when `limitReached` |
+|---------|-------------------------------|
+| Free Plan banner chip | Shows `X/2 used this month`; turns red at limit |
+| Banner subtitle | Switches to "used all 2 … resets on 1st" message |
+| Limit-reached overlay | Amber block inside workspace card with upgrade CTA |
+| 1-remaining warning | Amber strip when `docsRemaining === 1 && !limitReached` |
+| Generate button | `disabled` + opacity 0.45 + `cursor: not-allowed` |
+| Upload & Analyze button | `disabled` + opacity 0.45 + `cursor: not-allowed` |
+| Drop zone `onClick` | Guarded: `!uploadFile && !limitReached` |
+| Drop zone `onDrop` | `if (limitReached) return` at top |
+| Browse Files div | `if (!limitReached)` guard + opacity 0.45 + `cursor: not-allowed` |
+| `handleGenerate` | `if (limitReached) return` early exit |
+
+Sidebar user block shows **"Free Plan 🌱"** — do not change back to "Pro Plan ✦".
+
+---
 
 ## Known Issues Resolved
 
