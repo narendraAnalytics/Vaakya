@@ -142,24 +142,6 @@ export default function LandingPage() {
                     {item.label}
                   </a>
                 ))}
-                <a
-                  href="#"
-                  className="nav-link"
-                  style={{
-                    fontSize: 14.5,
-                    fontWeight: 500,
-                    color: '#2C4A38',
-                    textDecoration: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 4,
-                  }}
-                >
-                  Resources
-                  <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-                    <path d="M2.5 4L5.5 7L8.5 4" stroke="#2C4A38" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </a>
               </nav>
 
               {/* Auth buttons */}
