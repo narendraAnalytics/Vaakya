@@ -352,7 +352,7 @@ export default function DashboardClient({ username, documents }: Props) {
               <div style={{ width: 34, height: 34, background: 'linear-gradient(135deg,#1A5C35,#1EA851)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: '#fff', flexShrink: 0, boxShadow: '0 2px 8px rgba(26,92,53,0.25)' }}>{initial}</div>
               <div className="sidebar-lbl" style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: '#0F2D1F', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{displayName}</div>
-                <div style={{ fontSize: 11, color: '#8BAA96', marginTop: 1 }}>Pro Plan ✦</div>
+                <div style={{ fontSize: 11, color: '#8BAA96', marginTop: 1 }}>Free Plan 🌱</div>
               </div>
             </div>
           </div>
@@ -405,6 +405,31 @@ export default function DashboardClient({ username, documents }: Props) {
                 ← Home
               </a>
             </div>
+          </div>
+
+          {/* ── Free Plan Banner ── */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'linear-gradient(135deg, rgba(30,168,81,0.07) 0%, rgba(192,112,16,0.06) 100%)', border: '1px solid rgba(30,168,81,0.18)', borderRadius: 16, padding: '14px 20px', flexShrink: 0, position: 'relative', zIndex: 1 }}>
+            {/* Icon */}
+            <div style={{ width: 40, height: 40, background: 'linear-gradient(135deg,#1A5C35,#1EA851)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 10px rgba(26,92,53,0.22)' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 22C12 22 3 16 3 9C3 5.13 7.03 2 12 2C16.97 2 21 5.13 21 9C21 16 12 22 12 22Z" fill="rgba(255,255,255,0.9)" />
+                <path d="M12 22C12 22 10 14 12 8C14 2 18 5 18 9" stroke="rgba(26,92,53,0.5)" strokeWidth="1.4" fill="none" strokeLinecap="round" />
+              </svg>
+            </div>
+            {/* Text */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
+                <span style={{ fontSize: 14, fontWeight: 800, color: '#0F2D1F', letterSpacing: -0.3 }}>You&apos;re on the Free Plan</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: '#C07010', background: 'rgba(192,112,16,0.12)', border: '1px solid rgba(192,112,16,0.22)', borderRadius: 100, padding: '2px 10px', letterSpacing: 0.2 }}>2 docs / month</span>
+              </div>
+              <p style={{ fontSize: 12.5, color: '#7B9A8A', margin: 0, lineHeight: 1.5 }}>
+                2 documents per month included. Upgrade anytime to unlock unlimited documents, e-signatures, and priority processing.
+              </p>
+            </div>
+            {/* CTA */}
+            <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'linear-gradient(135deg,#1A5C35,#1EA851)', color: '#fff', fontSize: 13, fontWeight: 700, padding: '9px 20px', borderRadius: 100, textDecoration: 'none', flexShrink: 0, boxShadow: '0 2px 12px rgba(26,92,53,0.28)', letterSpacing: 0.1, whiteSpace: 'nowrap' }}>
+              Upgrade to Pro →
+            </a>
           </div>
 
           {/* ── Hero Workspace Row ── */}
