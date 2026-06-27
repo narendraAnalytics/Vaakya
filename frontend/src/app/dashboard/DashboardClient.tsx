@@ -588,16 +588,17 @@ export default function DashboardClient({ username, documents }: Props) {
                   {/* Drop zone */}
                   <div
                     className="upload-zone"
-                    onClick={() => !uploadFile && fileInputRef.current?.click()}
+                    onClick={() => !uploadFile && !limitReached && fileInputRef.current?.click()}
                     onDragOver={e => { e.preventDefault(); setDragOver(true) }}
                     onDragLeave={() => setDragOver(false)}
                     onDrop={e => {
                       e.preventDefault(); setDragOver(false)
+                      if (limitReached) return
                       const f = e.dataTransfer.files[0]
                       if (f?.type === 'application/pdf') { setUploadFile(f); setUploadError('') }
                       else setUploadError('Only PDF files are supported.')
                     }}
-                    style={{ border: `2px dashed ${dragOver ? '#1EA851' : 'rgba(26,92,53,0.22)'}`, borderRadius: 18, padding: uploadFile ? '20px 24px' : '36px 24px', textAlign: 'center', background: dragOver ? '#EDFAF2' : '#F5FAF6', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, cursor: uploadFile ? 'default' : 'pointer', transition: 'all 0.18s' }}
+                    style={{ border: `2px dashed ${dragOver ? '#1EA851' : 'rgba(26,92,53,0.22)'}`, borderRadius: 18, padding: uploadFile ? '20px 24px' : '36px 24px', textAlign: 'center', background: dragOver ? '#EDFAF2' : '#F5FAF6', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, cursor: limitReached ? 'not-allowed' : uploadFile ? 'default' : 'pointer', transition: 'all 0.18s' }}
                   >
                     {!uploadFile ? (
                       <>
@@ -607,8 +608,8 @@ export default function DashboardClient({ username, documents }: Props) {
                           <div style={{ fontSize: 13, color: '#7B9A8A' }}>or click to browse</div>
                         </div>
                         <div
-                          onClick={e => { e.stopPropagation(); fileInputRef.current?.click() }}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 20px', background: '#E0F5E8', borderRadius: 100, fontSize: 13.5, fontWeight: 600, color: '#1A5C35', border: '1.5px solid rgba(30,168,81,0.25)', cursor: 'pointer' }}
+                          onClick={e => { e.stopPropagation(); if (!limitReached) fileInputRef.current?.click() }}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '9px 20px', background: '#E0F5E8', borderRadius: 100, fontSize: 13.5, fontWeight: 600, color: '#1A5C35', border: '1.5px solid rgba(30,168,81,0.25)', cursor: limitReached ? 'not-allowed' : 'pointer', opacity: limitReached ? 0.45 : 1 }}
                         >
                           Browse Files
                         </div>
