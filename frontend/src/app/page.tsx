@@ -113,6 +113,12 @@ export default function LandingPage() {
         .vid-play-btn:hover { background: #17943F !important; transform: scale(1.08); }
         .login-btn { transition: all 0.18s; }
         .login-btn:hover { border-color: #1A5C35 !important; color: #1A5C35 !important; }
+        @keyframes spinRing {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+        .portfolio-logo { transition: transform 0.2s; }
+        .portfolio-logo:hover { transform: scale(1.1); }
 
         @media (max-width: 1060px) {
           .nav-links-row { display: none !important; }
@@ -219,6 +225,24 @@ export default function LandingPage() {
 
               {/* Auth buttons */}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, marginLeft: 'auto' }}>
+
+                {/* Portfolio logo with spinning color ring */}
+                <a
+                  href="https://www.buildflows.shop/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="portfolio-logo"
+                  style={{ position: 'relative', width: 42, height: 42, display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: 6, flexShrink: 0, textDecoration: 'none' }}
+                >
+                  {/* Spinning conic-gradient ring */}
+                  <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'conic-gradient(from 0deg, #1EA851, #F59F0B, #0EA5E9, #A855F7, #EC4899, #1EA851)', animation: 'spinRing 2.8s linear infinite' }} />
+                  {/* Gap mask */}
+                  <div style={{ position: 'absolute', inset: 2.5, borderRadius: '50%', background: '#F5F3EE' }} />
+                  {/* Logo */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="https://res.cloudinary.com/dkqbzwicr/image/upload/v1780985346/porfolioicon_vqyt3j.png" alt="BuildFlows" style={{ position: 'relative', zIndex: 1, width: 30, height: 30, borderRadius: '50%', objectFit: 'cover' }} />
+                </a>
+
                 {username ? (
                   <>
                     <div style={{
