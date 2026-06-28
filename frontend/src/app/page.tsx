@@ -268,7 +268,7 @@ export default function LandingPage() {
                       </span>
                     </div>
                     <button
-                      onClick={async () => { const s = createClient(); await s.auth.signOut(); router.replace('/auth/login'); }}
+                      onClick={async () => { const s = createClient(); await s.auth.signOut(); router.replace('/'); }}
                       style={{ fontSize: 13.5, fontWeight: 500, color: '#7B9A8A', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
                     >
                       Sign out
