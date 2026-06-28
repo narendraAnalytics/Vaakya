@@ -130,7 +130,7 @@ export default function IntroPage() {
         </video>
 
         {/* Overlays */}
-        <div style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'rgba(10,38,18,0.62)' }} />
+        <div style={{ position: 'absolute', inset: 0, zIndex: 2, background: 'rgba(10,38,18,0.35)' }} />
         <div style={{ position: 'absolute', inset: 0, zIndex: 3, background: 'radial-gradient(ellipse at center, transparent 28%, rgba(5,20,10,0.55) 100%)' }} />
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 220, zIndex: 3, background: 'linear-gradient(to bottom, rgba(8,30,14,0.70) 0%, transparent 100%)' }} />
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 260, zIndex: 3, background: 'linear-gradient(to top, rgba(8,30,14,0.78) 0%, transparent 100%)' }} />
