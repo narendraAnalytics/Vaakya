@@ -50,7 +50,7 @@ export default function SettingsPage() {
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    router.replace('/')
+    window.location.href = '/'
   }
 
   const initial = username[0]?.toUpperCase() || '?'
