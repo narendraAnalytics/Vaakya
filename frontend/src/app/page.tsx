@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/client';
 
@@ -12,6 +12,11 @@ const VIDEO_URL =
 export default function LandingPage() {
   const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
+  const [showVideoModal, setShowVideoModal] = useState(false);
+  const [playing, setPlaying] = useState(false);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (!localStorage.getItem('vaakya_intro_seen')) {
@@ -27,6 +32,64 @@ export default function LandingPage() {
       }
     });
   }, [router]);
+
+  useEffect(() => {
+    if (!showVideoModal) return;
+    const vid = videoRef.current;
+    if (!vid) return;
+    const onTime = () => setCurrentTime(vid.currentTime);
+    const onMeta = () => setDuration(vid.duration);
+    const onEnd  = () => { setPlaying(false); vid.currentTime = 0; setCurrentTime(0); };
+    vid.addEventListener('timeupdate', onTime);
+    vid.addEventListener('loadedmetadata', onMeta);
+    vid.addEventListener('ended', onEnd);
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    document.addEventListener('keydown', onKey);
+    return () => {
+      vid.removeEventListener('timeupdate', onTime);
+      vid.removeEventListener('loadedmetadata', onMeta);
+      vid.removeEventListener('ended', onEnd);
+      document.removeEventListener('keydown', onKey);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showVideoModal]);
+
+  function formatTime(s: number) {
+    const m = Math.floor(s / 60);
+    return `${m}:${Math.floor(s % 60).toString().padStart(2, '0')}`;
+  }
+  function closeModal() {
+    const vid = videoRef.current;
+    if (vid) { vid.pause(); vid.currentTime = 0; }
+    setPlaying(false); setCurrentTime(0); setShowVideoModal(false);
+  }
+  function togglePlay() {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (vid.paused) { vid.play(); setPlaying(true); }
+    else { vid.pause(); setPlaying(false); }
+  }
+  function rewind10() {
+    const vid = videoRef.current;
+    if (vid) vid.currentTime = Math.max(0, vid.currentTime - 10);
+  }
+  function forward10() {
+    const vid = videoRef.current;
+    if (vid) vid.currentTime = Math.min(vid.duration || 0, vid.currentTime + 10);
+  }
+  function stopVideo() {
+    const vid = videoRef.current;
+    if (!vid) return;
+    vid.pause(); vid.currentTime = 0;
+    setPlaying(false); setCurrentTime(0);
+  }
+  function seekTo(e: React.MouseEvent<HTMLDivElement>) {
+    const vid = videoRef.current;
+    if (!vid || !vid.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    vid.currentTime = ((e.clientX - rect.left) / rect.width) * vid.duration;
+  }
+
   return (
     <>
       <style>{`
@@ -42,8 +105,12 @@ export default function LandingPage() {
         .nav-link:hover { color: #1A5C35 !important; }
         .cta-primary { transition: all 0.2s; }
         .cta-primary:hover { background: #144A2A !important; box-shadow: 0 6px 24px rgba(26,92,53,0.35) !important; transform: translateY(-1px); }
-        .cta-secondary { transition: color 0.18s; }
+        .cta-secondary { transition: color 0.18s; background: none; border: none; cursor: pointer; font-family: inherit; }
         .cta-secondary:hover { color: #144A2A !important; }
+        .vid-ctrl-btn { transition: background 0.15s; }
+        .vid-ctrl-btn:hover { background: rgba(30,168,81,0.18) !important; }
+        .vid-play-btn { transition: background 0.15s, transform 0.12s; }
+        .vid-play-btn:hover { background: #17943F !important; transform: scale(1.08); }
         .login-btn { transition: all 0.18s; }
         .login-btn:hover { border-color: #1A5C35 !important; color: #1A5C35 !important; }
 
@@ -331,8 +398,8 @@ export default function LandingPage() {
                     <path d="M2 8H14M10 4L14 8L10 12" stroke="#F0FFF6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </a>
-                <a
-                  href="#"
+                <button
+                  onClick={() => setShowVideoModal(true)}
                   className="cta-secondary"
                   style={{
                     display: 'inline-flex',
@@ -341,7 +408,6 @@ export default function LandingPage() {
                     color: '#1A5C35',
                     fontSize: 15.5,
                     fontWeight: 600,
-                    textDecoration: 'none',
                     padding: '15px 4px',
                   }}
                 >
@@ -364,7 +430,7 @@ export default function LandingPage() {
                     </svg>
                   </span>
                   See How It Works
-                </a>
+                </button>
               </div>
 
               {/* Trust note */}
@@ -513,6 +579,102 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* ═══════════ VIDEO MODAL ═══════════ */}
+        {showVideoModal && (
+          <div
+            onClick={closeModal}
+            style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(5,15,10,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, backdropFilter: 'blur(4px)' }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ width: '100%', maxWidth: 900, background: '#0F1F15', borderRadius: 20, overflow: 'hidden', boxShadow: '0 40px 100px rgba(0,0,0,0.75), 0 0 0 1px rgba(30,168,81,0.15)', display: 'flex', flexDirection: 'column' }}
+            >
+              {/* Modal header */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '13px 18px', borderBottom: '1px solid rgba(30,168,81,0.14)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div style={{ width: 28, height: 28, background: 'rgba(30,168,81,0.18)', border: '1px solid rgba(30,168,81,0.3)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 2l7 4-7 4V2z" fill="#1EA851"/></svg>
+                  </div>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: 'rgba(255,248,240,0.9)', letterSpacing: -0.2 }}>See How Vaakya Works</span>
+                </div>
+                <button
+                  onClick={closeModal}
+                  style={{ background: 'rgba(255,248,240,0.08)', border: '1px solid rgba(255,248,240,0.12)', borderRadius: '50%', width: 30, height: 30, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'rgba(255,248,240,0.7)', fontSize: 17, lineHeight: 1 }}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* Video */}
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <video
+                ref={videoRef}
+                poster="https://res.cloudinary.com/dkqbzwicr/image/upload/v1782625766/bannerImage_doqcpe.png"
+                onClick={togglePlay}
+                style={{ width: '100%', display: 'block', cursor: 'pointer', maxHeight: '62vh', background: '#000', objectFit: 'contain' }}
+              >
+                <source src="https://res.cloudinary.com/dkqbzwicr/video/upload/v1782625568/vaakyavideo_uiuy6q.webm" type="video/webm" />
+              </video>
+
+              {/* Controls bar */}
+              <div style={{ background: '#0A1A10', padding: '12px 18px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {/* Progress bar */}
+                <div
+                  onClick={seekTo}
+                  style={{ height: 4, background: 'rgba(255,248,240,0.1)', borderRadius: 4, cursor: 'pointer', position: 'relative' }}
+                >
+                  <div style={{ height: '100%', width: `${duration ? (currentTime / duration) * 100 : 0}%`, background: 'linear-gradient(90deg, #1EA851, #16A34A)', borderRadius: 4, transition: 'width 0.1s linear' }} />
+                  <div style={{ position: 'absolute', top: '50%', left: `${duration ? (currentTime / duration) * 100 : 0}%`, transform: 'translate(-50%, -50%)', width: 13, height: 13, background: '#1EA851', borderRadius: '50%', boxShadow: '0 0 0 3px rgba(30,168,81,0.25)' }} />
+                </div>
+
+                {/* Buttons row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  {/* Rewind 10s */}
+                  <button className="vid-ctrl-btn" onClick={rewind10} title="Rewind 10s"
+                    style={{ background: 'none', border: 'none', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', color: 'rgba(255,248,240,0.7)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 700 }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path d="M11 17l-5-5 5-5M18 17l-5-5 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    10
+                  </button>
+
+                  {/* Play / Pause */}
+                  <button className="vid-play-btn" onClick={togglePlay}
+                    style={{ background: '#1EA851', border: 'none', borderRadius: '50%', width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#fff', flexShrink: 0, boxShadow: '0 4px 14px rgba(30,168,81,0.4)' }}>
+                    {playing ? (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><rect x="5" y="3" width="5" height="18" rx="1"/><rect x="14" y="3" width="5" height="18" rx="1"/></svg>
+                    ) : (
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+                    )}
+                  </button>
+
+                  {/* Forward 10s */}
+                  <button className="vid-ctrl-btn" onClick={forward10} title="Forward 10s"
+                    style={{ background: 'none', border: 'none', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', color: 'rgba(255,248,240,0.7)', display: 'flex', alignItems: 'center', gap: 4, fontSize: 11.5, fontWeight: 700 }}>
+                    10
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path d="M13 7l5 5-5 5M6 7l5 5-5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </button>
+
+                  {/* Stop */}
+                  <button className="vid-ctrl-btn" onClick={stopVideo} title="Stop"
+                    style={{ background: 'none', border: 'none', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', color: 'rgba(255,248,240,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                  </button>
+
+                  <div style={{ flex: 1 }} />
+
+                  {/* Time */}
+                  <span style={{ fontSize: 12, color: 'rgba(255,248,240,0.45)', fontVariantNumeric: 'tabular-nums', letterSpacing: 0.4, fontFamily: 'monospace' }}>
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </main>
     </>
