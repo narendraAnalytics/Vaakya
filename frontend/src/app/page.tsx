@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/client';
 
 const LOGO_URL =
@@ -9,9 +10,14 @@ const VIDEO_URL =
   'https://res.cloudinary.com/dkqbzwicr/video/upload/v1782139728/vaakyavideo_orngvn.webm';
 
 export default function LandingPage() {
+  const router = useRouter();
   const [username, setUsername] = useState<string | null>(null);
 
   useEffect(() => {
+    if (!localStorage.getItem('vaakya_intro_seen')) {
+      router.replace('/intro');
+      return;
+    }
     const supabase = createClient();
     supabase.auth.getUser().then(({ data }) => {
       const name = data.user?.user_metadata?.username ?? null;
@@ -20,7 +26,7 @@ export default function LandingPage() {
         fetch(`${process.env.NEXT_PUBLIC_API_URL}/health`).catch(() => {});
       }
     });
-  }, []);
+  }, [router]);
   return (
     <>
       <style>{`
@@ -161,7 +167,7 @@ export default function LandingPage() {
                       </span>
                     </div>
                     <button
-                      onClick={async () => { const s = createClient(); await s.auth.signOut(); window.location.reload(); }}
+                      onClick={async () => { const s = createClient(); await s.auth.signOut(); localStorage.removeItem('vaakya_intro_seen'); router.replace('/intro'); }}
                       style={{ fontSize: 13.5, fontWeight: 500, color: '#7B9A8A', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
                     >
                       Sign out
