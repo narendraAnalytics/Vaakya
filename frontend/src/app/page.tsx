@@ -117,8 +117,14 @@ export default function LandingPage() {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
+        @keyframes tipPop {
+          from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+          to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
         .portfolio-logo { transition: transform 0.2s; }
         .portfolio-logo:hover { transform: scale(1.1); }
+        .portfolio-tip { display: none; }
+        .portfolio-logo:hover .portfolio-tip { display: block; animation: tipPop 0.18s ease both; }
 
         @media (max-width: 1060px) {
           .nav-links-row { display: none !important; }
@@ -241,6 +247,10 @@ export default function LandingPage() {
                   {/* Logo */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src="https://res.cloudinary.com/dkqbzwicr/image/upload/v1780985346/porfolioicon_vqyt3j.png" alt="BuildFlows" style={{ position: 'relative', zIndex: 1, width: 30, height: 30, borderRadius: '50%', objectFit: 'cover' }} />
+                  {/* Tooltip */}
+                  <div className="portfolio-tip" style={{ position: 'absolute', top: 'calc(100% + 10px)', left: '50%', transform: 'translateX(-50%)', whiteSpace: 'nowrap', background: 'linear-gradient(135deg, #1EA851, #F59F0B)', color: '#fff', fontSize: 11.5, fontWeight: 700, letterSpacing: 0.3, padding: '5px 11px', borderRadius: 100, boxShadow: '0 4px 16px rgba(30,168,81,0.45)', zIndex: 100, pointerEvents: 'none' }}>
+                    ✦ My Portfolio
+                  </div>
                 </a>
 
                 {username ? (
