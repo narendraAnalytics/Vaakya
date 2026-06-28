@@ -190,3 +190,17 @@ throws `Unhandled Rejection`. **Fix:** deleted `middleware.ts`, created `src/pro
 Proxy reads stale JWT → no username → redirects back to `/onboarding` loop.
 **Fix:** call `supabase.auth.refreshSession()` after `updateUser()` before `router.replace('/')`.
 
+---
+
+## Middleware — Public Route Whitelist
+`src/lib/middleware.ts` protects every route except `/`, `/auth/**`, `/login/**`. Any new public page (e.g. `/intro`) must be added to the unauthenticated-pass condition (~line 44), or unauthenticated users will be bounced to `/auth/login` before the page renders.
+
+## Intro Page Flow (localStorage gate)
+`localStorage key: vaakya_intro_seen` — set to `'true'` by `/intro` on "Enter Vaakya" click.
+- `/` checks this key on mount; if absent → `router.replace('/intro')`
+- Sign out (landing page + settings) clears key → `router.replace('/intro')`
+- `/intro` is whitelisted in middleware so unauthenticated users can reach it
+
+## DC HTML Design Comps — Video/Image Src Paths
+`frontend/samplecode/*.dc.html` use local placeholder src paths (e.g. `uploads/intovideo.mp4`). Always replace with actual Cloudinary URLs from `vaakya_doc.txt` (repo root) when translating to JSX.
+
