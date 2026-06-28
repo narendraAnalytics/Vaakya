@@ -31,7 +31,7 @@ export default function IntroPage() {
   }, []);
 
   function enterSite() {
-    localStorage.setItem('vaakya_intro_seen', 'true');
+    sessionStorage.setItem('vaakya_intro_seen', 'true');
     const root = rootRef.current;
     if (root) {
       root.style.transition = 'opacity 0.6s ease';

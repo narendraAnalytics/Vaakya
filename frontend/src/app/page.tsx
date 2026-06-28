@@ -19,7 +19,7 @@ export default function LandingPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    if (!localStorage.getItem('vaakya_intro_seen')) {
+    if (!sessionStorage.getItem('vaakya_intro_seen')) {
       router.replace('/intro');
       return;
     }
@@ -268,7 +268,7 @@ export default function LandingPage() {
                       </span>
                     </div>
                     <button
-                      onClick={async () => { const s = createClient(); await s.auth.signOut(); localStorage.removeItem('vaakya_intro_seen'); router.replace('/intro'); }}
+                      onClick={async () => { const s = createClient(); await s.auth.signOut(); router.replace('/auth/login'); }}
                       style={{ fontSize: 13.5, fontWeight: 500, color: '#7B9A8A', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px' }}
                     >
                       Sign out

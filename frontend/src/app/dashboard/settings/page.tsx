@@ -50,8 +50,7 @@ export default function SettingsPage() {
   async function handleLogout() {
     const supabase = createClient()
     await supabase.auth.signOut()
-    localStorage.removeItem('vaakya_intro_seen')
-    router.replace('/intro')
+    router.replace('/auth/login')
   }
 
   const initial = username[0]?.toUpperCase() || '?'
